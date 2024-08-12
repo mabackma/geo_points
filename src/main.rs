@@ -1,5 +1,5 @@
 use std::io;
-use geo_types::{coord, Coord, LineString, Polygon, Line};
+use geo_types::{coord, Coord, LineString, Polygon};
 use rand::{thread_rng, Rng};
 use geo::{Intersects, line_string};
 
