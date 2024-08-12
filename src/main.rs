@@ -1,7 +1,7 @@
 use std::io;
 use geo_types::{coord, Coord, LineString, Polygon};
 use rand::{thread_rng, Rng};
-use geo::{Intersects, line_string};
+use geo::Contains;
 
 fn create_point() -> Coord<f64> {
     println!("Please input your x-coordinate. Type 'q' to stop entering points.");
@@ -65,27 +65,9 @@ fn generate_random_points(p: Polygon, amount: i32) -> Vec<Coord<f64>> {
     loop {
         let rand_x: f64 = rng.gen_range(min_x..max_x);
         let rand_y: f64 = rng.gen_range(min_y..max_y);
-
         let point = coord! {x: rand_x, y: rand_y};
 
-        // Create a long line that extends beyond the polygon bounds
-        let line_max_x = max_x + 1.0;
-
-        let point_start = coord! { x: rand_x, y: rand_y };
-        let point_end = coord! { x: line_max_x, y: rand_y };
-        let point_line = line_string![point_start, point_end];  
-        
-        let mut intersections = 0;
-        for line in p.exterior().lines() {
-            if line.intersects(&point_line) {
-                intersections += 1;
-            }
-        }
-
-        println!("point_line: {:?} intersections: {}", point_line, intersections);
-
-        // Check if random point is within the polygon
-        if intersections % 2 == 0 && intersections != 0 {
+        if p.contains(&point) {
             points.push(point);
             count += 1;
             if count == amount {
