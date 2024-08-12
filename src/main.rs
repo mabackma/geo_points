@@ -27,20 +27,41 @@ fn create_point() -> Coord<f64> {
     coord! { x: x, y: y }
 }
 
+// Get the minimum and maximum x and y coordinates of a polygon
+fn get_min_max_coordinates(p: &Polygon) -> (f64, f64, f64, f64) {
+    let mut min_x = f64::INFINITY;
+    let mut max_x = f64::NEG_INFINITY;
+    let mut min_y = f64::INFINITY;
+    let mut max_y = f64::NEG_INFINITY;
+
+    for c in p.exterior().0.iter() {
+        if c.x < min_x {
+            min_x = c.x;
+        }
+        if c.x > max_x {
+            max_x = c.x;
+        }
+        if c.y < min_y {
+            min_y = c.y;
+        }
+        if c.y > max_y {
+            max_y = c.y;
+        }
+    }
+
+    (min_x, max_x, min_y, max_y)
+}
+
 // Generates random points within a polygon's minimum and maximum x and y coordinates
 fn generate_random_points(p: Polygon, amount: i32) -> Vec<Coord<f64>> {
     let mut points = Vec::new();
 
-    let min_x = p.exterior().0.iter().map(|c| c.x).fold(f64::INFINITY, |a, b| a.min(b));
-    let max_x = p.exterior().0.iter().map(|c| c.x).fold(f64::NEG_INFINITY, |a, b| a.max(b));
-    let min_y = p.exterior().0.iter().map(|c| c.y).fold(f64::INFINITY, |a, b| a.min(b));
-    let max_y = p.exterior().0.iter().map(|c| c.y).fold(f64::NEG_INFINITY, |a, b| a.max(b));
-
+    let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&p);
     println!("min_x: {}, max_x: {}, min_y: {}, max_y: {}", min_x, max_x, min_y, max_y);
-    let mut rng = thread_rng();
 
     // Generate random x and y coordinates
     let mut count = 0;
+    let mut rng = thread_rng();
     loop {
         let rand_x: f64 = rng.gen_range(min_x..max_x);
         let rand_y: f64 = rng.gen_range(min_y..max_y);
@@ -77,6 +98,14 @@ fn generate_random_points(p: Polygon, amount: i32) -> Vec<Coord<f64>> {
     points
 }
 
+// Draw polygon
+fn draw_polygon(p: Polygon) {
+    let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&p);
+
+    let width = max_x - min_x;
+    let height = max_y - min_y;
+}
+
 fn main() {
     let mut coordinates = Vec::new();
 
@@ -95,8 +124,10 @@ fn main() {
     let polygon = Polygon::new(line_string, vec![]);
     println!("polygon: {:?}", polygon);
 
+    
     // Generate random points within the polygon
     let random_points = generate_random_points(polygon, 10);
     println!("random_points within polygon: {:?}", random_points);
+    
 }
 
