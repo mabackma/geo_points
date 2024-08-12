@@ -40,7 +40,8 @@ fn generate_random_points(p: Polygon, amount: i32) -> Vec<Coord<f64>> {
     let mut rng = thread_rng();
 
     // Generate random x and y coordinates
-    for _ in 0..amount {
+    let mut count = 0;
+    loop {
         let rand_x: f64 = rng.gen_range(min_x..max_x);
         let rand_y: f64 = rng.gen_range(min_y..max_y);
 
@@ -65,6 +66,10 @@ fn generate_random_points(p: Polygon, amount: i32) -> Vec<Coord<f64>> {
         // Check if random point is within the polygon
         if intersections % 2 == 0 && intersections != 0 {
             points.push(point);
+            count += 1;
+            if count == amount {
+                break;
+            }
         }
     }
 
