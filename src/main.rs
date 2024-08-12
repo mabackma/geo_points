@@ -52,10 +52,9 @@ fn generate_random_points(p: Polygon, amount: i32) -> Vec<Coord<f64>> {
         //let line_max_x = f64::INFINITY;
 
         // Create a long line that extends beyond the polygon bounds
-        let line_min_x = min_x - 1.0;
         let line_max_x = max_x + 1.0;
 
-        let point_start = coord! { x: line_min_x, y: rand_y };
+        let point_start = coord! { x: min_x, y: rand_y };
         let point_end = coord! { x: line_max_x, y: rand_y };
         let point_line = line_string![point_start, point_end];  
         
