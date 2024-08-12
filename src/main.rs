@@ -67,7 +67,7 @@ fn generate_random_points(p: Polygon, amount: i32) -> Vec<Coord<f64>> {
 
         println!("point_line: {:?} intersections: {}", point_line, intersections);
 
-        if intersections % 2 == 0 {
+        if intersections % 2 == 0 && intersections != 0 {
             points.push(point);
         }
     }
