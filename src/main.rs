@@ -1,7 +1,7 @@
 use std::io;
 use geo_types::{coord, Coord, LineString, Polygon};
 use rand::{thread_rng, Rng};
-use geo::{scale, BoundingRect, Contains};
+use geo::{BoundingRect, Contains};
 use image::{Rgb, RgbImage};
 
 fn create_point() -> Coord<f64> {
@@ -51,7 +51,7 @@ fn generate_random_points(p: &Polygon, amount: i32) -> Vec<Coord<f64>> {
         let rand_x: f64 = rng.gen_range(min_x..max_x);
         let rand_y: f64 = rng.gen_range(min_y..max_y);
         let point = coord! {x: rand_x, y: rand_y};
-        println!("point: {:#?}", point);
+        
         if p.contains(&point) {
             points.push(point);
             count += 1;
@@ -85,20 +85,24 @@ fn map_coordinates_to_image(p: &Polygon<f64>, img_width: u32, img_height: u32) -
         .collect()
 }
 
+// DDA Line algorithm to draw line segments
 fn draw_line_segment(img: &mut RgbImage, p1: (u32, u32), p2: (u32, u32), color: Rgb<u8>) {
     println!("Drawing line segment from {:?} to {:?}", p1, p2);
 
     let dx = p2.0 as i32 - p1.0 as i32;
     let dy = p2.1 as i32 - p1.1 as i32;
 
-    let steps = dx.abs().max(dy.abs());
-
+    // Choose the larger of dx and dy as the number of steps to take
+    let steps = if dx.abs() > dy.abs() { dx.abs() } else { dy.abs() };
+    
+    // Calculate the increment in x and y for each step
     let x_step = dx as f64 / steps as f64;
     let y_step = dy as f64 / steps as f64;
 
     let mut x = p1.0 as f64;
     let mut y = p1.1 as f64;
 
+    // Draw the line segment pixel by pixel
     for _ in 0..=steps {
         if x >= 0.0 && y >= 0.0 && (x as u32) < img.width() && (y as u32) < img.height() {
             img.put_pixel(x as u32, y as u32, color);
