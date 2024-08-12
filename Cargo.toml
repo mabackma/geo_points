@@ -1,0 +1,9 @@
+[package]
+name = "geo_points"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+geo-types = "0.7.13"
+rand = "0.8"
+geo = "0.28.0"
