@@ -44,12 +44,7 @@ fn generate_random_points(p: Polygon, amount: i32) -> Vec<Coord<f64>> {
         let rand_x: f64 = rng.gen_range(min_x..max_x);
         let rand_y: f64 = rng.gen_range(min_y..max_y);
 
-        // Check if random point is within the polygon
         let point = coord! {x: rand_x, y: rand_y};
-        
-        // If point is within the polygon, add it to the list of points
-        //let line_min_x = f64::NEG_INFINITY;
-        //let line_max_x = f64::INFINITY;
 
         // Create a long line that extends beyond the polygon bounds
         let line_max_x = max_x + 1.0;
@@ -67,6 +62,7 @@ fn generate_random_points(p: Polygon, amount: i32) -> Vec<Coord<f64>> {
 
         println!("point_line: {:?} intersections: {}", point_line, intersections);
 
+        // Check if random point is within the polygon
         if intersections % 2 == 0 && intersections != 0 {
             points.push(point);
         }
