@@ -1,7 +1,7 @@
 use std::io;
 use geo_types::{coord, Coord, LineString, Polygon};
 use rand::{thread_rng, Rng};
-use geo::Contains;
+use geo::{BoundingRect, Contains};
 
 fn create_point() -> Coord<f64> {
     println!("Please input your x-coordinate. Type 'q' to stop entering points.");
@@ -27,27 +27,13 @@ fn create_point() -> Coord<f64> {
     coord! { x: x, y: y }
 }
 
-// Get the minimum and maximum x and y coordinates of a polygon
-fn get_min_max_coordinates(p: &Polygon) -> (f64, f64, f64, f64) {
-    let mut min_x = f64::INFINITY;
-    let mut max_x = f64::NEG_INFINITY;
-    let mut min_y = f64::INFINITY;
-    let mut max_y = f64::NEG_INFINITY;
-
-    for c in p.exterior().0.iter() {
-        if c.x < min_x {
-            min_x = c.x;
-        }
-        if c.x > max_x {
-            max_x = c.x;
-        }
-        if c.y < min_y {
-            min_y = c.y;
-        }
-        if c.y > max_y {
-            max_y = c.y;
-        }
-    }
+// Get minimum and maximum x and y coordinates of a polygon
+fn get_min_max_coordinates(p: &Polygon<f64>) -> (f64, f64, f64, f64) {
+    let rect = p.bounding_rect().unwrap();
+    let min_x = rect.min().x;
+    let max_x = rect.max().x;
+    let min_y = rect.min().y;
+    let max_y = rect.max().y;
 
     (min_x, max_x, min_y, max_y)
 }
@@ -55,9 +41,7 @@ fn get_min_max_coordinates(p: &Polygon) -> (f64, f64, f64, f64) {
 // Generates random points within a polygon's minimum and maximum x and y coordinates
 fn generate_random_points(p: Polygon, amount: i32) -> Vec<Coord<f64>> {
     let mut points = Vec::new();
-
     let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&p);
-    println!("min_x: {}, max_x: {}, min_y: {}, max_y: {}", min_x, max_x, min_y, max_y);
 
     // Generate random x and y coordinates
     let mut count = 0;
@@ -109,7 +93,6 @@ fn main() {
     
     // Generate random points within the polygon
     let random_points = generate_random_points(polygon, 10);
-    println!("random_points within polygon: {:?}", random_points);
-    
+    println!("random_points within polygon: {:?}", random_points);  
 }
 
