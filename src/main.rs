@@ -51,7 +51,7 @@ fn generate_random_points(p: &Polygon, amount: i32) -> Vec<Coord<f64>> {
         let rand_x: f64 = rng.gen_range(min_x..max_x);
         let rand_y: f64 = rng.gen_range(min_y..max_y);
         let point = coord! {x: rand_x, y: rand_y};
-        
+
         if p.contains(&point) {
             points.push(point);
             count += 1;
@@ -76,7 +76,7 @@ fn map_coordinates_to_image(p: &Polygon<f64>, img_width: u32, img_height: u32) -
     let scale_y = img_height as f64 / height;
 
     p.exterior()
-        .points_iter()
+        .points()
         .map(|point| {
             let x = ((point.x() - min_x) * scale_x).round() as u32;
             let y = (img_height as f64 - (point.y() - min_y) * scale_y).round() as u32;
