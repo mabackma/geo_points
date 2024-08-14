@@ -8,6 +8,7 @@ use std::path::Path;
 use geometry_utils::*;
 use geo_types::{Coord, LineString, Polygon};
 
+// Read JSON file
 fn read_json_file(file_name: String) -> Root {
     let path = Path::new(&file_name);
     let mut file_data = String::new();
@@ -26,6 +27,7 @@ fn read_json_file(file_name: String) -> Root {
     }
 }
 
+// Choose a parcel 
 fn choose_parcel(file_name: String) -> Parcel {
     let root = read_json_file(file_name);
     let parcels: Vec<Parcel> = root.forest_property_data.real_estates.real_estate.parcels.parcel;
@@ -44,6 +46,7 @@ fn choose_parcel(file_name: String) -> Parcel {
     parcel.clone()
 }
 
+// Choose a stand
 fn choose_stand(parcel: Parcel) -> Stand {
     println!("\nStands:");
     for stand in parcel.stands.stand.iter() {
@@ -59,12 +62,12 @@ fn choose_stand(parcel: Parcel) -> Stand {
     stand.clone()
 }
 
+// Create a polygon from a string of coordinates
 fn create_polygon(coord_string: &str) -> Polygon<f64> {
     let coordinates_str: Vec<&str> = coord_string.split(" ").collect();
 
     // Parse coordinates into a Vec of `Coord<f64>`
     let mut coords: Vec<Coord<f64>> = Vec::new();
-
     for coordinate in coordinates_str {
         let parts: Vec<&str> = coordinate.split(',').collect();
         if parts.len() == 2 {
@@ -83,10 +86,9 @@ fn create_polygon(coord_string: &str) -> Polygon<f64> {
 }
 
 fn main() {
-
     let parcel = choose_parcel("forestpropertydata.json".to_string());
     let stand = choose_stand(parcel);
-
+    
     let coordinate_string = stand.stand_basic_data.polygon_geometry.polygon_property.polygon.exterior.linear_ring.coordinates.trim();
     let polygon = create_polygon(coordinate_string);
 

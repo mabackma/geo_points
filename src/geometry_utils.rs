@@ -36,7 +36,6 @@ pub fn generate_random_points(p: &Polygon, amount: i32) -> Vec<Coord<f64>> {
         }
     }
 
-    // Return random points
     points
 }
 
@@ -46,7 +45,6 @@ pub fn scale_x_and_y(p: &Polygon<f64>, img_width: u32, img_height: u32) -> (f64,
     let width = max_x - min_x;
     let height = max_y - min_y;
 
-    // Scale polygon to fit image
     let scale_x = img_width as f64 / width;
     let scale_y = img_height as f64 / height;
 
