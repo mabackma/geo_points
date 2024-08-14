@@ -3,6 +3,7 @@ use geo_types::{coord, Coord, LineString, Polygon};
 use rand::{thread_rng, Rng};
 use geo::{BoundingRect, Contains};
 use image::{Rgb, RgbImage};
+use chrono::{DateTime, Utc}; 
 
 fn create_point() -> Coord<f64> {
     println!("Please input your x-coordinate. Type 'q' to stop entering points.");
@@ -150,6 +151,61 @@ fn draw_image(p: &Polygon, rand_p: Vec<Coord<f64>>) {
 
     img.save("polygon_image.png").expect("Failed to save image");
     println!("Polygon image saved as 'polygon_image.png'");
+}
+
+struct Stand {
+    stand_basic_data: StandBasicData,
+    tree_stand_data: TreeStandData,
+}
+
+struct StandBasicData {
+    change_state: u32,
+    change_time: DateTime<Utc>, 
+    complete_state: u32,
+    stand_number: u32,
+    stand_number_extension: String,
+    main_group: u32,
+    sub_group: u32,
+    fertility_class: u32,
+    soil_type: u32,
+    drainage_state: u32,
+    development_class: u32,
+    stand_quality: u32,
+    main_tree_species: u32,
+    accessibility: u32,
+    stand_basic_data_date: DateTime<Utc>, 
+    area: u32,
+    point_property: Coord<f64>,
+    exterior_lr: Coord<f64>,
+    interior_lr: Coord<f64>,
+}
+
+struct TreeStrata {
+    change_state: u32,
+    stratum_number: u32,
+    tree_species: u32,
+    storey: u32,
+    age: u32,
+    basal_area: f64,
+    mean_diameter: u32,
+    mean_height: f64,
+    data_source: u32,
+}
+
+struct TreeStandSummary {
+    change_state: u32,
+    mean_age: u32,
+    basal_area: f64,
+    stem_count: u32,
+    mean_diameter: u32,
+    mean_height: f64,
+    volume: u32,
+    volume_growth: u32,
+}
+
+struct TreeStandData {
+    tree_strata: TreeStrata,
+    tree_stand_summary: TreeStandSummary,
 }
 
 fn main() {
