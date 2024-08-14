@@ -1,32 +1,7 @@
-use std::io;
 use geo_types::{coord, Coord, Polygon};
 use rand::{thread_rng, Rng};
 use geo::{BoundingRect, Contains};
 use image::{Rgb, RgbImage};
-
-pub fn create_point() -> Coord<f64> {
-    println!("Please input your x-coordinate. Type 'q' to stop entering points.");
-    let mut x_coordinate = String::new();
-    io::stdin()
-        .read_line(&mut x_coordinate)
-        .expect("Failed to read line");
-    if x_coordinate.trim() == "q" {
-        return coord! {x : -1.0, y: -1.0};
-    }
-    let x: f64 = x_coordinate.trim().parse().expect("Please type a number!");
-
-    println!("Please input your y-coordinate. Type 'q' to stop entering points.");
-    let mut y_coordinate = String::new();
-    io::stdin()
-        .read_line(&mut y_coordinate)
-        .expect("Failed to read line");
-    if y_coordinate.trim() == "q" {
-        return coord! {x : -1.0, y: -1.0};
-    }
-    let y: f64 = y_coordinate.trim().parse().expect("Please type a number!");
-
-    coord! { x: x, y: y }
-}
 
 // Get minimum and maximum x and y coordinates of a polygon
 pub fn get_min_max_coordinates(p: &Polygon<f64>) -> (f64, f64, f64, f64) {

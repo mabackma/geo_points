@@ -1,85 +1,94 @@
 mod geometry_utils;
+mod data_structures;
 
+use data_structures::*;
+use std::fs::File;
+use std::io::Read;
+use std::path::Path;
 use geometry_utils::*;
-use chrono::{DateTime, Utc}; 
 use geo_types::{Coord, LineString, Polygon};
 
-/* 
- * My own data structures for stand data
- 
-struct Stand {
-    stand_basic_data: StandBasicData,
-    tree_stand_data: TreeStandData,
+fn read_json_file(file_name: String) -> Root {
+    let path = Path::new(&file_name);
+    let mut file_data = String::new();
+
+    let mut rfile = File::open(&path).expect("Unable to open file");
+    rfile.read_to_string(&mut file_data).expect("Unable to read file");
+
+    // Deserialize directly into Root
+    match serde_json::from_str::<Root>(&file_data) {
+        Ok(forest_property_data) => {
+            forest_property_data
+        },
+        Err(e) => {
+            panic!("Error parsing JSON data: {}", e);
+        }
+    }
 }
 
-struct StandBasicData {
-    change_state: u32,
-    change_time: DateTime<Utc>, 
-    complete_state: u32,
-    stand_number: u32,
-    stand_number_extension: String,
-    main_group: u32,
-    sub_group: u32,
-    fertility_class: u32,
-    soil_type: u32,
-    drainage_state: u32,
-    development_class: u32,
-    stand_quality: u32,
-    main_tree_species: u32,
-    accessibility: u32,
-    stand_basic_data_date: DateTime<Utc>, 
-    area: u32,
-    point_property: Coord<f64>,
-    exterior_lr: Coord<f64>,
-    interior_lr: Coord<f64>,
+fn choose_parcel(file_name: String) -> Parcel {
+    let root = read_json_file(file_name);
+    let parcels: Vec<Parcel> = root.forest_property_data.real_estates.real_estate.parcels.parcel;
+    
+    println!("\nParcels:");
+    for parcel in parcels.iter() {
+        print!("{:?}, ", parcel.parcel_number);
+    }
+
+    println!("Choose a parcel number to view: ");
+    let mut parcel_number = String::new();
+    std::io::stdin().read_line(&mut parcel_number).expect("Failed to read line");
+    let parcel_number: i64 = parcel_number.trim().parse().expect("Please type a number!");
+    let parcel = parcels.iter().find(|&x| x.parcel_number == parcel_number).unwrap();
+
+    parcel.clone()
 }
 
-struct TreeStrata {
-    change_state: u32,
-    stratum_number: u32,
-    tree_species: u32,
-    storey: u32,
-    age: u32,
-    basal_area: f64,
-    mean_diameter: u32,
-    mean_height: f64,
-    data_source: u32,
+fn choose_stand(parcel: Parcel) -> Stand {
+    println!("\nStands:");
+    for stand in parcel.stands.stand.iter() {
+        print!("{:?}, ", stand.stand_basic_data.stand_number);
+    }
+
+    println!("Choose a stand number to view: ");
+    let mut stand_number = String::new();
+    std::io::stdin().read_line(&mut stand_number).expect("Failed to read line");
+    let stand_number: i64 = stand_number.trim().parse().expect("Please type a number!");
+    let stand = parcel.stands.stand.iter().find(|&x| x.stand_basic_data.stand_number == stand_number).unwrap();
+
+    stand.clone()
 }
 
-struct TreeStandSummary {
-    change_state: u32,
-    mean_age: u32,
-    basal_area: f64,
-    stem_count: u32,
-    mean_diameter: u32,
-    mean_height: f64,
-    volume: u32,
-    volume_growth: u32,
-}
+fn create_polygon(coord_string: &str) -> Polygon<f64> {
+    let coordinates_str: Vec<&str> = coord_string.split(" ").collect();
 
-struct TreeStandData {
-    tree_strata: TreeStrata,
-    tree_stand_summary: TreeStandSummary,
-}
-*/
+    // Parse coordinates into a Vec of `Coord<f64>`
+    let mut coords: Vec<Coord<f64>> = Vec::new();
 
-fn main() {
-    let mut coordinates = Vec::new();
-
-    // Ask user to input coordinates for polygon
-    loop {
-        let coordinate = create_point();
-        if coordinate.x == -1.0 && coordinate.y == -1.0 {
-            break;
+    for coordinate in coordinates_str {
+        let parts: Vec<&str> = coordinate.split(',').collect();
+        if parts.len() == 2 {
+            let x: f64 = parts[0].parse().expect("Invalid x coordinate");
+            let y: f64 = parts[1].parse().expect("Invalid y coordinate");
+            coords.push(Coord { x, y });
         } else {
-            coordinates.push(coordinate);
+            println!("Invalid coordinate format: {}", coordinate);
         }
     }
 
-    // Create polygon from coordinates
-    let line_string = LineString::new(coordinates);
+    let line_string = LineString::new(coords);
     let polygon = Polygon::new(line_string, vec![]);
-    println!("polygon: {:?}", polygon);
+
+    polygon
+}
+
+fn main() {
+
+    let parcel = choose_parcel("forestpropertydata.json".to_string());
+    let stand = choose_stand(parcel);
+
+    let coordinate_string = stand.stand_basic_data.polygon_geometry.polygon_property.polygon.exterior.linear_ring.coordinates.trim();
+    let polygon = create_polygon(coordinate_string);
 
     // Generate random points within the polygon
     let random_points = generate_random_points(&polygon, 10);

@@ -1,6 +1,5 @@
-use serde_derive::Deserialize;
-use serde_derive::Serialize;
 use serde_json::Value;
+use serde::{Deserialize, Serialize};
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -100,7 +99,7 @@ pub struct StandBasicData {
     #[serde(rename = "DrainageState")]
     pub drainage_state: Option<i64>,
     #[serde(rename = "DevelopmentClass")]
-    pub development_class: Value,
+    pub development_class: Option<Value>,
     #[serde(rename = "StandQuality")]
     pub stand_quality: Option<i64>,
     #[serde(rename = "MainTreeSpecies")]
@@ -156,7 +155,7 @@ pub struct PolygonProperty {
 #[serde(rename_all = "camelCase")]
 pub struct Polygon {
     pub exterior: Exterior,
-    pub interior: Value,
+    pub interior: Option<Value>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
