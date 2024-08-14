@@ -1,12 +1,14 @@
-mod geometry_utils;
+mod image_utils;
 mod data_structures;
 
+use image_utils::*;
 use data_structures::*;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
-use geometry_utils::*;
-use geo_types::{Coord, LineString, Polygon};
+use geo_types::{coord, Coord, LineString, Polygon};
+use rand::{thread_rng, Rng};
+use geo::Contains;
 
 // Read JSON file
 fn read_json_file(file_name: String) -> Root {
@@ -85,10 +87,35 @@ fn create_polygon(coord_string: &str) -> Polygon<f64> {
     polygon
 }
 
+// Generates random points within a polygon's minimum and maximum x and y coordinates
+pub fn generate_random_points(p: &Polygon, amount: i32) -> Vec<Coord<f64>> {
+    let mut points = Vec::new();
+    let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&p);
+
+    // Generate random x and y coordinates
+    let mut count = 0;
+    let mut rng = thread_rng();
+    loop {
+        let rand_x: f64 = rng.gen_range(min_x..max_x);
+        let rand_y: f64 = rng.gen_range(min_y..max_y);
+        let point = coord! {x: rand_x, y: rand_y};
+
+        if p.contains(&point) {
+            points.push(point);
+            count += 1;
+            if count == amount {
+                break;
+            }
+        }
+    }
+
+    points
+}
+
 fn main() {
     let parcel = choose_parcel("forestpropertydata.json".to_string());
     let stand = choose_stand(parcel);
-    
+
     let coordinate_string = stand.stand_basic_data.polygon_geometry.polygon_property.polygon.exterior.linear_ring.coordinates.trim();
     let polygon = create_polygon(coordinate_string);
 
