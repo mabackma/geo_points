@@ -4,6 +4,9 @@ use geometry_utils::*;
 use chrono::{DateTime, Utc}; 
 use geo_types::{Coord, LineString, Polygon};
 
+/* 
+ * My own data structures for stand data
+ 
 struct Stand {
     stand_basic_data: StandBasicData,
     tree_stand_data: TreeStandData,
@@ -58,6 +61,7 @@ struct TreeStandData {
     tree_strata: TreeStrata,
     tree_stand_summary: TreeStandSummary,
 }
+*/
 
 fn main() {
     let mut coordinates = Vec::new();
