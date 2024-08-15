@@ -1,8 +1,8 @@
 mod image_utils;
-mod data_structures;
+mod data_structures_updated;
 
 use image_utils::*;
-use data_structures::*;
+use data_structures_updated::*;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
@@ -132,10 +132,10 @@ pub fn generate_random_points(p: &Polygon, amount: i32) -> Vec<Coord<f64>> {
 
     points
 }
-
+ 
 fn main() {
     // Choose a parcel and a stand
-    let parcel = choose_parcel("forestpropertydata.json".to_string());
+    let parcel = choose_parcel("forestpropertydata_updated.json".to_string());
     let stand = choose_stand(parcel);
 
     // Create a polygon from the stand's coordinates
@@ -152,3 +152,4 @@ fn main() {
     // Draw the polygon and random points
     draw_image(&polygon, random_points);
 }
+
