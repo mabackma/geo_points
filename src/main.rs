@@ -9,7 +9,7 @@ use std::path::Path;
 use geo_types::{coord, Coord, LineString, Polygon};
 use rand::{thread_rng, Rng};
 use geo::Contains;
-
+ 
 // Read JSON file
 fn read_json_file(file_name: String) -> Root {
     let path = Path::new(&file_name);
@@ -102,8 +102,7 @@ fn create_polygon(coord_string: &str) -> Polygon<f64> {
 
 // Get stem count
 fn get_stem_count(tree_stand_data: &TreeStandData) -> i64 {
-    let length = tree_stand_data.tree_stand_data_date.len();
-    let data_date = tree_stand_data.tree_stand_data_date[length - 1].clone();
+    let data_date = tree_stand_data.tree_stand_data_date.last().unwrap().clone();
     let stem_count = data_date.tree_stand_summary.unwrap().stem_count;
     
     stem_count
@@ -135,6 +134,10 @@ pub fn generate_random_points(p: &Polygon, amount: i32) -> Vec<Coord<f64>> {
 }
 
 fn main() {
+    let exist_stem_counts = stem_counts_in_stratum(0, 5).unwrap();
+    println!("Stem counts in all strata: {}", exist_stem_counts);
+
+     /* 
     // Choose a parcel and a stand
     let parcel = choose_parcel("forestpropertydata.json".to_string());
     let stand = choose_stand(parcel);
@@ -152,5 +155,67 @@ fn main() {
 
     // Draw the polygon and random points
     draw_image(&polygon, random_points);
+    */
+}
+
+
+use serde_json::{Value, from_str};
+use std::fs;
+
+fn stem_counts_in_stratum(parcel_index: usize, stand_index: usize) -> Result<bool, Box<dyn std::error::Error>> {
+    // Read JSON from file
+    let data = fs::read_to_string("forestpropertydata.json")?;
+    
+    // Parse JSON
+    let json_value: Value = from_str(&data)?;
+
+    // Extract the specific parcel and stand
+    if let Some(parcel) = json_value
+        .get("ForestPropertyData")
+        .and_then(|v| v.get("RealEstates"))
+        .and_then(|v| v.get("RealEstate"))
+        .and_then(|v| v.get("Parcels"))
+        .and_then(|v| v.get("Parcel"))
+        .and_then(|v| v.as_array())
+        .and_then(|v| v.get(parcel_index)) // Use the parcel_index to get the specific parcel
+    {
+        if let Some(stand) = parcel.get("Stands")
+            .and_then(|v| v.get("Stand"))
+            .and_then(|v| v.as_array())
+            .and_then(|v| v.get(stand_index)) // Use the stand_index to get the specific stand
+        {
+            // Check TreeStratum in the last TreeStandDataDate entry
+            if let Some(tree_stand_data) = stand.get("TreeStandData") {
+                if let Some(tree_stand_data_dates) = tree_stand_data.get("TreeStandDataDate").and_then(|v| v.as_array()) {
+                    if let Some(last_tree_stand_data_date) = tree_stand_data_dates.last() { // Get the last TreeStandDataDate
+                        if let Some(tree_strata) = last_tree_stand_data_date.get("TreeStrata") {
+                            if let Some(tree_stratum_array) = tree_strata.get("TreeStratum").and_then(|v| v.as_array()) {
+                                for stratum in tree_stratum_array {
+                                    if !stratum.get("StemCount").is_some() {
+                                        return Ok(false); // StemCount is missing in at least one stratum
+                                    }
+                                }
+                                return Ok(true); // All TreeStratum objects contain a StemCount
+                            } else {
+                                return Ok(false); // TreeStratum array is missing
+                            }
+                        } else {
+                            return Ok(false); // TreeStrata is missing
+                        }
+                    } else {
+                        return Ok(false); // TreeStandDataDate array is empty
+                    }
+                } else {
+                    return Ok(false); // TreeStandDataDate field not found or not an array
+                }
+            } else {
+                return Ok(false); // TreeStandData field not found
+            }
+        } else {
+            return Ok(false); // Stand not found or not an array
+        }
+    } else {
+        return Ok(false); // Parcel not found or not an array
+    }
 }
 
