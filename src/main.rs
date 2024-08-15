@@ -13,12 +13,14 @@ use geo::Contains;
 // Read JSON file
 fn read_json_file(file_name: String) -> Root {
     let path = Path::new(&file_name);
+    let mut rfile = File::open(&path).expect("Unable to open file");
     let mut file_data = String::new();
 
-    let mut rfile = File::open(&path).expect("Unable to open file");
+    // Read file data into the string `file_data`
     rfile.read_to_string(&mut file_data).expect("Unable to read file");
 
-    // Deserialize directly into Root
+    // Deserialize directly into struct `Root`
+    // Root is the top-level struct that contains all the data
     match serde_json::from_str::<Root>(&file_data) {
         Ok(forest_property_data) => {
             forest_property_data
@@ -33,6 +35,7 @@ fn read_json_file(file_name: String) -> Root {
 fn choose_parcel(file_name: String) -> Parcel {
     let root = read_json_file(file_name);
     let parcels: Vec<Parcel> = root.forest_property_data.real_estates.real_estate.parcels.parcel;
+    let mut parcel_number = String::new();
     
     println!("\nParcels:");
     for parcel in parcels.iter() {
@@ -40,8 +43,11 @@ fn choose_parcel(file_name: String) -> Parcel {
     }
 
     println!("Choose a parcel number to view: ");
-    let mut parcel_number = String::new();
+
+    // Read parcel number from user input into String `parcel_number`
     std::io::stdin().read_line(&mut parcel_number).expect("Failed to read line");
+
+    // Shadowing `parcel_number` to convert it to an integer
     let parcel_number: i64 = parcel_number.trim().parse().expect("Please type a number!");
     let parcel = parcels.iter().find(|&x| x.parcel_number == parcel_number).unwrap();
 
@@ -50,14 +56,19 @@ fn choose_parcel(file_name: String) -> Parcel {
 
 // Choose a stand
 fn choose_stand(parcel: Parcel) -> Stand {
+    let mut stand_number = String::new();
+
     println!("\nStands:");
     for stand in parcel.stands.stand.iter() {
         print!("{:?}, ", stand.stand_basic_data.stand_number);
     }
 
     println!("Choose a stand number to view: ");
-    let mut stand_number = String::new();
+
+    // Read stand number from user input into String `stand_number`
     std::io::stdin().read_line(&mut stand_number).expect("Failed to read line");
+
+    // Shadowing `stand_number` to convert it to an integer
     let stand_number: i64 = stand_number.trim().parse().expect("Please type a number!");
     let stand = parcel.stands.stand.iter().find(|&x| x.stand_basic_data.stand_number == stand_number).unwrap();
 
@@ -113,9 +124,11 @@ pub fn generate_random_points(p: &Polygon, amount: i32) -> Vec<Coord<f64>> {
 }
 
 fn main() {
+    // Choose a parcel and a stand
     let parcel = choose_parcel("forestpropertydata.json".to_string());
     let stand = choose_stand(parcel);
 
+    // Create a polygon from the stand's coordinates
     let coordinate_string = stand.stand_basic_data.polygon_geometry.polygon_property.polygon.exterior.linear_ring.coordinates.trim();
     let polygon = create_polygon(coordinate_string);
 
@@ -123,6 +136,7 @@ fn main() {
     let random_points = generate_random_points(&polygon, 10);
     println!("random_points within polygon: {:?}", random_points);  
 
+    // Draw the polygon and random points
     draw_image(&polygon, random_points);
 }
 
