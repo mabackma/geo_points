@@ -60,7 +60,9 @@ fn choose_stand(parcel: Parcel) -> Stand {
 
     println!("\nStands:");
     for stand in parcel.stands.stand.iter() {
-        print!("{:?}, ", stand.stand_basic_data.stand_number);
+        if stand.tree_stand_data.is_some() {
+            print!("{:?}, ", stand.stand_basic_data.stand_number);
+        }
     }
 
     println!("Choose a stand number to view: ");
