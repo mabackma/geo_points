@@ -98,6 +98,15 @@ fn create_polygon(coord_string: &str) -> Polygon<f64> {
     polygon
 }
 
+// Get stem count
+fn get_stem_count(tree_stand_data: &TreeStandData) -> i64 {
+    let length = tree_stand_data.tree_stand_data_date.len();
+    let data_date = tree_stand_data.tree_stand_data_date[length - 1].clone();
+    let stem_count = data_date.tree_stand_summary.unwrap().stem_count;
+    
+    stem_count
+}
+
 // Generates random points within a polygon's minimum and maximum x and y coordinates
 pub fn generate_random_points(p: &Polygon, amount: i32) -> Vec<Coord<f64>> {
     let mut points = Vec::new();
@@ -132,9 +141,12 @@ fn main() {
     let coordinate_string = stand.stand_basic_data.polygon_geometry.polygon_property.polygon.exterior.linear_ring.coordinates.trim();
     let polygon = create_polygon(coordinate_string);
 
+    // Get stem count
+    let stem_count = get_stem_count(&stand.tree_stand_data.unwrap());
+    println!("\nStem_count: {:?}", stem_count);
+
     // Generate random points within the polygon
-    let random_points = generate_random_points(&polygon, 10);
-    println!("random_points within polygon: {:?}", random_points);  
+    let random_points = generate_random_points(&polygon, stem_count as i32);
 
     // Draw the polygon and random points
     draw_image(&polygon, random_points);

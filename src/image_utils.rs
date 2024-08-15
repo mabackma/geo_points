@@ -41,8 +41,6 @@ pub fn map_coordinates_to_image(p: &Polygon<f64>, img_width: u32, img_height: u3
 
 // DDA Line algorithm to draw line segments
 pub fn draw_line_segment(img: &mut RgbImage, p1: (u32, u32), p2: (u32, u32), color: Rgb<u8>) {
-    println!("Drawing line segment from {:?} to {:?}", p1, p2);
-
     let dx = p2.0 as i32 - p1.0 as i32;
     let dy = p2.1 as i32 - p1.1 as i32;
 
@@ -69,8 +67,13 @@ pub fn draw_line_segment(img: &mut RgbImage, p1: (u32, u32), p2: (u32, u32), col
 // Draws a random point
 pub fn draw_random_point(img: &mut RgbImage, p: &Polygon, img_width: u32, img_height: u32, point: Coord, color: Rgb<u8>) {
     let (scale_x, scale_y, min_x, min_y) = scale_x_and_y(&p, img_width, img_height);
-    let x = ((point.x - min_x) * scale_x).round() as u32;
-    let y = (img_height as f64 - (point.y - min_y) * scale_y).round() as u32;
+    let mut x = ((point.x - min_x) * scale_x).round() as u32;
+    let mut y = (img_height as f64 - (point.y - min_y) * scale_y).round() as u32;
+
+    // Clamp x and y to ensure they are within bounds
+    x = x.max(0).min(img_width - 1);
+    y = y.max(0).min(img_height - 1);
+
     img.put_pixel(x, y, color);
 } 
 
