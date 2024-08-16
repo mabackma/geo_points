@@ -64,6 +64,15 @@ pub fn draw_line_segment(img: &mut RgbImage, p1: (u32, u32), p2: (u32, u32), col
     }
 }
 
+// Draw the polygon edges by connecting points
+pub fn draw_polygon_image(img: &mut ImageBuffer<Rgb<u8>, Vec<u8>>, coords: Vec<(u32, u32)>) {
+    for i in 0..coords.len() {
+        let (x0, y0) = coords[i];
+        let (x1, y1) = coords[(i + 1) % coords.len()]; // Wrap around to connect the last point to the first
+        draw_line_segment(img, (x0, y0), (x1, y1), Rgb([0, 0, 255]));
+    }
+}
+
 // Draws a random point
 pub fn draw_random_point(img: &mut RgbImage, p: &Polygon, img_width: u32, img_height: u32, point: Coord, color: Rgb<u8>) {
     let (scale_x, scale_y, min_x, min_y) = scale_x_and_y(&p, img_width, img_height);
@@ -76,12 +85,3 @@ pub fn draw_random_point(img: &mut RgbImage, p: &Polygon, img_width: u32, img_he
 
     img.put_pixel(x, y, color);
 } 
-
-// Draw the polygon edges by connecting points
-pub fn draw_image(img: &mut ImageBuffer<Rgb<u8>, Vec<u8>>, p: &Polygon, coords: Vec<(u32, u32)>) {
-    for i in 0..coords.len() {
-        let (x0, y0) = coords[i];
-        let (x1, y1) = coords[(i + 1) % coords.len()]; // Wrap around to connect the last point to the first
-        draw_line_segment(img, (x0, y0), (x1, y1), Rgb([0, 0, 255]));
-    }
-}

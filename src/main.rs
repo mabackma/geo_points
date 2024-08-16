@@ -102,14 +102,6 @@ fn create_polygon(coord_string: &str) -> Polygon<f64> {
     polygon
 }
 
-// Get stem count
-fn get_stem_count(tree_stand_data: &TreeStandData) -> i64 {
-    let data_date = tree_stand_data.tree_stand_data_date.last().unwrap().clone();
-    let stem_count = data_date.tree_stand_summary.unwrap().stem_count;
-    
-    stem_count
-}
-
 // Generates random points within a polygon's minimum and maximum x and y coordinates
 pub fn generate_random_points(p: &Polygon, amount: i32) -> Vec<Coord<f64>> {
     let mut points = Vec::new();
@@ -135,6 +127,15 @@ pub fn generate_random_points(p: &Polygon, amount: i32) -> Vec<Coord<f64>> {
     points
 }
 
+// Get stem count
+fn get_stem_count(tree_stand_data: &TreeStandData) -> i64 {
+    let data_date = tree_stand_data.tree_stand_data_date.last().unwrap().clone();
+    let stem_count = data_date.tree_stand_summary.unwrap().stem_count;
+    
+    stem_count
+}
+
+// Determines if stem count is in individual stratum
 fn stem_count_in_stratum(stand: &Stand) -> bool {
     if let Some(tree_stand_data) = &stand.tree_stand_data {
         let data_date = tree_stand_data.tree_stand_data_date.last().unwrap().clone();
@@ -148,6 +149,7 @@ fn stem_count_in_stratum(stand: &Stand) -> bool {
     false
 }
 
+// Returns a vector of tuples containing species and amount of trees in a stratum
 fn get_stratum_info(stand: &Stand) -> Vec<(i64, i64)> {
     let mut info = Vec::new();
     
@@ -167,43 +169,43 @@ fn get_stratum_info(stand: &Stand) -> Vec<(i64, i64)> {
     info
 }
 
-fn get_color_by_species(number: i64) -> &'static str {
+fn get_color_by_species(number: i64) -> Rgb<u8> {
     match number {
         // Coniferous Trees (Shades of Orange and Red)
-        1 => "Orange",         // Mänty
-        2 => "Red",            // Kuusi
-        10 => "DarkOrange",    // Douglaskuusi
-        11 => "Tomato",        // Kataja
-        12 => "Coral",         // Kontortamänty
-        16 => "Firebrick",     // Mustakuusi
-        19 => "IndianRed",     // Pihta
-        22 => "DarkRed",       // Sembramänty
-        23 => "DarkSalmon",    // Serbiankuusi
-        30 => "Salmon",        // Havupuu
+        1 => Rgb([255, 165, 0]),    // Orange - Mänty
+        2 => Rgb([255, 0, 0]),      // Red - Kuusi
+        10 => Rgb([255, 140, 0]),   // DarkOrange - Douglaskuusi
+        11 => Rgb([255, 99, 71]),   // Tomato - Kataja
+        12 => Rgb([255, 127, 80]),  // Coral - Kontortamänty
+        16 => Rgb([178, 34, 34]),   // Firebrick - Mustakuusi
+        19 => Rgb([205, 92, 92]),   // IndianRed - Pihta
+        22 => Rgb([139, 0, 0]),     // DarkRed - Sembramänty
+        23 => Rgb([233, 150, 122]), // DarkSalmon - Serbiankuusi
+        30 => Rgb([250, 128, 114]), // Salmon - Havupuu
 
         // Deciduous Trees (Shades of Green and Blue)
-        3 => "LimeGreen",       // Rauduskoivu
-        4 => "ForestGreen",     // Hieskoivu
-        5 => "OliveDrab",       // Haapa
-        6 => "DarkSeaGreen",    // Harmaaleppä
-        7 => "SeaGreen",        // Tervaleppä
-        9 => "LightSeaGreen",   // Muu lehtipuu
-        13 => "Teal",           // Kynäjalava
-        14 => "MediumAquamarine",// Lehtikuusi
-        15 => "MediumSeaGreen", // Metsälehmus
-        17 => "PaleGreen",      // Paju
-        18 => "SpringGreen",    // Pihlaja
-        20 => "MediumSpringGreen", // Raita
-        21 => "LightGreen",     // Saarni
-        24 => "DarkOliveGreen", // Tammi
-        25 => "YellowGreen",    // Tuomi
-        26 => "Lime",           // Vaahtera
-        27 => "LightBlue",      // Visakoivu
-        28 => "MediumTurquoise",// Vuorijalava
-        29 => "Turquoise",      // Lehtipuu
+        3 => Rgb([50, 205, 50]),    // LimeGreen - Rauduskoivu
+        4 => Rgb([34, 139, 34]),    // ForestGreen - Hieskoivu
+        5 => Rgb([107, 142, 35]),   // OliveDrab - Haapa
+        6 => Rgb([143, 188, 143]),  // DarkSeaGreen - Harmaaleppä
+        7 => Rgb([46, 139, 87]),    // SeaGreen - Tervaleppä
+        9 => Rgb([32, 178, 170]),   // LightSeaGreen - Muu lehtipuu
+        13 => Rgb([0, 128, 128]),   // Teal - Kynäjalava
+        14 => Rgb([102, 205, 170]), // MediumAquamarine - Lehtikuusi
+        15 => Rgb([60, 179, 113]),  // MediumSeaGreen - Metsälehmus
+        17 => Rgb([152, 251, 152]), // PaleGreen - Paju
+        18 => Rgb([0, 255, 127]),   // SpringGreen - Pihlaja
+        20 => Rgb([0, 250, 154]),   // MediumSpringGreen - Raita
+        21 => Rgb([144, 238, 144]), // LightGreen - Saarni
+        24 => Rgb([85, 107, 47]),   // DarkOliveGreen - Tammi
+        25 => Rgb([154, 205, 50]),  // YellowGreen - Tuomi
+        26 => Rgb([0, 255, 0]),     // Lime - Vaahtera
+        27 => Rgb([173, 216, 230]), // LightBlue - Visakoivu
+        28 => Rgb([72, 209, 204]),  // MediumTurquoise - Vuorijalava
+        29 => Rgb([64, 224, 208]),  // Turquoise - Lehtipuu
 
         // Default case for any unknown tree number
-        _ => "Unknown",
+        _ => Rgb([0, 0, 0]),        // Black for Unknown
     }
 }
 
@@ -211,7 +213,6 @@ fn main() {
     // Choose a parcel and a stand
     let parcel = choose_parcel("forestpropertydata_updated.json".to_string());
     let stand = choose_stand(parcel);
-    let mut stratum_info = Vec::new();
 
     // Create a polygon from the stand's coordinates
     let coordinate_string = stand.stand_basic_data.polygon_geometry.polygon_property.polygon.exterior.linear_ring.coordinates.trim();
@@ -225,38 +226,38 @@ fn main() {
     // Map polygon coordinates to image
     let mapped_coordinates = map_coordinates_to_image(&polygon, img_width, img_height);
 
-    // Draw the polygon and random points
-    draw_image(&mut image, &polygon, mapped_coordinates.clone());
+    // Draw the polygon
+    draw_polygon_image(&mut image, mapped_coordinates.clone());
 
     if stem_count_in_stratum(&stand) {
         println!("\nStem count is in individual stratum");
 
-        stratum_info = get_stratum_info(&stand);
+        let stratum_info = get_stratum_info(&stand);
 
         for (species, amount) in stratum_info {
             println!("Species: {:?}, Amount: {:?}", species, amount);
             
+            // Draw random points with different colors based on species
             let color = get_color_by_species(species);
             let random_points = generate_random_points(&polygon, amount as i32);
             for point in random_points {
-                //draw_random_point(&mut image, &polygon, img_width, img_height, point, color);
+                draw_random_point(&mut image, &polygon, img_width, img_height, point, color);
             }
         }
     } else {
         println!("Stem count is not in stratum");
-        //TODO: Move code for summary case here
-    }
+        
+        // Get stem count from tree stand summary
+        let stem_count = get_stem_count(&stand.tree_stand_data.unwrap());
+        println!("\nStem_count: {:?}", stem_count);
 
-    // Get stem count
-    let stem_count = get_stem_count(&stand.tree_stand_data.unwrap());
-    println!("\nStem_count: {:?}", stem_count);
+        // Generate random points within the polygon
+        let random_points = generate_random_points(&polygon, stem_count as i32);
 
-    // Generate random points within the polygon
-    let random_points = generate_random_points(&polygon, stem_count as i32);
-
-    // Draw the generated random points within the polygon
-    for point in random_points {
-        draw_random_point(&mut image, &polygon, img_width, img_height, point, Rgb([255, 0, 0])) // Draw points in red
+        // Draw the generated random points within the polygon
+        for point in random_points {
+            draw_random_point(&mut image, &polygon, img_width, img_height, point, Rgb([255, 0, 0])) // Draw points in red
+        }
     }
 
     image.save("polygon_image.png").expect("Failed to save image");
