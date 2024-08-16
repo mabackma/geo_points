@@ -217,8 +217,13 @@ fn main() {
     let coordinate_string = stand.stand_basic_data.polygon_geometry.polygon_property.polygon.exterior.linear_ring.coordinates.trim();
     let polygon = create_polygon(coordinate_string);
 
+    // Create an image for the polygon and random points
+    let img_width = 800;
+    let img_height = 600;
+    let mut image = RgbImage::new(img_width, img_height);
+
     if stem_count_in_stratum(&stand) {
-        println!("Stem count is in stratum");
+        println!("Stem count is in individual stratum");
 
         stratum_info = get_stratum_info(&stand);
 
@@ -227,16 +232,7 @@ fn main() {
         }
     } else {
         println!("Stem count is not in stratum");
-/* 
-        // Get stem count
-        let stem_count = get_stem_count(&stand.tree_stand_data.unwrap());
-        println!("\nStem_count: {:?}", stem_count);
-
-        // Generate random points within the polygon
-        let random_points = generate_random_points(&polygon, stem_count as i32);
-
-        // Draw the polygon and random points
-        draw_image(&polygon, random_points);*/
+        //TODO: Move code for summary case here
     }
 
     // Get stem count
@@ -245,10 +241,6 @@ fn main() {
 
     // Generate random points within the polygon
     let random_points = generate_random_points(&polygon, stem_count as i32);
-
-    let img_width = 800;
-    let img_height = 600;
-    let mut image = RgbImage::new(img_width, img_height);
 
     // Map polygon coordinates to image
     let mapped_coordinates = map_coordinates_to_image(&polygon, img_width, img_height);
