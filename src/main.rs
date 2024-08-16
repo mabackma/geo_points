@@ -165,24 +165,77 @@ fn get_stratum_info(stand: &Stand) -> Vec<(i64, i64)> {
     info
 }
 
+fn get_color_by_species(number: i64) -> &'static str {
+    match number {
+        // Coniferous Trees (Shades of Orange and Red)
+        1 => "Orange",         // Mänty
+        2 => "Red",            // Kuusi
+        10 => "DarkOrange",    // Douglaskuusi
+        11 => "Tomato",        // Kataja
+        12 => "Coral",         // Kontortamänty
+        16 => "Firebrick",     // Mustakuusi
+        19 => "IndianRed",     // Pihta
+        22 => "DarkRed",       // Sembramänty
+        23 => "DarkSalmon",    // Serbiankuusi
+        30 => "Salmon",        // Havupuu
+
+        // Deciduous Trees (Shades of Green and Blue)
+        3 => "LimeGreen",       // Rauduskoivu
+        4 => "ForestGreen",     // Hieskoivu
+        5 => "OliveDrab",       // Haapa
+        6 => "DarkSeaGreen",    // Harmaaleppä
+        7 => "SeaGreen",        // Tervaleppä
+        9 => "LightSeaGreen",   // Muu lehtipuu
+        13 => "Teal",           // Kynäjalava
+        14 => "MediumAquamarine",// Lehtikuusi
+        15 => "MediumSeaGreen", // Metsälehmus
+        17 => "PaleGreen",      // Paju
+        18 => "SpringGreen",    // Pihlaja
+        20 => "MediumSpringGreen", // Raita
+        21 => "LightGreen",     // Saarni
+        24 => "DarkOliveGreen", // Tammi
+        25 => "YellowGreen",    // Tuomi
+        26 => "Lime",           // Vaahtera
+        27 => "LightBlue",      // Visakoivu
+        28 => "MediumTurquoise",// Vuorijalava
+        29 => "Turquoise",      // Lehtipuu
+
+        // Default case for any unknown tree number
+        _ => "Unknown",
+    }
+}
+
 fn main() {
     // Choose a parcel and a stand
     let parcel = choose_parcel("forestpropertydata_updated.json".to_string());
     let stand = choose_stand(parcel);
+    let mut stratum_info = Vec::new();
+
+    // Create a polygon from the stand's coordinates
+    let coordinate_string = stand.stand_basic_data.polygon_geometry.polygon_property.polygon.exterior.linear_ring.coordinates.trim();
+    let polygon = create_polygon(coordinate_string);
 
     if stem_count_in_stratum(&stand) {
         println!("Stem count is in stratum");
-        let stratum_info = get_stratum_info(&stand);
+
+        stratum_info = get_stratum_info(&stand);
+
         for (species, amount) in stratum_info {
             println!("Species: {:?}, Amount: {:?}", species, amount);
         }
     } else {
         println!("Stem count is not in stratum");
+/* 
+        // Get stem count
+        let stem_count = get_stem_count(&stand.tree_stand_data.unwrap());
+        println!("\nStem_count: {:?}", stem_count);
+
+        // Generate random points within the polygon
+        let random_points = generate_random_points(&polygon, stem_count as i32);
+
+        // Draw the polygon and random points
+        draw_image(&polygon, random_points);*/
     }
-    
-    // Create a polygon from the stand's coordinates
-    let coordinate_string = stand.stand_basic_data.polygon_geometry.polygon_property.polygon.exterior.linear_ring.coordinates.trim();
-    let polygon = create_polygon(coordinate_string);
 
     // Get stem count
     let stem_count = get_stem_count(&stand.tree_stand_data.unwrap());
