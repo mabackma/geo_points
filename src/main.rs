@@ -1,6 +1,7 @@
 mod image_utils;
 mod data_structures_updated;
 
+use image::{Rgb, RgbImage};
 use image_utils::*;
 use data_structures_updated::*;
 use std::fs::File;
@@ -9,6 +10,7 @@ use std::path::Path;
 use geo_types::{coord, Coord, LineString, Polygon};
 use rand::{thread_rng, Rng};
 use geo::Contains;
+
  
 // Read JSON file
 fn read_json_file(file_name: String) -> Root {
@@ -244,7 +246,22 @@ fn main() {
     // Generate random points within the polygon
     let random_points = generate_random_points(&polygon, stem_count as i32);
 
+    let img_width = 800;
+    let img_height = 600;
+    let mut image = RgbImage::new(img_width, img_height);
+
+    // Map polygon coordinates to image
+    let mapped_coordinates = map_coordinates_to_image(&polygon, img_width, img_height);
+
     // Draw the polygon and random points
-    draw_image(&polygon, random_points);
+    draw_image(&mut image, &polygon, mapped_coordinates.clone());
+
+    // Draw the generated random points within the polygon
+    for point in random_points {
+        draw_random_point(&mut image, &polygon, img_width, img_height, point, Rgb([255, 0, 0])) // Draw points in red
+    }
+
+    image.save("polygon_image.png").expect("Failed to save image");
+    println!("Polygon image saved as 'polygon_image.png'");
 }
 

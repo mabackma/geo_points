@@ -1,6 +1,6 @@
 use geo_types::{Coord, Polygon};
 use geo::BoundingRect;
-use image::{Rgb, RgbImage};
+use image::{Rgb, RgbImage, ImageBuffer};
 
 // Get minimum and maximum x and y coordinates of a polygon
 pub fn get_min_max_coordinates(p: &Polygon<f64>) -> (f64, f64, f64, f64) {
@@ -77,27 +77,11 @@ pub fn draw_random_point(img: &mut RgbImage, p: &Polygon, img_width: u32, img_he
     img.put_pixel(x, y, color);
 } 
 
-// Draw image with polygon and random points
-pub fn draw_image(p: &Polygon, rand_p: Vec<Coord<f64>>) {
-    let img_width = 800;
-    let img_height = 600;
-    let mut img = RgbImage::new(img_width, img_height);
-
-    // Map polygon coordinates to image
-    let mapped_coordinates = map_coordinates_to_image(&p, img_width, img_height);
-
-    // Draw the polygon edges by connecting points
-    for i in 0..mapped_coordinates.len() {
-        let (x0, y0) = mapped_coordinates[i];
-        let (x1, y1) = mapped_coordinates[(i + 1) % mapped_coordinates.len()]; // Wrap around to connect the last point to the first
-        draw_line_segment(&mut img, (x0, y0), (x1, y1), Rgb([0, 0, 255]));
+// Draw the polygon edges by connecting points
+pub fn draw_image(img: &mut ImageBuffer<Rgb<u8>, Vec<u8>>, p: &Polygon, coords: Vec<(u32, u32)>) {
+    for i in 0..coords.len() {
+        let (x0, y0) = coords[i];
+        let (x1, y1) = coords[(i + 1) % coords.len()]; // Wrap around to connect the last point to the first
+        draw_line_segment(img, (x0, y0), (x1, y1), Rgb([0, 0, 255]));
     }
-
-    // Draw the generated random points within the polygon
-    for point in rand_p {
-        draw_random_point(&mut img, &p, img_width, img_height, point, Rgb([255, 0, 0])) // Draw points in red
-    }
-
-    img.save("polygon_image.png").expect("Failed to save image");
-    println!("Polygon image saved as 'polygon_image.png'");
 }
