@@ -222,13 +222,25 @@ fn main() {
     let img_height = 600;
     let mut image = RgbImage::new(img_width, img_height);
 
+    // Map polygon coordinates to image
+    let mapped_coordinates = map_coordinates_to_image(&polygon, img_width, img_height);
+
+    // Draw the polygon and random points
+    draw_image(&mut image, &polygon, mapped_coordinates.clone());
+
     if stem_count_in_stratum(&stand) {
-        println!("Stem count is in individual stratum");
+        println!("\nStem count is in individual stratum");
 
         stratum_info = get_stratum_info(&stand);
 
         for (species, amount) in stratum_info {
             println!("Species: {:?}, Amount: {:?}", species, amount);
+            
+            let color = get_color_by_species(species);
+            let random_points = generate_random_points(&polygon, amount as i32);
+            for point in random_points {
+                //draw_random_point(&mut image, &polygon, img_width, img_height, point, color);
+            }
         }
     } else {
         println!("Stem count is not in stratum");
@@ -241,12 +253,6 @@ fn main() {
 
     // Generate random points within the polygon
     let random_points = generate_random_points(&polygon, stem_count as i32);
-
-    // Map polygon coordinates to image
-    let mapped_coordinates = map_coordinates_to_image(&polygon, img_width, img_height);
-
-    // Draw the polygon and random points
-    draw_image(&mut image, &polygon, mapped_coordinates.clone());
 
     // Draw the generated random points within the polygon
     for point in random_points {
