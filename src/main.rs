@@ -132,12 +132,54 @@ pub fn generate_random_points(p: &Polygon, amount: i32) -> Vec<Coord<f64>> {
 
     points
 }
- 
+
+fn stem_count_in_stratum(stand: &Stand) -> bool {
+    if let Some(tree_stand_data) = &stand.tree_stand_data {
+        let data_date = tree_stand_data.tree_stand_data_date.last().unwrap().clone();
+        for stratum in data_date.tree_strata.tree_stratum.iter() {
+            if stratum.stem_count.is_some() {
+                return true;
+            }
+        }
+    }
+
+    false
+}
+
+fn get_stratum_info(stand: &Stand) -> Vec<(i64, i64)> {
+    let mut info = Vec::new();
+    
+    let tree_stand_data = stand.tree_stand_data.as_ref().unwrap();
+    let data_date = tree_stand_data.tree_stand_data_date.last().unwrap().clone();
+
+    for stratum in data_date.tree_strata.tree_stratum.iter() {
+        let species = stratum.tree_species.clone();
+
+        if let Some(amount) = stratum.stem_count {
+            info.push((species, amount));
+        } else {
+            info.push((species, 0));
+        }
+    }
+
+    info
+}
+
 fn main() {
     // Choose a parcel and a stand
     let parcel = choose_parcel("forestpropertydata_updated.json".to_string());
     let stand = choose_stand(parcel);
 
+    if stem_count_in_stratum(&stand) {
+        println!("Stem count is in stratum");
+        let stratum_info = get_stratum_info(&stand);
+        for (species, amount) in stratum_info {
+            println!("Species: {:?}, Amount: {:?}", species, amount);
+        }
+    } else {
+        println!("Stem count is not in stratum");
+    }
+    
     // Create a polygon from the stand's coordinates
     let coordinate_string = stand.stand_basic_data.polygon_geometry.polygon_property.polygon.exterior.linear_ring.coordinates.trim();
     let polygon = create_polygon(coordinate_string);
