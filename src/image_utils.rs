@@ -65,7 +65,7 @@ pub fn draw_line_segment(img: &mut RgbImage, p1: (u32, u32), p2: (u32, u32), col
 }
 
 // Draw the polygon edges by connecting points
-pub fn draw_polygon_image(img: &mut ImageBuffer<Rgb<u8>, Vec<u8>>, coords: Vec<(u32, u32)>) {
+pub fn draw_polygon_image(img: &mut RgbImage, coords: Vec<(u32, u32)>) {
     for i in 0..coords.len() {
         let (x0, y0) = coords[i];
         let (x1, y1) = coords[(i + 1) % coords.len()]; // Wrap around to connect the last point to the first
