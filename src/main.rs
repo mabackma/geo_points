@@ -2,7 +2,6 @@ mod image_utils;
 mod forest_property;
 use crate::forest_property::real_estate::Root;
 use crate::forest_property::parcel::Parcel;
-use crate::forest_property::stand::Stand;
 
 use image::{Rgb, RgbImage};
 use image_utils::*;
@@ -56,29 +55,6 @@ fn choose_parcel(file_name: String) -> Parcel {
     let parcel = parcels.iter().find(|&x| x.parcel_number == parcel_number).unwrap();
 
     parcel.clone()
-}
-
-// Choose a stand
-fn choose_stand(parcel: Parcel) -> Stand {
-    let mut stand_number = String::new();
-
-    println!("\nStands:");
-    for stand in parcel.stands.stand.iter() {
-        if stand.tree_stand_data.is_some() {
-            print!("{:?}, ", stand.stand_basic_data.stand_number);
-        }
-    }
-
-    println!("Choose a stand number to view: ");
-
-    // Read stand number from user input into String `stand_number`
-    std::io::stdin().read_line(&mut stand_number).expect("Failed to read line");
-
-    // Shadowing `stand_number` to convert it to an integer
-    let stand_number: i64 = stand_number.trim().parse().expect("Please type a number!");
-    let stand = parcel.stands.stand.iter().find(|&x| x.stand_basic_data.stand_number == stand_number).unwrap();
-
-    stand.clone()
 }
 
 // Create a polygon from a string of coordinates
@@ -172,7 +148,7 @@ fn get_color_by_species(number: i64) -> Rgb<u8> {
 fn main() {
     // Choose a parcel and a stand
     let parcel = choose_parcel("forestpropertydata_updated.json".to_string());
-    let stand = choose_stand(parcel);
+    let stand = parcel.choose_stand();
 
     // Create a polygon from the stand's coordinates
     let coordinate_string = stand.stand_basic_data.polygon_geometry.polygon_property.polygon.exterior.linear_ring.coordinates.trim();
