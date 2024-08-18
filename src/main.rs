@@ -1,9 +1,12 @@
 mod image_utils;
-mod data_structures_updated;
+mod forest_property;
+use crate::forest_property::real_estate::Root;
+use crate::forest_property::parcel::Parcel;
+use crate::forest_property::stand::Stand;
+use crate::forest_property::tree_stand_data::TreeStandData;
 
 use image::{Rgb, RgbImage};
 use image_utils::*;
-use data_structures_updated::*;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
