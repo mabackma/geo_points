@@ -1,7 +1,6 @@
 mod image_utils;
 mod forest_property;
 use crate::forest_property::real_estate::Root;
-use crate::forest_property::parcel::Parcel;
 
 use image::{Rgb, RgbImage};
 use image_utils::*;
@@ -32,29 +31,6 @@ fn read_json_file(file_name: String) -> Root {
             panic!("Error parsing JSON data: {}", e);
         }
     }
-}
-
-// Choose a parcel 
-fn choose_parcel(file_name: String) -> Parcel {
-    let root = read_json_file(file_name);
-    let parcels: Vec<Parcel> = root.forest_property_data.real_estates.real_estate.parcels.parcel;
-    let mut parcel_number = String::new();
-    
-    println!("\nParcels:");
-    for parcel in parcels.iter() {
-        print!("{:?}, ", parcel.parcel_number);
-    }
-
-    println!("Choose a parcel number to view: ");
-
-    // Read parcel number from user input into String `parcel_number`
-    std::io::stdin().read_line(&mut parcel_number).expect("Failed to read line");
-
-    // Shadowing `parcel_number` to convert it to an integer
-    let parcel_number: i64 = parcel_number.trim().parse().expect("Please type a number!");
-    let parcel = parcels.iter().find(|&x| x.parcel_number == parcel_number).unwrap();
-
-    parcel.clone()
 }
 
 // Create a polygon from a string of coordinates
@@ -147,7 +123,9 @@ fn get_color_by_species(number: i64) -> Rgb<u8> {
 
 fn main() {
     // Choose a parcel and a stand
-    let parcel = choose_parcel("forestpropertydata_updated.json".to_string());
+    let file_name = "forestpropertydata_updated.json".to_string();
+    let root = read_json_file(file_name);
+    let parcel = root.choose_parcel();
     let stand = parcel.choose_stand();
 
     // Create a polygon from the stand's coordinates
