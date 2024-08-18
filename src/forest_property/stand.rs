@@ -23,6 +23,50 @@ pub struct Stand {
     pub special_features: Option<SpecialFeatures>,
 }
 
+impl Stand {
+    // Get stem count
+    pub fn get_stem_count(&self) -> i64 {
+        let data_date = self.tree_stand_data.as_ref().unwrap().tree_stand_data_date.last().unwrap().clone();
+        let stem_count = data_date.tree_stand_summary.unwrap().stem_count;
+        
+        stem_count
+    }
+
+    // Determines if stem count is in individual stratum
+    pub fn stem_count_in_stratum(&self) -> bool {
+        if let Some(tree_stand_data) = &self.tree_stand_data {
+            let data_date = tree_stand_data.tree_stand_data_date.last().unwrap().clone();
+            for stratum in data_date.tree_strata.tree_stratum.iter() {
+                if stratum.stem_count.is_some() {
+                    return true;
+                }
+            }
+        }
+
+        false
+    }
+
+    // Returns a vector of tuples containing species and amount of trees in a stratum
+    pub fn get_stratum_info(&self) -> Vec<(i64, i64)> {
+        let mut info = Vec::new();
+        
+        let tree_stand_data = self.tree_stand_data.as_ref().unwrap();
+        let data_date = tree_stand_data.tree_stand_data_date.last().unwrap().clone();
+
+        for stratum in data_date.tree_strata.tree_stratum.iter() {
+            let species = stratum.tree_species.clone();
+
+            if let Some(amount) = stratum.stem_count {
+                info.push((species, amount));
+            } else {
+                info.push((species, 0));
+            }
+        }
+
+        info
+    }
+}
+
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StandBasicData {

@@ -3,7 +3,6 @@ mod forest_property;
 use crate::forest_property::real_estate::Root;
 use crate::forest_property::parcel::Parcel;
 use crate::forest_property::stand::Stand;
-use crate::forest_property::tree_stand_data::TreeStandData;
 
 use image::{Rgb, RgbImage};
 use image_utils::*;
@@ -130,48 +129,6 @@ pub fn generate_random_points(p: &Polygon, amount: i32) -> Vec<Coord<f64>> {
     points
 }
 
-// Get stem count
-fn get_stem_count(tree_stand_data: &TreeStandData) -> i64 {
-    let data_date = tree_stand_data.tree_stand_data_date.last().unwrap().clone();
-    let stem_count = data_date.tree_stand_summary.unwrap().stem_count;
-    
-    stem_count
-}
-
-// Determines if stem count is in individual stratum
-fn stem_count_in_stratum(stand: &Stand) -> bool {
-    if let Some(tree_stand_data) = &stand.tree_stand_data {
-        let data_date = tree_stand_data.tree_stand_data_date.last().unwrap().clone();
-        for stratum in data_date.tree_strata.tree_stratum.iter() {
-            if stratum.stem_count.is_some() {
-                return true;
-            }
-        }
-    }
-
-    false
-}
-
-// Returns a vector of tuples containing species and amount of trees in a stratum
-fn get_stratum_info(stand: &Stand) -> Vec<(i64, i64)> {
-    let mut info = Vec::new();
-    
-    let tree_stand_data = stand.tree_stand_data.as_ref().unwrap();
-    let data_date = tree_stand_data.tree_stand_data_date.last().unwrap().clone();
-
-    for stratum in data_date.tree_strata.tree_stratum.iter() {
-        let species = stratum.tree_species.clone();
-
-        if let Some(amount) = stratum.stem_count {
-            info.push((species, amount));
-        } else {
-            info.push((species, 0));
-        }
-    }
-
-    info
-}
-
 fn get_color_by_species(number: i64) -> Rgb<u8> {
     match number {
         // Coniferous Trees (Shades of Orange and Red)
@@ -232,10 +189,10 @@ fn main() {
     // Draw the polygon
     draw_polygon_image(&mut image, mapped_coordinates.clone());
 
-    if stem_count_in_stratum(&stand) {
+    if stand.stem_count_in_stratum() {
         println!("\nStem count is in individual stratum");
 
-        let stratum_info = get_stratum_info(&stand);
+        let stratum_info = stand.get_stratum_info();
 
         for (species, amount) in stratum_info {
             println!("Species: {:?}, Amount: {:?}", species, amount);
@@ -251,7 +208,7 @@ fn main() {
         println!("Stem count is not in stratum");
         
         // Get stem count from tree stand summary
-        let stem_count = get_stem_count(&stand.tree_stand_data.unwrap());
+        let stem_count = stand.get_stem_count();
         println!("\nStem_count: {:?}", stem_count);
 
         // Generate random points within the polygon
