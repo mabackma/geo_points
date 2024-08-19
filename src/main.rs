@@ -101,6 +101,7 @@ fn main() {
 
         let stratum_info = stand.get_stratum_info();
          
+        // TODO: Implement drawing random points from a single combined stratum list with multiple species (not from inside a loop)
         for (species, mean_height, amount) in stratum_info {
             println!("Species: {:?}, Amount: {:?}", species, amount);
             

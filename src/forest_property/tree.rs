@@ -38,7 +38,7 @@ impl Trees {
             let radius = tree.calculate_radius();
             let mut found = false;
     
-            for _ in 0..30 { // Number of attempts to place a new point around an active point
+            loop { // Number of attempts to place a new point around an active point
                 let new_position = tree.generate_random_point_around(radius);
                 
                 let new_tree = Tree {
