@@ -3,6 +3,8 @@ use crate::forest_property::geometry::PolygonGeometry;
 use serde_json::Value;
 use serde::{Deserialize, Serialize};
 
+use super::tree_stand_data::{TreeStrata, TreeStratum};
+
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Stands {
@@ -46,25 +48,16 @@ impl Stand {
         false
     }
 
-    // Returns a vector of tuples containing species and amount of trees in a stratum
-    pub fn get_stratum_info(&self) -> Vec<(i64, f64, i64)> {
-        let mut info = Vec::new();
+    // Returns strata information for the stand
+    pub fn get_strata(&self) -> TreeStrata {
+        let mut strata = &Vec::new();
         
         let tree_stand_data = self.tree_stand_data.as_ref().unwrap();
         let data_date = tree_stand_data.tree_stand_data_date.last().unwrap();
 
-        for stratum in data_date.tree_strata.tree_stratum.iter() {
-            let species = stratum.tree_species;
-            let mean_height = stratum.mean_height;
-
-            if let Some(amount) = stratum.stem_count {
-                info.push((species, mean_height, amount));
-            } else {
-                info.push((species, mean_height, 0));
-            }
-        }
-
-        info
+        strata = data_date.tree_strata.tree_stratum.as_ref();
+        let strata = TreeStrata::new(strata.to_vec());
+        strata
     }
 }
 

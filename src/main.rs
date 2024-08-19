@@ -99,10 +99,11 @@ fn main() {
     if stand.stem_count_in_stratum() {
         println!("\nStem count is in individual stratum");
 
-        let stratum_info = stand.get_stratum_info();
-         
+        let stratum_info = stand.get_strata();
+          
         // TODO: Implement drawing random points from a single combined stratum list with multiple species (not from inside a loop)
-        for (species, mean_height, amount) in stratum_info {
+        for stratum in stratum_info.tree_stratum.iter() {
+            let (species, mean_height, amount) = (stratum.tree_species, stratum.mean_height, stratum.stem_count.unwrap());
             println!("Species: {:?}, Amount: {:?}", species, amount);
             
             // Draw random points with different colors based on species
@@ -124,7 +125,9 @@ fn main() {
             }
         }
         /* 
-        for (species, amount) in stratum_info {
+        // Draw random points without using Poisson disc sampling
+        for stratum in stratum_info.tree_stratum.iter() {
+            let (species, mean_height, amount) = (stratum.tree_species, stratum.mean_height, stratum.stem_count.unwrap());
             println!("Species: {:?}, Amount: {:?}", species, amount);
             
             // Draw random points with different colors based on species
@@ -133,7 +136,8 @@ fn main() {
             for point in random_points {
                 image.draw_random_point(&polygon, img_width, img_height, point, color);
             }
-        }*/
+        }
+        */
     } else {
         println!("Stem count is not in any individual stratum. Drawing random points based on tree stand summary.");
 
