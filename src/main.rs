@@ -3,6 +3,8 @@ mod forest_property;
 
 use crate::forest_property::root::Root;
 use crate::forest_property::image_processor::ImageProcessor;
+use crate::forest_property::tree::{Trees, Tree};
+use geo_types::coord;
 use geometry_utils::*;
 use image::Rgb;
 use std::fs::File;
@@ -98,7 +100,29 @@ fn main() {
         println!("\nStem count is in individual stratum");
 
         let stratum_info = stand.get_stratum_info();
+         
+        for (species, amount) in stratum_info {
+            println!("Species: {:?}, Amount: {:?}", species, amount);
+            
+            // Draw random points with different colors based on species
+            let color = get_color_by_species(species);
+            let random_points = generate_random_points(&polygon, amount as i32);
 
+            let mean_height = 20.0; // Mean height of trees
+            let mut random_trees = Vec::new();
+            for point in random_points {
+                let tree = Tree::new(species, mean_height, (point.x, point.y));
+                random_trees.push(tree);
+            }
+            
+            let random_trees = Trees::new(random_trees);
+            let trees = random_trees.variable_radius_poisson_disc_sampling(&polygon);
+            for tree in trees {
+                let point = coord! {x: tree.position().0, y: tree.position().1};
+                image.draw_random_point(&polygon, img_width, img_height, point, color);
+            }
+        }
+        /* 
         for (species, amount) in stratum_info {
             println!("Species: {:?}, Amount: {:?}", species, amount);
             
@@ -108,7 +132,7 @@ fn main() {
             for point in random_points {
                 image.draw_random_point(&polygon, img_width, img_height, point, color);
             }
-        }
+        }*/
     } else {
         println!("Stem count is not in any individual stratum. Drawing random points based on tree stand summary.");
 
