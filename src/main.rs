@@ -93,6 +93,7 @@ fn main() {
     // Draw the polygon
     image.draw_polygon_image(&mapped_coordinates);
 
+    let summary_stem_count = stand.get_stem_count();
     if stand.stem_count_in_stratum() {
         println!("\nStem count is in individual stratum");
 
@@ -108,23 +109,18 @@ fn main() {
                 image.draw_random_point(&polygon, img_width, img_height, point, color);
             }
         }
-        let stem_count = stand.get_stem_count();
-        println!("\nTotal stem count: {:?}", stem_count);
     } else {
-        println!("Stem count is not in any individual stratum. Drawing random points based on tree stand summary stem count");
-        
-        // Get stem count from tree stand summary
-        let stem_count = stand.get_stem_count();
-        println!("\nStem_count: {:?}", stem_count);
+        println!("Stem count is not in any individual stratum. Drawing random points based on tree stand summary.");
 
         // Generate random points within the polygon
-        let random_points = generate_random_points(&polygon, stem_count as i32);
+        let random_points = generate_random_points(&polygon, summary_stem_count as i32);
 
         // Draw the generated random points within the polygon
         for point in random_points {
             image.draw_random_point(&polygon, img_width, img_height, point, Rgb([255, 0, 0])) // Draw points in red
         }
     }
+    println!("\nTotal stem count: {:?}", summary_stem_count);
 
     image.img().save("polygon_image.png").expect("Failed to save image");
     println!("Polygon image saved as 'polygon_image.png'");
