@@ -108,6 +108,8 @@ fn main() {
                 image.draw_random_point(&polygon, img_width, img_height, point, color);
             }
         }
+        let stem_count = stand.get_stem_count();
+        println!("\nTotal stem count: {:?}", stem_count);
     } else {
         println!("Stem count is not in any individual stratum. Drawing random points based on tree stand summary stem count");
         
