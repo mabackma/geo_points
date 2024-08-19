@@ -109,7 +109,7 @@ fn main() {
             }
         }
     } else {
-        println!("Stem count is not in stratum");
+        println!("Stem count is not in any individual stratum. Drawing random points based on tree stand summary stem count");
         
         // Get stem count from tree stand summary
         let stem_count = stand.get_stem_count();
