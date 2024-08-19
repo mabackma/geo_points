@@ -85,8 +85,15 @@ impl Tree {
     }
 
     fn calculate_radius(&self) -> f64 {
-        // Adjust this function to fine-tune spacing
-        self.mean_height * 0.5
+        // TODO: Adjust this function to fine-tune spacing between trees
+        let scaling_factor = match self.species {
+            1 => 1.0, // For species 1
+            2 => 3.0, // For species 2
+            3 => 0.8, // For species 3
+            4 => 3.0, // For species 4
+            _ => 0.8, // Default scaling factor
+        };
+        self.mean_height * scaling_factor
     }
     
     fn generate_random_point_around(&self, radius: f64) -> (f64, f64) {

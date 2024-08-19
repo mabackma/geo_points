@@ -101,14 +101,14 @@ fn main() {
 
         let stratum_info = stand.get_stratum_info();
          
-        for (species, amount) in stratum_info {
+        for (species, mean_height, amount) in stratum_info {
             println!("Species: {:?}, Amount: {:?}", species, amount);
             
             // Draw random points with different colors based on species
             let color = get_color_by_species(species);
             let random_points = generate_random_points(&polygon, amount as i32);
 
-            let mean_height = 20.0; // Mean height of trees
+            // Generate random trees with different species and mean height
             let mut random_trees = Vec::new();
             for point in random_points {
                 let tree = Tree::new(species, mean_height, (point.x, point.y));

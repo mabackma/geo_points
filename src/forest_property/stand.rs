@@ -47,7 +47,7 @@ impl Stand {
     }
 
     // Returns a vector of tuples containing species and amount of trees in a stratum
-    pub fn get_stratum_info(&self) -> Vec<(i64, i64)> {
+    pub fn get_stratum_info(&self) -> Vec<(i64, f64, i64)> {
         let mut info = Vec::new();
         
         let tree_stand_data = self.tree_stand_data.as_ref().unwrap();
@@ -55,11 +55,12 @@ impl Stand {
 
         for stratum in data_date.tree_strata.tree_stratum.iter() {
             let species = stratum.tree_species;
+            let mean_height = stratum.mean_height;
 
             if let Some(amount) = stratum.stem_count {
-                info.push((species, amount));
+                info.push((species, mean_height, amount));
             } else {
-                info.push((species, 0));
+                info.push((species, mean_height, 0));
             }
         }
 
