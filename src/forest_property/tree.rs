@@ -80,6 +80,10 @@ impl Tree {
         }
     }
 
+    pub fn species(&self) -> i64 {
+        self.species
+    }
+
     pub fn position(&self) -> (f64, f64) {
         self.position
     }

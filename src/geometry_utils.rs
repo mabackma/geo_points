@@ -3,7 +3,7 @@ use rand::{thread_rng, Rng};
 use geo::{Contains, BoundingRect};
 use image::Rgb;
 
-use crate::forest_property::{tree::{Tree, Trees}, tree_stand_data::TreeStrata};
+use crate::forest_property::{tree::Tree, tree_stand_data::TreeStrata};
 
 // Get minimum and maximum x and y coordinates of a polygon
 pub fn get_min_max_coordinates(p: &Polygon<f64>) -> (f64, f64, f64, f64) {
