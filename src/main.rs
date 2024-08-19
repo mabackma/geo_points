@@ -91,7 +91,7 @@ fn main() {
     let mapped_coordinates = image.map_coordinates_to_image(&polygon);
 
     // Draw the polygon
-    image.draw_polygon_image(mapped_coordinates.clone());
+    image.draw_polygon_image(&mapped_coordinates);
 
     if stand.stem_count_in_stratum() {
         println!("\nStem count is in individual stratum");

@@ -73,7 +73,7 @@ impl ImageProcessor {
     }
 
     // Draw the polygon edges by connecting points
-    pub fn draw_polygon_image(&mut self, coords: Vec<(u32, u32)>) {
+    pub fn draw_polygon_image(&mut self, coords: &Vec<(u32, u32)>) {
         for i in 0..coords.len() {
             let (x0, y0) = coords[i];
             let (x1, y1) = coords[(i + 1) % coords.len()]; // Wrap around to connect the last point to the first

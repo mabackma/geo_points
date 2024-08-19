@@ -26,8 +26,8 @@ pub struct Stand {
 impl Stand {
     // Get stem count
     pub fn get_stem_count(&self) -> i64 {
-        let data_date = self.tree_stand_data.as_ref().unwrap().tree_stand_data_date.last().unwrap().clone();
-        let stem_count = data_date.tree_stand_summary.unwrap().stem_count;
+        let data_date = self.tree_stand_data.as_ref().unwrap().tree_stand_data_date.last().unwrap();
+        let stem_count = data_date.tree_stand_summary.as_ref().unwrap().stem_count;
         
         stem_count
     }
@@ -35,7 +35,7 @@ impl Stand {
     // Determines if stem count is in individual stratum
     pub fn stem_count_in_stratum(&self) -> bool {
         if let Some(tree_stand_data) = &self.tree_stand_data {
-            let data_date = tree_stand_data.tree_stand_data_date.last().unwrap().clone();
+            let data_date = tree_stand_data.tree_stand_data_date.last().unwrap();
             for stratum in data_date.tree_strata.tree_stratum.iter() {
                 if stratum.stem_count.is_some() {
                     return true;
@@ -51,10 +51,10 @@ impl Stand {
         let mut info = Vec::new();
         
         let tree_stand_data = self.tree_stand_data.as_ref().unwrap();
-        let data_date = tree_stand_data.tree_stand_data_date.last().unwrap().clone();
+        let data_date = tree_stand_data.tree_stand_data_date.last().unwrap();
 
         for stratum in data_date.tree_strata.tree_stratum.iter() {
-            let species = stratum.tree_species.clone();
+            let species = stratum.tree_species;
 
             if let Some(amount) = stratum.stem_count {
                 info.push((species, amount));
