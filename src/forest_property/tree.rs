@@ -38,7 +38,7 @@ impl Trees {
             let radius = tree.calculate_radius();
             let mut found = false;
     
-            loop { // Number of attempts to place a new point around an active point
+            for _ in 0..30 { // Number of attempts to place a new point around an active point
                 let new_position = tree.generate_random_point_around(radius);
                 
                 let new_tree = Tree {
@@ -88,9 +88,9 @@ impl Tree {
         // TODO: Adjust this function to fine-tune spacing between trees
         let scaling_factor = match self.species {
             1 => 1.0, // For species 1
-            2 => 3.0, // For species 2
+            2 => 10.0, // For species 2
             3 => 0.8, // For species 3
-            4 => 3.0, // For species 4
+            4 => 5.5, // For species 4
             _ => 0.8, // Default scaling factor
         };
         self.mean_height * scaling_factor
