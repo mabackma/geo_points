@@ -1,5 +1,4 @@
 use crate::geometry_utils::get_min_max_coordinates;
-
 use geo_types::{Coord, Polygon};
 use image::{Rgb, RgbImage};
 

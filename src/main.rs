@@ -1,8 +1,8 @@
 mod geometry_utils;
 mod forest_property;
-use crate::forest_property::real_estate::Root;
-use crate::forest_property::image_processor::ImageProcessor;
 
+use crate::forest_property::root::Root;
+use crate::forest_property::image_processor::ImageProcessor;
 use geometry_utils::*;
 use image::Rgb;
 use std::fs::File;
