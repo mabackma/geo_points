@@ -1,11 +1,10 @@
-mod image_utils;
 mod geometry_utils;
 mod forest_property;
 use crate::forest_property::real_estate::Root;
+use crate::forest_property::image_processor::ImageProcessor;
 
-use image_utils::*;
 use geometry_utils::*;
-use image::{Rgb, RgbImage};
+use image::Rgb;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
@@ -86,13 +85,13 @@ fn main() {
     // Create an image for the polygon and random points
     let img_width = 800;
     let img_height = 600;
-    let mut image = RgbImage::new(img_width, img_height);
+    let mut image = ImageProcessor::new(img_width, img_height);
 
     // Map polygon coordinates to image
-    let mapped_coordinates = map_coordinates_to_image(&polygon, img_width, img_height);
+    let mapped_coordinates = image.map_coordinates_to_image(&polygon);
 
     // Draw the polygon
-    draw_polygon_image(&mut image, mapped_coordinates.clone());
+    image.draw_polygon_image(mapped_coordinates.clone());
 
     if stand.stem_count_in_stratum() {
         println!("\nStem count is in individual stratum");
@@ -106,7 +105,7 @@ fn main() {
             let color = get_color_by_species(species);
             let random_points = generate_random_points(&polygon, amount as i32);
             for point in random_points {
-                draw_random_point(&mut image, &polygon, img_width, img_height, point, color);
+                image.draw_random_point(&polygon, img_width, img_height, point, color);
             }
         }
     } else {
@@ -121,11 +120,11 @@ fn main() {
 
         // Draw the generated random points within the polygon
         for point in random_points {
-            draw_random_point(&mut image, &polygon, img_width, img_height, point, Rgb([255, 0, 0])) // Draw points in red
+            image.draw_random_point(&polygon, img_width, img_height, point, Rgb([255, 0, 0])) // Draw points in red
         }
     }
 
-    image.save("polygon_image.png").expect("Failed to save image");
+    image.img().save("polygon_image.png").expect("Failed to save image");
     println!("Polygon image saved as 'polygon_image.png'");
 }
 

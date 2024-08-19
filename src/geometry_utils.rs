@@ -1,8 +1,17 @@
-use crate::image_utils::get_min_max_coordinates;
-
 use geo_types::{coord, Coord, LineString, Polygon};
 use rand::{thread_rng, Rng};
-use geo::Contains;
+use geo::{Contains, BoundingRect};
+
+// Get minimum and maximum x and y coordinates of a polygon
+pub fn get_min_max_coordinates(p: &Polygon<f64>) -> (f64, f64, f64, f64) {
+    let rect = p.bounding_rect().unwrap();
+    let min_x = rect.min().x;
+    let max_x = rect.max().x;
+    let min_y = rect.min().y;
+    let max_y = rect.max().y;
+
+    (min_x, max_x, min_y, max_y)
+}
 
 // Create a polygon from a string of coordinates
 pub fn create_polygon(coord_string: &str) -> Polygon<f64> {
