@@ -3,7 +3,7 @@ use rand::{thread_rng, Rng};
 use geo::{Contains, BoundingRect};
 use image::Rgb;
 
-use crate::forest_property::tree::{Tree, Trees};
+use crate::forest_property::{tree::{Tree, Trees}, tree_stand_data::TreeStrata};
 
 // Get minimum and maximum x and y coordinates of a polygon
 pub fn get_min_max_coordinates(p: &Polygon<f64>) -> (f64, f64, f64, f64) {
@@ -64,44 +64,22 @@ pub fn generate_random_points(p: &Polygon, amount: i32) -> Vec<Coord<f64>> {
     points
 }
 
-struct StratumInfo {
-    species: i64,
-    mean_height: f64,
-    amount: i32,
-}
-
-impl StratumInfo {
-    pub fn new(species: i64, mean_height: f64, amount: i32) -> Self {
-        StratumInfo {
-            species,
-            mean_height,
-            amount,
-        }
-    }
-}
-
 // Generates random trees for all strata within a polygon's minimum and maximum x and y coordinates
-pub fn generate_random_trees(p: &Polygon, strata: Vec<StratumInfo>) -> Vec<Trees> {
+pub fn generate_random_trees(p: &Polygon, strata: &TreeStrata) -> Vec<Tree> {
     let mut trees = Vec::new();
-    let mut all_forests = Vec::new();
-    let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&p);
 
-    // Generate random x and y coordinates
-    let mut count = 0;
-    let mut rng = thread_rng();
+    for stratum in strata.tree_stratum.iter() {
+        let amount = stratum.stem_count.unwrap_or(0);
+        let random_points = generate_random_points(&p, amount as i32);
 
-    for stratum_info in strata {
-        let color = get_color_by_species(stratum_info.species);
-        let random_points = generate_random_points(&p, stratum_info.amount as i32);
+        // Generate random trees for each stratum
         for point in random_points {
-            let tree = Tree::new(stratum_info.species, stratum_info.mean_height, (point.x, point.y));
+            let tree = Tree::new(stratum.tree_species, stratum.mean_height, (point.x, point.y));
             trees.push(tree);
         }
-        let forest = Trees::new(trees.clone());
-        all_forests.push(forest.clone());
     }
 
-    all_forests
+    trees
 }
 
 
