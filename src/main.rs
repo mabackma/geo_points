@@ -93,27 +93,24 @@ fn main() {
     image.draw_polygon_image(&mapped_coordinates);
 
     let summary_stem_count = stand.summary_stem_count();
+    let strata = stand.get_strata();
+    let random_trees = generate_random_trees(&polygon, &strata);
+    
     if stand.stem_count_in_stratum() {
         println!("\nStem count is in individual stratum");
 
-        let strata = stand.get_strata();
-        let random_trees = generate_random_trees(&polygon, &strata);
-
-        // Draw random points without using Poisson disc sampling
+        // Draw the random points
         for tree in random_trees {
             let point = coord! {x: tree.position().0, y: tree.position().1};
             let color = get_color_by_species(tree.species());
             image.draw_random_point(&polygon, img_width, img_height, point, color);
         }
-        // TODO: Implement Poisson disc sampling for better random point distribution
     } else {
         println!("Stem count is not in any individual stratum. Drawing random points based on tree stand summary.");
 
-        // Generate random points within the polygon
-        let random_points = generate_random_points(&polygon, summary_stem_count as i32);
-
-        // Draw the generated random points within the polygon
-        for point in random_points {
+        // Draw the random points
+        for tree in random_trees {
+            let point = coord! {x: tree.position().0, y: tree.position().1};
             image.draw_random_point(&polygon, img_width, img_height, point, Rgb([255, 0, 0])) // Draw points in red
         }
     }

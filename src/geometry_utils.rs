@@ -40,31 +40,6 @@ pub fn create_polygon(coord_string: &str) -> Polygon<f64> {
     polygon
 }
 
-// Generates random points within a polygon's minimum and maximum x and y coordinates
-pub fn generate_random_points(p: &Polygon, amount: i32) -> Vec<Coord<f64>> {
-    let mut points = Vec::new();
-    let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&p);
-
-    // Generate random x and y coordinates
-    let mut count = 0;
-    let mut rng = thread_rng();
-    loop {
-        let rand_x: f64 = rng.gen_range(min_x..max_x);
-        let rand_y: f64 = rng.gen_range(min_y..max_y);
-        let point = coord! {x: rand_x, y: rand_y};
-
-        if p.contains(&point) {
-            points.push(point);
-            count += 1;
-            if count == amount {
-                break;
-            }
-        }
-    }
-
-    points
-}
-
 pub fn generate_poisson_disc_points(p: &Polygon<f64>, radius: f64) -> Vec<Coord<f64>> {
     let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&p);
     let width = max_x - min_x;
@@ -91,8 +66,9 @@ pub fn generate_poisson_disc_points(p: &Polygon<f64>, radius: f64) -> Vec<Coord<
 fn pick_random_points(points: &mut Vec<Coord<f64>>, amount: usize) -> Vec<Coord<f64>> {
     let mut rng = thread_rng();
     let mut random_points = Vec::new();
+    let amount_to_pick = usize::min(amount, points.len());  // Clamp amount to points length
 
-    for _ in 0..amount {
+    for _ in 0..amount_to_pick {
         let index = rng.gen_range(0..points.len());
         random_points.push(points.remove(index));
     }
