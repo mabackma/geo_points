@@ -1,9 +1,9 @@
 use geo_types::{coord, Coord, LineString, Polygon};
 use rand::{thread_rng, Rng};
 use geo::{Contains, BoundingRect};
-use image::Rgb;
 
-use crate::forest_property::{tree::Tree, tree_stand_data::TreeStrata};
+use crate::forest_property::tree_stand_data::TreeStrata;
+use crate::forest_property::tree::Tree;
 
 // Get minimum and maximum x and y coordinates of a polygon
 pub fn get_min_max_coordinates(p: &Polygon<f64>) -> (f64, f64, f64, f64) {
@@ -62,46 +62,6 @@ pub fn generate_random_points(p: &Polygon, amount: i32) -> Vec<Coord<f64>> {
     }
 
     points
-}
-
-// Generates random points within a polygon's minimum and maximum x and y coordinates
-pub fn random_poisson_disc_points(p: &Polygon, amount: i32, radius: f64) -> Vec<Coord<f64>> {
-    let mut points = Vec::new();
-    let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&p);
-
-    // Generate random x and y coordinates
-    let mut count = 0;
-    let mut rng = thread_rng();
-    loop {
-        let rand_x: f64 = rng.gen_range(min_x..max_x);
-        let rand_y: f64 = rng.gen_range(min_y..max_y);
-        let point = coord! {x: rand_x, y: rand_y};
-
-        if p.contains(&point) && is_valid_point(&point, &points, radius) {
-            points.push(point);
-            count += 1;
-            if count == amount {
-                break;
-            }
-        }
-    }
-
-    points
-}
-
-// Helper function to check if a new point is at least `radius` away from existing points
-fn is_valid_point(new_point: &Coord<f64>, points: &[Coord<f64>], radius: f64) -> bool {
-    for point in points {
-        if euclidean_distance(*new_point, *point) < radius {
-            return false;
-        }
-    }
-    true
-}
-
-// Function to calculate Euclidean distance between two points
-fn euclidean_distance(p1: Coord<f64>, p2: Coord<f64>) -> f64 {
-    ((p1.x - p2.x).powi(2) + (p1.y - p2.y).powi(2)).sqrt()
 }
 
 // Generates random trees for all strata within a polygon's minimum and maximum x and y coordinates

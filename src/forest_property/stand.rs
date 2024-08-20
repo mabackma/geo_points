@@ -1,9 +1,8 @@
 use crate::forest_property::tree_stand_data::{TreeStandData, Operations, SpecialFeatures};
 use crate::forest_property::geometry::PolygonGeometry;
+use super::tree_stand_data::TreeStrata;
 use serde_json::Value;
 use serde::{Deserialize, Serialize};
-
-use super::tree_stand_data::{TreeStrata, TreeStratum};
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -50,12 +49,10 @@ impl Stand {
 
     // Returns strata information for the stand
     pub fn get_strata(&self) -> TreeStrata {
-        let mut strata = &Vec::new();
-        
         let tree_stand_data = self.tree_stand_data.as_ref().unwrap();
         let data_date = tree_stand_data.tree_stand_data_date.last().unwrap();
 
-        strata = data_date.tree_strata.tree_stratum.as_ref();
+        let strata = &data_date.tree_strata.tree_stratum;
         let strata = TreeStrata::new(strata.to_vec());
         strata
     }

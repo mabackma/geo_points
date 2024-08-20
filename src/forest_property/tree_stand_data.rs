@@ -67,44 +67,6 @@ pub struct TreeStratum {
     pub pulp_wood_volume: Option<f64>,
 }
 
-impl TreeStratum {
-    pub fn new(
-        change_state: i64,
-        stratum_number: i64,
-        tree_species: i64,
-        storey: i64,
-        age: i64,
-        stem_count: i64,
-        mean_diameter: f64,
-        mean_height: f64,
-        data_source: i64,
-        basal_area: f64,
-        saw_log_percent: f64,
-        saw_log_volume: f64,
-        volume_growth: f64,
-        volume: f64,
-        pulp_wood_volume: f64,
-    ) -> Self {
-        TreeStratum {
-            change_state,
-            stratum_number,
-            tree_species,
-            storey,
-            age,
-            stem_count: Some(stem_count),
-            mean_diameter: Some(mean_diameter),
-            mean_height,
-            data_source,
-            basal_area: Some(basal_area),
-            saw_log_percent: Some(saw_log_percent),
-            saw_log_volume: Some(saw_log_volume),
-            volume_growth: Some(volume_growth),
-            volume: Some(volume),
-            pulp_wood_volume: Some(pulp_wood_volume),
-        }
-    }
-}
-
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TreeStandSummary {

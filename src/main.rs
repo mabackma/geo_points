@@ -107,31 +107,6 @@ fn main() {
             let color = get_color_by_species(tree.species());
             image.draw_random_point(&polygon, img_width, img_height, point, color);
         }
-        /*
-        // TODO: Implement drawing random points from a single combined stratum list with multiple species (not from inside a loop)
-        for stratum in strata.tree_stratum.iter() {
-            let (species, mean_height, amount) = (stratum.tree_species, stratum.mean_height, stratum.stem_count.unwrap());
-            println!("Species: {:?}, Amount: {:?}", species, amount);
-            
-            // Draw random points with different colors based on species
-            let color = get_color_by_species(species);
-            let random_points = generate_random_points(&polygon, amount as i32);
-
-            // Generate random trees with different species and mean height
-            let mut random_trees = Vec::new();
-            for point in random_points {
-                let tree = Tree::new(species, mean_height, (point.x, point.y));
-                random_trees.push(tree);
-            }
-            
-            let random_trees = Trees::new(random_trees);
-            let trees = random_trees.variable_radius_poisson_disc_sampling(&polygon);
-            for tree in trees {
-                let point = coord! {x: tree.position().0, y: tree.position().1};
-                image.draw_random_point(&polygon, img_width, img_height, point, color);
-            }
-        }
-        */
     } else {
         println!("Stem count is not in any individual stratum. Drawing random points based on tree stand summary.");
 
