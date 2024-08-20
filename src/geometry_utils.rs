@@ -1,4 +1,4 @@
-use geo_types::{coord, Coord, LineString, Polygon};
+use geo_types::{Coord, LineString, Polygon};
 use rand::{thread_rng, Rng};
 use geo::{Contains, BoundingRect};
 use fast_poisson::Poisson2D;
