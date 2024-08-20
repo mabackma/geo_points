@@ -3,11 +3,16 @@ mod forest_property;
 
 use crate::forest_property::root::Root;
 use crate::forest_property::image_processor::ImageProcessor;
+use forest_property::forest_property_data::ForestPropertyData;
+use forest_property::tree_stand_data::TreeStrata;
 use geo_types::coord;
 use geometry_utils::*;
 use image::Rgb;
-use std::fs::File;
-use std::io::Read;
+use serde::{Deserialize, Serialize};
+use serde_json::Serializer;
+use serde_xml_rs::{Deserializer, EventReader, ParserConfig};
+use std::fs::{read_to_string, File};
+use std::io::{Read, Write};
 use std::path::Path;
  
 // Read JSON file
@@ -72,16 +77,29 @@ fn get_color_by_species(number: i64) -> Rgb<u8> {
     }
 }
 
+
 fn main() {
+
+    let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
+    let real_estate = property.choose_real_estate();
+    let parcel = real_estate.choose_parcel();
+    let stand = parcel.choose_stand();
+    let coordinate_strings: Vec<String> = stand.get_coordinate_string();
+
+    // !! Some modifications for a quick test !!
+
     // Choose a parcel and a stand
-    let file_name = "forestpropertydata_updated.json".to_string();
+/*  let file_name = "forestpropertydata_updated.json".to_string();
     let root = read_json_file(file_name);
     let parcel = root.choose_parcel();
     let stand = parcel.choose_stand();
 
     // Create a polygon from the stand's coordinates
-    let coordinate_string = stand.stand_basic_data.polygon_geometry.polygon_property.polygon.exterior.linear_ring.coordinates.trim();
-    let polygon = create_polygon(coordinate_string);
+    let coordinate_string = stand.stand_basic_data.polygon_geometry.polygon_property.polygon.exterior.linear_ring.coordinates.trim(); */
+
+    let coordinate_string = coordinate_strings.first().expect("No coordinates found");
+
+    let polygon = create_polygon(&coordinate_string.as_str());
 
     // Create an image for the polygon and random points
     let img_width = 800;
@@ -98,8 +116,10 @@ fn main() {
     if stand.stem_count_in_stratum() {
         println!("\nStem count is in individual stratum");
 
-        let strata = stand.get_strata();
-        let random_trees = generate_random_trees(&polygon, &strata);
+        // Replaced for a quick test to try out if this is working
+        let stratums = stand.get_stratums();
+        // Modified generate_random_trees function to take Vec<Stratum>
+        let random_trees = generate_random_trees(&polygon, stratums);
 
         // Draw random points without using Poisson disc sampling
         for tree in random_trees {

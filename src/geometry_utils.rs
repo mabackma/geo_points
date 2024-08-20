@@ -2,6 +2,7 @@ use geo_types::{coord, Coord, LineString, Polygon};
 use rand::{thread_rng, Rng};
 use geo::{Contains, BoundingRect};
 
+use crate::forest_property::forest_property_data;
 use crate::forest_property::tree_stand_data::TreeStrata;
 use crate::forest_property::tree::Tree;
 
@@ -65,16 +66,16 @@ pub fn generate_random_points(p: &Polygon, amount: i32) -> Vec<Coord<f64>> {
 }
 
 // Generates random trees for all strata within a polygon's minimum and maximum x and y coordinates
-pub fn generate_random_trees(p: &Polygon, strata: &TreeStrata) -> Vec<Tree> {
+pub fn generate_random_trees(p: &Polygon, strata: Vec<forest_property_data::TreeStratum>) -> Vec<Tree> {
     let mut trees = Vec::new();
 
-    for stratum in strata.tree_stratum.iter() {
+    for stratum in strata.iter() {
         let amount = stratum.stem_count.unwrap_or(0);
         let random_points = generate_random_points(&p, amount as i32);
 
         // Generate random trees for each stratum
         for point in random_points {
-            let tree = Tree::new(stratum.tree_species, stratum.mean_height, (point.x, point.y));
+            let tree = Tree::new(stratum.tree_species.into(), stratum.mean_height, (point.x, point.y));
             trees.push(tree);
         }
     }
