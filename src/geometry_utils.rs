@@ -77,6 +77,8 @@ pub fn generate_random_trees(p: &Polygon, strata: &TreeStrata) -> Vec<Tree> {
             let tree = Tree::new(stratum.tree_species, stratum.mean_height, (point.x, point.y));
             trees.push(tree);
         }
+
+        println!("Species: {}, Stem count: {}", stratum.tree_species, amount);
     }
 
     trees

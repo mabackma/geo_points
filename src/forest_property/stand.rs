@@ -25,8 +25,8 @@ pub struct Stand {
 }
 
 impl Stand {
-    // Get stem count
-    pub fn get_stem_count(&self) -> i64 {
+    // Get stem count from tree stand summary
+    pub fn summary_stem_count(&self) -> i64 {
         let data_date = self.tree_stand_data.as_ref().unwrap().tree_stand_data_date.last().unwrap();
         let stem_count = data_date.tree_stand_summary.as_ref().unwrap().stem_count;
         
