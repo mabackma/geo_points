@@ -46,7 +46,7 @@ pub fn generate_poisson_disc_points(p: &Polygon<f64>, radius: f64) -> Vec<Coord<
     let height = max_y - min_y;
 
     let poisson = Poisson2D::new().with_dimensions([width, height], radius).generate();
-    println!("Generated {} Poisson disc samples", poisson.len());
+    println!("\nGenerated {} Poisson disc samples", poisson.len());
 
     let mut points = Vec::new();
     for sample in poisson.iter() {
@@ -88,9 +88,12 @@ pub fn generate_random_trees(p: &Polygon, strata: &TreeStrata) -> Vec<Tree> {
 
     for stratum in strata.tree_stratum.iter() {
         let amount = stratum.stem_count.unwrap_or(0);
-
         let radius = generate_radius(stratum.tree_species, stratum.mean_height);
+
+        // Generate Poisson disc points within the polygon
         let mut poisson_disc_points = generate_poisson_disc_points(&p, radius);
+
+        // Pick random points from the Poisson disc points based on the stem count
         let random_points = pick_random_points(&mut poisson_disc_points, amount as usize);
         println!("Picked {} random points for species {}", random_points.len(), stratum.tree_species);
 
