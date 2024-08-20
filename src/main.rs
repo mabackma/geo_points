@@ -107,6 +107,7 @@ fn main() {
             let color = get_color_by_species(tree.species());
             image.draw_random_point(&polygon, img_width, img_height, point, color);
         }
+        // TODO: Implement Poisson disc sampling for better random point distribution
     } else {
         println!("Stem count is not in any individual stratum. Drawing random points based on tree stand summary.");
 
