@@ -78,8 +78,7 @@ fn pick_random_points(points: &mut Vec<Coord<f64>>, amount: usize) -> Vec<Coord<
 
 fn generate_radius(mean_height: f64, divisor: f64) -> f64 {
     // Calculate the radius based on the mean height of the tree species
-    let radius = mean_height / divisor;
-    radius
+    mean_height / divisor
 }
 
 // Generates random trees for all strata within a polygon's minimum and maximum x and y coordinates
