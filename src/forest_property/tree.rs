@@ -2,11 +2,11 @@
 pub struct Tree {
     species: i64,
     mean_height: f64,
-    position: (f64, f64),
+    position: (f64, f64, f64),
 }
 
 impl Tree {
-    pub fn new(species: i64, mean_height: f64, position: (f64, f64)) -> Self {
+    pub fn new(species: i64, mean_height: f64, position: (f64, f64, f64)) -> Self {
         Tree {
             species,
             mean_height,
@@ -18,7 +18,7 @@ impl Tree {
         self.species
     }
 
-    pub fn position(&self) -> (f64, f64) {
+    pub fn position(&self) -> (f64, f64, f64) {
         self.position
     }
 }

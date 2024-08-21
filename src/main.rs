@@ -9,7 +9,7 @@ use image::Rgb;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
- 
+
 // Read JSON file
 fn read_json_file(file_name: String) -> Root {
     let path = Path::new(&file_name);
@@ -119,4 +119,3 @@ fn main() {
     image.img().save("polygon_image.png").expect("Failed to save image");
     println!("Polygon image saved as 'polygon_image.png'");
 }
-
