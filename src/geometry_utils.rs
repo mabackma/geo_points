@@ -46,7 +46,7 @@ pub fn generate_poisson_disc_points(p: &Polygon<f64>, radius: f64) -> Vec<Coord<
     let height = max_y - min_y;
 
     let poisson = Poisson2D::new().with_dimensions([width, height], radius).generate();
-    println!("\nGenerated {} Poisson disc samples", poisson.len());
+    println!("Generated {} Poisson disc samples", poisson.len());
 
     let mut points = Vec::new();
     for sample in poisson.iter() {
@@ -58,7 +58,7 @@ pub fn generate_poisson_disc_points(p: &Polygon<f64>, radius: f64) -> Vec<Coord<
         }
     }
 
-    println!("Generated {} points", points.len()); // Print the number of points generated
+    println!("Generated {} points inside polygon", points.len()); // Print the number of points generated
     points
 }
 
@@ -76,9 +76,9 @@ fn pick_random_points(points: &mut Vec<Coord<f64>>, amount: usize) -> Vec<Coord<
     random_points
 }
 
-fn generate_radius(species: i64, mean_height: f64) -> f64 {
+fn generate_radius(mean_height: f64, divisor: f64) -> f64 {
     // Calculate the radius based on the mean height of the tree species
-    let radius = mean_height / 2.0; // TODO: Adjust this calculation based on the tree species
+    let radius = mean_height / divisor;
     radius
 }
 
@@ -88,22 +88,36 @@ pub fn generate_random_trees(p: &Polygon, strata: &TreeStrata) -> Vec<Tree> {
 
     for stratum in strata.tree_stratum.iter() {
         let amount = stratum.stem_count.unwrap_or(0);
-        let radius = generate_radius(stratum.tree_species, stratum.mean_height);
+        let mut divisor = stratum.mean_height / 2.0; // Initial divisor for Poisson disc radius
+        let mut random_points = Vec::new();
 
-        // Generate Poisson disc points within the polygon
-        let mut poisson_disc_points = generate_poisson_disc_points(&p, radius);
+        println!("\nSpecies: {}, Mean Height: {}, Basal Area: {}, Stem count: {}", stratum.tree_species, stratum.mean_height, stratum.basal_area.unwrap_or(0.0), amount);
+        
+        // Loop until enough points are generated for the stratum
+        loop {
+            // Calculate the radius based on the mean height of the tree species
+            let radius = generate_radius(stratum.mean_height, divisor);
 
-        // Pick random points from the Poisson disc points based on the stem count
-        let random_points = pick_random_points(&mut poisson_disc_points, amount as usize);
-        println!("Picked {} random points for species {}", random_points.len(), stratum.tree_species);
+            // Generate Poisson disc points within the polygon
+            let mut poisson_disc_points = generate_poisson_disc_points(&p, radius);
+
+            // Pick random points from the Poisson disc points based on the stem count
+            random_points = pick_random_points(&mut poisson_disc_points, amount as usize);
+            println!("Picked {} random points for species {}", random_points.len(), stratum.tree_species);
+
+            if random_points.len() == amount as usize {
+                break;
+            } else {
+                println!("Not enough points generated for species {}. Trying again...", stratum.tree_species);
+                divisor += 1.0; // Increase the divisor to generate more points
+            }
+        }
 
         // Generate random trees for each stratum
         for point in random_points {
             let tree = Tree::new(stratum.tree_species, stratum.mean_height, (point.x, point.y));
             trees.push(tree);
         }
-
-        println!("Species: {}, Mean Height: {}, Stem count: {}", stratum.tree_species, stratum.mean_height, amount);
     }
 
     trees
