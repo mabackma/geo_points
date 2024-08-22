@@ -7,7 +7,7 @@
       <re:AreaNumber>893</re:AreaNumber>
       <re:GroupNumber>15</re:GroupNumber>
       <re:UnitNumber>2</re:UnitNumber>
-      <re:RealEstateName>ROVANIEMEN METSÄOPPILAITOS</re:RealEstateName>
+      <re:RealEstateName>ROVANIEMEN METS OPPILAITOS</re:RealEstateName>
       <re:Parcels>
         <re:Parcel id="350875">
           <re:ParcelNumber>0</re:ParcelNumber>
@@ -367,7 +367,7 @@
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>4</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Jätetään riistan elinalueeksi</st:StandInfo>
+                <st:StandInfo>J tet  n riistan elinalueeksi</st:StandInfo>
                 <st:Area>0.76</st:Area>
                 <gdt:PolygonGeometry>
                   <gml:pointProperty>
@@ -636,7 +636,7 @@
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>4</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Aurattu ja viljelty mäntyä ( kylvö ja istutus ) v.1964. Kuvio on osaksi korpea ja soistunutta kangasta. tykkytuhoja</st:StandInfo>
+                <st:StandInfo>Aurattu ja viljelty m nty  ( kylv  ja istutus ) v.1964. Kuvio on osaksi korpea ja soistunutta kangasta. tykkytuhoja</st:StandInfo>
                 <st:Area>1.0862</st:Area>
                 <st:AreaDecrease>0.1579</st:AreaDecrease>
                 <gdt:PolygonGeometry>
@@ -1404,7 +1404,7 @@
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>2</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Osaksi aurattu ja istutettu mäntyä v.1979. Kuvio on osittain raivattu Tykkytuhoja vuodelta 2013</st:StandInfo>
+                <st:StandInfo>Osaksi aurattu ja istutettu m nty  v.1979. Kuvio on osittain raivattu Tykkytuhoja vuodelta 2013</st:StandInfo>
                 <st:Area>4.427</st:Area>
                 <st:AreaDecrease>0.1064</st:AreaDecrease>
                 <gdt:PolygonGeometry>
@@ -1647,7 +1647,7 @@
                 <st:MainTreeSpecies>12</st:MainTreeSpecies>
                 <st:Accessibility>4</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Aurattu ja istutettu kontortamäntyä ( Pinus contorta ) sekä mäntyä v.1
+                <st:StandInfo>Aurattu ja istutettu kontortam nty  ( Pinus contorta ) sek  m nty  v.1
 979. tykkytuhoja</st:StandInfo>
                 <st:Area>3.5192</st:Area>
                 <gdt:PolygonGeometry>
@@ -3165,7 +3165,7 @@
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>4</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Laaja, puustoinen rämealue. Useita suotyyppejä. Harvennettavia puustoryhmiä kuvion koillisosassa. Lahopuuta</st:StandInfo>
+                <st:StandInfo>Laaja, puustoinen r mealue. Useita suotyyppej . Harvennettavia puustoryhmi  kuvion koillisosassa. Lahopuuta</st:StandInfo>
                 <st:Area>25.8968</st:Area>
                 <gdt:PolygonGeometry>
                   <gml:pointProperty>
@@ -3955,7 +3955,7 @@
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>4</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Aurattu ja istutettu mäntyä ja kuusta v.1989. Osaksi turvekangasta.</st:StandInfo>
+                <st:StandInfo>Aurattu ja istutettu m nty  ja kuusta v.1989. Osaksi turvekangasta.</st:StandInfo>
                 <st:Area>7.873</st:Area>
                 <st:AreaDecrease>0.2166</st:AreaDecrease>
                 <gdt:PolygonGeometry>
@@ -4375,7 +4375,7 @@
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>2</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Aurattu ja viljelty mäntyä v.1976. Taimikonhoito tehty v.1995.</st:StandInfo>
+                <st:StandInfo>Aurattu ja viljelty m nty  v.1976. Taimikonhoito tehty v.1995.</st:StandInfo>
                 <st:Area>7.0656</st:Area>
                 <st:AreaDecrease>0.0685</st:AreaDecrease>
                 <gdt:PolygonGeometry>
@@ -5241,7 +5241,7 @@
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>2</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Aurattu ja viljelty mäntyä v.1979. Taimikonhoito tehty v.1998. Osaksi
+                <st:StandInfo>Aurattu ja viljelty m nty  v.1979. Taimikonhoito tehty v.1998. Osaksi
 RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:Area>8.1179</st:Area>
                 <gdt:PolygonGeometry>
@@ -6215,7 +6215,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>2</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Laikutettu ja kylvetty mäntyä v.1986.</st:StandInfo>
+                <st:StandInfo>Laikutettu ja kylvetty m nty  v.1986.</st:StandInfo>
                 <st:Area>2.4614</st:Area>
                 <st:AreaDecrease>0.1252</st:AreaDecrease>
                 <gdt:PolygonGeometry>
@@ -6424,7 +6424,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:StandQuality>10</st:StandQuality>
                 <st:Accessibility>2</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Kuviolla runsaasti säästöpuuryhmiä</st:StandInfo>
+                <st:StandInfo>Kuviolla runsaasti s  st puuryhmi </st:StandInfo>
                 <st:Area>1.0613</st:Area>
                 <st:AreaDecrease>0.0592</st:AreaDecrease>
                 <gdt:PolygonGeometry>
@@ -7733,7 +7733,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>4</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Aurattu ja istutettu mäntyä v.1976. Taimikonhoito tehty v.1997.</st:StandInfo>
+                <st:StandInfo>Aurattu ja istutettu m nty  v.1976. Taimikonhoito tehty v.1997.</st:StandInfo>
                 <st:Area>1.1222</st:Area>
                 <st:AreaDecrease>0.0758</st:AreaDecrease>
                 <gdt:PolygonGeometry>
@@ -7969,7 +7969,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>2</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Äestetty ja kylvetty mäntyä v.1988.</st:StandInfo>
+                <st:StandInfo> estetty ja kylvetty m nty  v.1988.</st:StandInfo>
                 <st:Area>0.9858</st:Area>
                 <gdt:PolygonGeometry>
                   <gml:pointProperty>
@@ -8335,7 +8335,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>4</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Jätetään käsittelemättä riistan elinympäristöksi.</st:StandInfo>
+                <st:StandInfo>J tet  n k sittelem tt  riistan elinymp rist ksi.</st:StandInfo>
                 <st:Area>5.4034</st:Area>
                 <st:AreaDecrease>0.1178</st:AreaDecrease>
                 <gdt:PolygonGeometry>
@@ -8823,7 +8823,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>2</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Laikutettu ja istutettu mäntyä v.1976.</st:StandInfo>
+                <st:StandInfo>Laikutettu ja istutettu m nty  v.1976.</st:StandInfo>
                 <st:Area>1.7366</st:Area>
                 <gdt:PolygonGeometry>
                   <gml:pointProperty>
@@ -9215,7 +9215,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>2</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Isot säästöpuuryhmät, kalliot ym. jätetään hakkaamatta.</st:StandInfo>
+                <st:StandInfo>Isot s  st puuryhm t, kalliot ym. j tet  n hakkaamatta.</st:StandInfo>
                 <st:Area>4.4209</st:Area>
                 <gdt:PolygonGeometry>
                   <gml:pointProperty>
@@ -10435,7 +10435,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                     <op:ProposalType>1</op:ProposalType>
                     <op:ProposalYear>2017</op:ProposalYear>
                   </op:ProposalData>
-                  <op:OperationInfo>Väljennyshakkuulla tähdätään kuusen luontaiseen uudistamiseen</op:OperationInfo>
+                  <op:OperationInfo>V ljennyshakkuulla t hd t  n kuusen luontaiseen uudistamiseen</op:OperationInfo>
                   <op:Cutting>
                     <op:CuttingVolume>161</op:CuttingVolume>
                     <op:Assortments>
@@ -11142,7 +11142,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>4</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Jätetään reilusti riistatiheiköitä</st:StandInfo>
+                <st:StandInfo>J tet  n reilusti riistatiheik it </st:StandInfo>
                 <st:Area>2.1476</st:Area>
                 <st:AreaDecrease>0.0669</st:AreaDecrease>
                 <gdt:PolygonGeometry>
@@ -11829,7 +11829,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:StandQuality>10</st:StandQuality>
                 <st:Accessibility>4</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Järviruoko ( Phragmites australis ).</st:StandInfo>
+                <st:StandInfo>J rviruoko ( Phragmites australis ).</st:StandInfo>
                 <st:Area>8.477</st:Area>
                 <gdt:PolygonGeometry>
                   <gml:pointProperty>
@@ -11881,7 +11881,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>2</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Luontaisesti aukkoinen puut ryhmittäin</st:StandInfo>
+                <st:StandInfo>Luontaisesti aukkoinen puut ryhmitt in</st:StandInfo>
                 <st:Area>1.1807</st:Area>
                 <st:AreaDecrease>0.0576</st:AreaDecrease>
                 <gdt:PolygonGeometry>
@@ -12170,7 +12170,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>4</st:MainTreeSpecies>
                 <st:Accessibility>4</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Ojitusmätästetty ja istutettu mäntyä ja kuusta v.1987. Kuvion itäpäässä hakkuusa tehdään kuuselle tilaa</st:StandInfo>
+                <st:StandInfo>Ojitusm t stetty ja istutettu m nty  ja kuusta v.1987. Kuvion it p  ss  hakkuusa tehd  n kuuselle tilaa</st:StandInfo>
                 <st:Area>0.5147</st:Area>
                 <gdt:PolygonGeometry>
                   <gml:pointProperty>
@@ -12396,7 +12396,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>2</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Äestetty ja istutettu mäntyä v.1987. Lepo seuraavat 10v</st:StandInfo>
+                <st:StandInfo> estetty ja istutettu m nty  v.1987. Lepo seuraavat 10v</st:StandInfo>
                 <st:Area>3.2357</st:Area>
                 <st:AreaDecrease>0.0728</st:AreaDecrease>
                 <gdt:PolygonGeometry>
@@ -12660,7 +12660,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:Accessibility>4</st:Accessibility>
                 <st:CuttingRestriction>9</st:CuttingRestriction>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Puustoinen lettoräme Kuviolla Kangasmetsäsaareke</st:StandInfo>
+                <st:StandInfo>Puustoinen lettor me Kuviolla Kangasmets saareke</st:StandInfo>
                 <st:Area>2.071</st:Area>
                 <gdt:PolygonGeometry>
                   <gml:pointProperty>
@@ -12937,7 +12937,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>4</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Kuviolla riistatiheikkö</st:StandInfo>
+                <st:StandInfo>Kuviolla riistatiheikk </st:StandInfo>
                 <st:Area>3.7914</st:Area>
                 <gdt:PolygonGeometry>
                   <gml:pointProperty>
@@ -13191,7 +13191,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>2</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Kuviolla kausikosteikko ja lähde. Lähde ojan vieressä Kuviolle toteutetaan riistanhoidollinen "kalansilmä" hakkuu, jossa jätetään koskemattomia noin aarin kokoisia alueita hakkaamatta. Aarin alueet tulisis sisältää monen ikäistä puustoa ja mustikkaa. Suon laitaan jätetään 50m suojavyöhyke.</st:StandInfo>
+                <st:StandInfo>Kuviolla kausikosteikko ja l hde. L hde ojan vieress  Kuviolle toteutetaan riistanhoidollinen "kalansilm " hakkuu, jossa j tet  n koskemattomia noin aarin kokoisia alueita hakkaamatta. Aarin alueet tulisis sis lt   monen ik ist  puustoa ja mustikkaa. Suon laitaan j tet  n 50m suojavy hyke.</st:StandInfo>
                 <st:Area>2.5966</st:Area>
                 <st:AreaDecrease>0.0801</st:AreaDecrease>
                 <gdt:PolygonGeometry>
@@ -13384,7 +13384,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                     <op:ProposalType>1</op:ProposalType>
                     <op:ProposalYear>2017</op:ProposalYear>
                   </op:ProposalData>
-                  <op:OperationInfo>Riistanhoidollinen hakkuu. Lisätiedoissa tarkennus.</op:OperationInfo>
+                  <op:OperationInfo>Riistanhoidollinen hakkuu. Lis tiedoissa tarkennus.</op:OperationInfo>
                   <op:Specifications>
                     <op:Specification id="93478">
                       <co:ChangeState>0</co:ChangeState>
@@ -13994,7 +13994,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:Accessibility>4</st:Accessibility>
                 <st:CuttingRestriction>9</st:CuttingRestriction>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Ei toimenpiteitä. Vanha metsä.</st:StandInfo>
+                <st:StandInfo>Ei toimenpiteit . Vanha mets .</st:StandInfo>
                 <st:Area>0.4464</st:Area>
                 <gdt:PolygonGeometry>
                   <gml:pointProperty>
@@ -14291,7 +14291,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>3</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Ojitusmätästetty ja istutettu mäntyä v.1987.</st:StandInfo>
+                <st:StandInfo>Ojitusm t stetty ja istutettu m nty  v.1987.</st:StandInfo>
                 <st:Area>2.3512</st:Area>
                 <st:AreaDecrease>0.0644</st:AreaDecrease>
                 <gdt:PolygonGeometry>
@@ -14530,7 +14530,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>4</st:MainTreeSpecies>
                 <st:Accessibility>3</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Ojitusmätästetty ja istutettu mäntyä ja kuusta v.1987. Ennakkoraivaus tehty liian lievänä</st:StandInfo>
+                <st:StandInfo>Ojitusm t stetty ja istutettu m nty  ja kuusta v.1987. Ennakkoraivaus tehty liian liev n </st:StandInfo>
                 <st:Area>3.9962</st:Area>
                 <st:AreaDecrease>0.0838</st:AreaDecrease>
                 <gdt:PolygonGeometry>
@@ -15330,7 +15330,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                     <op:ProposalType>1</op:ProposalType>
                     <op:ProposalYear>2017</op:ProposalYear>
                   </op:ProposalData>
-                  <op:OperationInfo>Eri-ikäisrakenteinen hakkuu</op:OperationInfo>
+                  <op:OperationInfo>Eri-ik israkenteinen hakkuu</op:OperationInfo>
                   <op:Cutting>
                     <op:CuttingVolume>75</op:CuttingVolume>
                     <op:Assortments>
@@ -16304,7 +16304,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                     <op:ProposalType>1</op:ProposalType>
                     <op:ProposalYear>2017</op:ProposalYear>
                   </op:ProposalData>
-                  <op:OperationInfo>Metsurityönä</op:OperationInfo>
+                  <op:OperationInfo>Metsurity n </op:OperationInfo>
                   <op:Specifications>
                     <op:Specification id="99241">
                       <co:ChangeState>0</co:ChangeState>
@@ -19063,7 +19063,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>2</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Riistatiheikkö. Sekametsää, mäntyä, kuusta ja koivua. Alueella metso.</st:StandInfo>
+                <st:StandInfo>Riistatiheikk . Sekamets  , m nty , kuusta ja koivua. Alueella metso.</st:StandInfo>
                 <st:Area>0.9026</st:Area>
                 <gdt:PolygonGeometry>
                   <gml:pointProperty>
@@ -20183,7 +20183,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>4</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Kuviolla reheviä korpijuotteja ja VMT-harjanteita.</st:StandInfo>
+                <st:StandInfo>Kuviolla rehevi  korpijuotteja ja VMT-harjanteita.</st:StandInfo>
                 <st:Area>13.951</st:Area>
                 <gdt:PolygonGeometry>
                   <gml:pointProperty>
@@ -21290,7 +21290,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:Accessibility>4</st:Accessibility>
                 <st:CuttingRestriction>9</st:CuttingRestriction>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Kuvion pohjoispäässä lähde. Ruohokorpi</st:StandInfo>
+                <st:StandInfo>Kuvion pohjoisp  ss  l hde. Ruohokorpi</st:StandInfo>
                 <st:Area>0.8213</st:Area>
                 <gdt:PolygonGeometry>
                   <gml:pointProperty>
@@ -21460,7 +21460,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>2</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Kuvio todella kivinen. Uudistuminen epävarmaa. Aukkoinen, harva.</st:StandInfo>
+                <st:StandInfo>Kuvio todella kivinen. Uudistuminen ep varmaa. Aukkoinen, harva.</st:StandInfo>
                 <st:Area>6.0268</st:Area>
                 <gdt:PolygonGeometry>
                   <gml:pointProperty>
@@ -21761,7 +21761,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>2</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Äestetty ja istutettu mäntyä v.1988.</st:StandInfo>
+                <st:StandInfo> estetty ja istutettu m nty  v.1988.</st:StandInfo>
                 <st:Area>1.5192</st:Area>
                 <gdt:PolygonGeometry>
                   <gml:pointProperty>
@@ -23273,7 +23273,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>2</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Riistakohde. Kuviolla vanhoja puita. Alueella nähtiin inventoinnin aikana metso.</st:StandInfo>
+                <st:StandInfo>Riistakohde. Kuviolla vanhoja puita. Alueella n htiin inventoinnin aikana metso.</st:StandInfo>
                 <st:Area>6.2452</st:Area>
                 <gdt:PolygonGeometry>
                   <gml:pointProperty>
@@ -24287,7 +24287,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                     <op:ProposalType>1</op:ProposalType>
                     <op:ProposalYear>2025</op:ProposalYear>
                   </op:ProposalData>
-                  <op:OperationInfo>Taimet ryhmittäin.</op:OperationInfo>
+                  <op:OperationInfo>Taimet ryhmitt in.</op:OperationInfo>
                   <op:Silviculture />
                 </op:Operation>
               </op:Operations>
@@ -25151,7 +25151,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>2</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Rehevä laikku</st:StandInfo>
+                <st:StandInfo>Rehev  laikku</st:StandInfo>
                 <st:Area>0.2658</st:Area>
                 <gdt:PolygonGeometry>
                   <gml:pointProperty>
@@ -25265,7 +25265,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>4</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Aurattu ja istutettu mäntyä ja kuusta v.1982.</st:StandInfo>
+                <st:StandInfo>Aurattu ja istutettu m nty  ja kuusta v.1982.</st:StandInfo>
                 <st:Area>5.6286</st:Area>
                 <gdt:PolygonGeometry>
                   <gml:pointProperty>
@@ -25424,7 +25424,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>4</st:Accessibility>
                 <st:StandBasicDataDate>2019-10-29</st:StandBasicDataDate>
-                <st:StandInfo>Aurattu ja viljelty mäntyä v.1983.</st:StandInfo>
+                <st:StandInfo>Aurattu ja viljelty m nty  v.1983.</st:StandInfo>
                 <st:Area>5.1688</st:Area>
                 <gdt:PolygonGeometry>
                   <gml:pointProperty>
@@ -25715,7 +25715,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>4</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Paikoittain taimettunut. Väljennyksellä pyritään luontaiseen uudistamiseen. Jatkuvan kasvatuksen kohde.</st:StandInfo>
+                <st:StandInfo>Paikoittain taimettunut. V ljennyksell  pyrit  n luontaiseen uudistamiseen. Jatkuvan kasvatuksen kohde.</st:StandInfo>
                 <st:Area>0.5759</st:Area>
                 <gdt:PolygonGeometry>
                   <gml:pointProperty>
@@ -26215,7 +26215,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>2</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Kuviolla riistatiheikkö</st:StandInfo>
+                <st:StandInfo>Kuviolla riistatiheikk </st:StandInfo>
                 <st:Area>11.0149</st:Area>
                 <st:AreaDecrease>0.2651</st:AreaDecrease>
                 <gdt:PolygonGeometry>
@@ -26746,7 +26746,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>4</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Kuviolla mahdollisesti neidonkenkäesiintymä. Mahdollista tehdä vain lievä väljennyshakkuu.</st:StandInfo>
+                <st:StandInfo>Kuviolla mahdollisesti neidonkenk esiintym . Mahdollista tehd  vain liev  v ljennyshakkuu.</st:StandInfo>
                 <st:Area>1.5255</st:Area>
                 <st:AreaDecrease>0.2846</st:AreaDecrease>
                 <gdt:PolygonGeometry>
@@ -27035,7 +27035,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>4</st:MainTreeSpecies>
                 <st:Accessibility>4</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>kuvion länsipäässä palanen harvennettua isompaa metsää </st:StandInfo>
+                <st:StandInfo>kuvion l nsip  ss  palanen harvennettua isompaa mets   </st:StandInfo>
                 <st:Area>0.8647</st:Area>
                 <st:AreaDecrease>0.0513</st:AreaDecrease>
                 <gdt:PolygonGeometry>
@@ -27822,7 +27822,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>2</st:MainTreeSpecies>
                 <st:Accessibility>2</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Neidonkenkä kasvaa ja esiintyy kuviolla.</st:StandInfo>
+                <st:StandInfo>Neidonkenk  kasvaa ja esiintyy kuviolla.</st:StandInfo>
                 <st:Area>1.3174</st:Area>
                 <gdt:PolygonGeometry>
                   <gml:pointProperty>
@@ -28103,7 +28103,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>4</st:MainTreeSpecies>
                 <st:Accessibility>2</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Yläharvennus laatua painottaen ja kuusen hyväksi</st:StandInfo>
+                <st:StandInfo>Yl harvennus laatua painottaen ja kuusen hyv ksi</st:StandInfo>
                 <st:Area>1.29</st:Area>
                 <gdt:PolygonGeometry>
                   <gml:pointProperty>
@@ -28593,7 +28593,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:Accessibility>2</st:Accessibility>
                 <st:CuttingRestriction>9</st:CuttingRestriction>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Haapametsikkö. Säästetään pienen pinta- alan vuoksi monimuotoisuukohteeksi.</st:StandInfo>
+                <st:StandInfo>Haapametsikk . S  stet  n pienen pinta- alan vuoksi monimuotoisuukohteeksi.</st:StandInfo>
                 <st:Area>0.758</st:Area>
                 <gdt:PolygonGeometry>
                   <gml:pointProperty>
@@ -29017,8 +29017,8 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>2</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Aita-Merkkivaaran etelärinne. Laaja-alainen kasvatusmetsikkö, jossa mm
-. neidonkenkäesiintymä kuvion luoteislaidalla, ampumaradan vieressä.</st:StandInfo>
+                <st:StandInfo>Aita-Merkkivaaran etel rinne. Laaja-alainen kasvatusmetsikk , jossa mm
+. neidonkenk esiintym  kuvion luoteislaidalla, ampumaradan vieress .</st:StandInfo>
                 <st:Area>19.5871</st:Area>
                 <st:AreaDecrease>0.2065</st:AreaDecrease>
                 <gdt:PolygonGeometry>
@@ -29194,7 +29194,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>2</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Kuvion poihjoispäädyssä taimikonhoito tekemätttä. Ennen hakkuuta ennakkoraivauksen tarve selvitettävä.</st:StandInfo>
+                <st:StandInfo>Kuvion poihjoisp  dyss  taimikonhoito tekem ttt . Ennen hakkuuta ennakkoraivauksen tarve selvitett v .</st:StandInfo>
                 <st:Area>6.8075</st:Area>
                 <st:AreaDecrease>0.0266</st:AreaDecrease>
                 <gdt:PolygonGeometry>
@@ -29560,7 +29560,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:Accessibility>2</st:Accessibility>
                 <st:CuttingRestriction>9</st:CuttingRestriction>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo> Koiravaaran lakialue, etelärinne. Säästetään maisemakohteena. Erittäin hieno vanhan metsän alue.</st:StandInfo>
+                <st:StandInfo> Koiravaaran lakialue, etel rinne. S  stet  n maisemakohteena. Eritt in hieno vanhan mets n alue.</st:StandInfo>
                 <st:Area>7.356</st:Area>
                 <gdt:PolygonGeometry>
                   <gml:pointProperty>
@@ -29897,7 +29897,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>4</st:MainTreeSpecies>
                 <st:Accessibility>2</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Ojitusmätästetty ja istutettu mäntyä ja kuusta v.1988.</st:StandInfo>
+                <st:StandInfo>Ojitusm t stetty ja istutettu m nty  ja kuusta v.1988.</st:StandInfo>
                 <st:Area>2.0927</st:Area>
                 <gdt:PolygonGeometry>
                   <gml:pointProperty>
@@ -30137,7 +30137,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>2</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Mänty mahd.viljelty v.1950.</st:StandInfo>
+                <st:StandInfo>M nty mahd.viljelty v.1950.</st:StandInfo>
                 <st:Area>2.141</st:Area>
                 <gdt:PolygonGeometry>
                   <gml:pointProperty>
@@ -30365,7 +30365,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>4</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Kuviolla lettoisuuden piirteitä</st:StandInfo>
+                <st:StandInfo>Kuviolla lettoisuuden piirteit </st:StandInfo>
                 <st:Area>0.6818</st:Area>
                 <gdt:PolygonGeometry>
                   <gml:pointProperty>
@@ -31898,7 +31898,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>4</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Aurattu ja istutettu mäntyä ja kuusta v.1982.</st:StandInfo>
+                <st:StandInfo>Aurattu ja istutettu m nty  ja kuusta v.1982.</st:StandInfo>
                 <st:Area>0.2479</st:Area>
                 <gdt:PolygonGeometry>
                   <gml:pointProperty>
@@ -34164,7 +34164,7 @@ RHK muuttumaa. harvennus osalla kuvioa kesken</st:StandInfo>
                 <st:MainTreeSpecies>1</st:MainTreeSpecies>
                 <st:Accessibility>2</st:Accessibility>
                 <st:StandBasicDataDate>2019-11-01</st:StandBasicDataDate>
-                <st:StandInfo>Äestetty ja kylvetty mäntyä sekä istutettu kontortamäntyä ( Pinus
+                <st:StandInfo> estetty ja kylvetty m nty  sek  istutettu kontortam nty  ( Pinus
 contorta ) v.1989.</st:StandInfo>
                 <st:Area>0.3476</st:Area>
                 <st:AreaDecrease>0.0832</st:AreaDecrease>

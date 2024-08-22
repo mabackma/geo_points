@@ -1,39 +1,102 @@
-use crate::forest_property::tree_stand_data::{TreeStandData, Operations, SpecialFeatures};
-use crate::forest_property::geometry::PolygonGeometry;
-use super::tree_stand_data::TreeStrata;
-use serde_json::Value;
-use serde::{Deserialize, Serialize};
 
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+use geo::{Coord, LineString, Polygon};
+use serde::{Deserialize, Serialize};
+use crate::forest_property::tree_stand_data::TreeStrata;
+use crate::forest_property::forest_property_data::{ TreeStandDataDate, TreeStratum};
+use crate::forest_property::forest_property_data::{Operations, SpecialFeatures, StandBasicData, TreeStandData};
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
+
 pub struct Stands {
+    #[serde(rename = "$text")]
+    pub text: Option<String>,
     #[serde(rename = "Stand")]
     pub stand: Vec<Stand>,
 }
 
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Stand {
+    #[serde(rename = "@id")]
+    pub id: String,
+    #[serde(rename = "$text")]
+    pub text: Option<String>,
     #[serde(rename = "StandBasicData")]
     pub stand_basic_data: StandBasicData,
-    #[serde(rename = "TreeStandData")]
-    pub tree_stand_data: Option<TreeStandData>,
-    #[serde(rename = "Operations")]
-    pub operations: Option<Operations>,
     #[serde(rename = "SpecialFeatures")]
     pub special_features: Option<SpecialFeatures>,
+    #[serde(rename = "Operations")]
+    pub operations: Option<Operations>,
+    #[serde(rename = "TreeStandData")]
+    pub tree_stand_data: Option<TreeStandData>,
 }
 
 impl Stand {
-    // Get stem count
-    pub fn get_stem_count(&self) -> i64 {
-        let data_date = self.tree_stand_data.as_ref().unwrap().tree_stand_data_date.last().unwrap();
-        let stem_count = data_date.tree_stand_summary.as_ref().unwrap().stem_count;
-        
-        stem_count
+    pub fn parse_geometry(&self, coord_string: &String) -> Vec<Coord<f64>> {
+        let coordinates_str: Vec<&str> = coord_string.split(" ").collect();
+
+        // Parse coordinates into a Vec of `Coord<f64>`
+        let mut coords: Vec<Coord<f64>> = Vec::new();
+
+        for coordinate in coordinates_str {
+            let parts: Vec<&str> = coordinate.split(',').collect();
+            if parts.len() == 2 {
+                let x: f64 = parts[0].parse().expect("Invalid x coordinate");
+                let y: f64 = parts[1].parse().expect("Invalid y coordinate");
+                coords.push(Coord { x, y });
+            } else {
+                println!("Invalid coordinate format: {}", coordinate);
+            }
+        }
+
+        coords
     }
 
-    // Determines if stem count is in individual stratum
+    pub fn get_geometries(&self) -> (LineString, Vec<LineString>) {
+        let polygon = &self
+            .stand_basic_data
+            .polygon_geometry
+            .polygon_property
+            .polygon;
+
+        let exterior = &polygon.exterior.linear_ring.coordinates;
+        let exterior_geometry = LineString::new(self.parse_geometry(&exterior).to_owned());
+
+        let interior_geometry: Vec<LineString> = polygon
+            .interior
+            .iter()
+            .map(|f| {
+                let geometry = self.parse_geometry(&f.linear_ring.coordinates);
+                LineString::new(geometry)
+            })
+            .collect();
+
+        (exterior_geometry, interior_geometry)
+    }
+
+    pub fn create_polygon(&self) -> Polygon {
+        let (interior, exterior) = self.get_geometries();
+
+        let polygon = Polygon::new(interior, exterior);
+
+        polygon
+    }
+
+    pub fn summary_stem_count(&self) -> Option<i64> {
+
+        let last_data_date = match self.get_last_tree_stand_data_date() {
+            Some(data) => data,
+            None => return None 
+        };
+
+        match &last_data_date.tree_stand_summary {
+            Some(summary) => return Some(summary.stem_count),
+            None => return None
+        };
+        
+    }
+
     pub fn stem_count_in_stratum(&self) -> bool {
         if let Some(tree_stand_data) = &self.tree_stand_data {
             let data_date = tree_stand_data.tree_stand_data_date.last().unwrap();
@@ -47,78 +110,33 @@ impl Stand {
         false
     }
 
-    // Returns strata information for the stand
-    pub fn get_strata(&self) -> TreeStrata {
+    pub fn get_stratums(&self) -> Vec<TreeStratum> {
         let tree_stand_data = self.tree_stand_data.as_ref().unwrap();
         let data_date = tree_stand_data.tree_stand_data_date.last().unwrap();
 
-        let strata = &data_date.tree_strata.tree_stratum;
-        let strata = TreeStrata::new(strata.to_vec());
-        strata
+        data_date.tree_strata.tree_stratum.to_owned()
     }
-}
 
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct StandBasicData {
-    #[serde(rename = "ChangeState")]
-    pub change_state: i64,
-    #[serde(rename = "ChangeTime")]
-    pub change_time: String,
-    #[serde(rename = "CompleteState")]
-    pub complete_state: i64,
-    #[serde(rename = "StandNumber")]
-    pub stand_number: i64,
-    #[serde(rename = "StandNumberExtension")]
-    pub stand_number_extension: Value,
-    #[serde(rename = "MainGroup")]
-    pub main_group: i64,
-    #[serde(rename = "SubGroup")]
-    pub sub_group: Option<i64>,
-    #[serde(rename = "FertilityClass")]
-    pub fertility_class: Option<i64>,
-    #[serde(rename = "SoilType")]
-    pub soil_type: Option<i64>,
-    #[serde(rename = "DrainageState")]
-    pub drainage_state: Option<i64>,
-    #[serde(rename = "DevelopmentClass")]
-    pub development_class: Option<Value>,
-    #[serde(rename = "StandQuality")]
-    pub stand_quality: Option<i64>,
-    #[serde(rename = "MainTreeSpecies")]
-    pub main_tree_species: Option<i64>,
-    #[serde(rename = "Accessibility")]
-    pub accessibility: Option<i64>,
-    #[serde(rename = "StandBasicDataDate")]
-    pub stand_basic_data_date: String,
-    #[serde(rename = "Area")]
-    pub area: f64,
-    #[serde(rename = "PolygonGeometry")]
-    pub polygon_geometry: PolygonGeometry,
-    #[serde(rename = "StandInfo")]
-    pub stand_info: Option<String>,
-    #[serde(rename = "AreaDecrease")]
-    pub area_decrease: Option<f64>,
-    #[serde(rename = "DitchingYear")]
-    pub ditching_year: Option<i64>,
-    #[serde(rename = "Identifiers")]
-    pub identifiers: Option<Identifiers>,
-    #[serde(rename = "CuttingRestriction")]
-    pub cutting_restriction: Option<i64>,
-}
+    pub fn get_strata(&self) -> Option<TreeStrata> {
+        let last_data_date = match self.get_last_tree_stand_data_date() {
+            Some(data) => data,
+            None => return None 
+        };
 
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Identifiers {
-    #[serde(rename = "Identifier")]
-    pub identifier: Identifier,
-}
+        let strata = &last_data_date.tree_strata.tree_stratum;
+        let strata = TreeStrata::new(strata.to_vec());
+        Some(strata)
+    }
 
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Identifier {
-    #[serde(rename = "IdentifierType")]
-    pub identifier_type: i64,
-    #[serde(rename = "IdentifierValue")]
-    pub identifier_value: i64,
+    pub fn get_last_tree_stand_data_date(&self) -> Option<TreeStandDataDate> {
+        let stand_data = match &self.tree_stand_data {
+            Some(data) => data,
+            None => return None 
+        };
+
+        match stand_data.tree_stand_data_date.last() {
+            Some(last_data_date) => Some(last_data_date.to_owned()),
+            None => return None 
+        }
+    }
 }

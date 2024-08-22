@@ -1,40 +1,12 @@
-mod geometry_utils;
 mod forest_property;
-
-use crate::forest_property::root::Root;
-use crate::forest_property::image_processor::ImageProcessor;
-use forest_property::forest_property_data::ForestPropertyData;
-use forest_property::tree_stand_data::TreeStrata;
+mod geometry_utils;
+use forest_property::{forest_property_data::ForestPropertyData, image_processor::ImageProcessor};
 use geo_types::coord;
-use geometry_utils::*;
+use geometry_utils::generate_random_trees;
 use image::Rgb;
-use serde::{Deserialize, Serialize};
-use serde_json::Serializer;
-use serde_xml_rs::{Deserializer, EventReader, ParserConfig};
-use std::fs::{read_to_string, File};
-use std::io::{Read, Write};
-use std::path::Path;
- 
-// Read JSON file
-fn read_json_file(file_name: String) -> Root {
-    let path = Path::new(&file_name);
-    let mut rfile = File::open(&path).expect("Unable to open file");
-    let mut file_data = String::new();
 
-    // Read file data into the string `file_data`
-    rfile.read_to_string(&mut file_data).expect("Unable to read file");
-
-    // Deserialize directly into struct `Root`
-    // Root is the top-level struct that contains all the data
-    match serde_json::from_str::<Root>(&file_data) {
-        Ok(forest_property_data) => {
-            forest_property_data
-        },
-        Err(e) => {
-            panic!("Error parsing JSON data: {}", e);
-        }
-    }
-}
+#[cfg(test)]
+use std::fs;
 
 // Get color based on species number
 fn get_color_by_species(number: i64) -> Rgb<u8> {
@@ -73,33 +45,16 @@ fn get_color_by_species(number: i64) -> Rgb<u8> {
         29 => Rgb([64, 224, 208]),  // Turquoise - Lehtipuu
 
         // Default case for any unknown tree number
-        _ => Rgb([0, 0, 0]),        // Black for Unknown
+        _ => Rgb([0, 0, 0]), // Black for Unknown
     }
 }
 
 
+
 fn main() {
-
     let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
-    let real_estate = property.choose_real_estate();
-    let parcel = real_estate.choose_parcel();
-    let stand = parcel.choose_stand();
-    let coordinate_strings: Vec<String> = stand.get_coordinate_string();
-
-    // !! Some modifications for a quick test !!
-
-    // Choose a parcel and a stand
-/*  let file_name = "forestpropertydata_updated.json".to_string();
-    let root = read_json_file(file_name);
-    let parcel = root.choose_parcel();
-    let stand = parcel.choose_stand();
-
-    // Create a polygon from the stand's coordinates
-    let coordinate_string = stand.stand_basic_data.polygon_geometry.polygon_property.polygon.exterior.linear_ring.coordinates.trim(); */
-
-    let coordinate_string = coordinate_strings.first().expect("No coordinates found");
-
-    let polygon = create_polygon(&coordinate_string.as_str());
+    let stand = property.get_stand_cli();
+    let polygon = stand.create_polygon();
 
     // Create an image for the polygon and random points
     let img_width = 800;
@@ -108,40 +63,79 @@ fn main() {
 
     // Map polygon coordinates to image
     let mapped_coordinates = image.map_coordinates_to_image(&polygon);
-
-    // Draw the polygon
     image.draw_polygon_image(&mapped_coordinates);
 
-    let summary_stem_count = stand.get_stem_count();
+    let summary_stem_count = stand.summary_stem_count();
+    let strata = stand.get_strata().expect("No treeStrata/stratums found");
+    let random_trees = generate_random_trees(&polygon, &strata);
+
     if stand.stem_count_in_stratum() {
         println!("\nStem count is in individual stratum");
 
-        // Replaced for a quick test to try out if this is working
-        let stratums = stand.get_stratums();
-        // Modified generate_random_trees function to take Vec<Stratum>
-        let random_trees = generate_random_trees(&polygon, stratums);
-
-        // Draw random points without using Poisson disc sampling
+        // Draw the random points
         for tree in random_trees {
             let point = coord! {x: tree.position().0, y: tree.position().1};
             let color = get_color_by_species(tree.species());
             image.draw_random_point(&polygon, img_width, img_height, point, color);
         }
-        // TODO: Implement Poisson disc sampling for better random point distribution
     } else {
         println!("Stem count is not in any individual stratum. Drawing random points based on tree stand summary.");
 
-        // Generate random points within the polygon
-        let random_points = generate_random_points(&polygon, summary_stem_count as i32);
-
-        // Draw the generated random points within the polygon
-        for point in random_points {
-            image.draw_random_point(&polygon, img_width, img_height, point, Rgb([255, 0, 0])) // Draw points in red
+        // Draw the random points
+        for tree in random_trees {
+            let point = coord! {x: tree.position().0, y: tree.position().1};
+            image.draw_random_point(&polygon, img_width, img_height, point, Rgb([255, 0, 0]))
+            // Draw points in red
         }
     }
     println!("\nTotal stem count: {:?}", summary_stem_count);
 
-    image.img().save("polygon_image.png").expect("Failed to save image");
+    image
+        .img()
+        .save("polygon_image.png")
+        .expect("Failed to save image");
     println!("Polygon image saved as 'polygon_image.png'");
 }
 
+#[test]
+fn test_writing_to_json(){
+    let test_json_path = "test_json_from_xml.json";
+
+    let xml_property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
+
+    match xml_property.write_to_json_file("test_json_from_xml.json") {
+        std::result::Result::Ok(_) => assert!(true),
+        _ => assert!(false)
+    }
+    
+    fs::remove_file(test_json_path).unwrap()
+
+}
+
+#[test]
+fn test_parsers() {
+    let xml_property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
+    xml_property.write_to_json_file("json_from_xml.json").expect("writing JSON failed");
+
+    let json_property = ForestPropertyData::from_json_file("json_from_xml.json");
+
+    let xml_real_estate = xml_property.real_estates.real_estate.first().unwrap();
+    let json_real_estate = json_property.real_estates.real_estate.first().unwrap();
+
+    let xml_id = &xml_real_estate.id;
+    let json_id = &json_real_estate.id;
+
+    assert!(xml_id == json_id, "JSON and XML file parsing");
+
+    let xml_stands = xml_real_estate.get_stands();
+    let json_stands = json_real_estate.get_stands();
+
+    for i in 0..xml_stands.iter().len() {
+        assert!(
+            xml_stands[i].id == json_stands[i].id,
+            "stand is matches with id: {}",
+            i
+        )
+    }
+
+}

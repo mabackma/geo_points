@@ -1,67 +1,48 @@
-use std::{fs::File, io::Read, sync::Arc};
-
-use anyhow::Ok;
+use core::f64;
+use std::fs::{self, File};
 use serde::{Deserialize, Serialize};
-use serde_xml_rs::{Deserializer, EventReader, ParserConfig};
+use super::{geometry::PolygonGeometry, stand::{Stand, Stands}};
 
-use crate::forest_property::stand;
-
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct ForestPropertyData {
-    #[serde(default)]
-    pub xmlns: String,
-    #[serde(rename(deserialize = "xmlns:re"), default)]
-    pub xmlns_re: String,
-    #[serde(rename(deserialize = "xmlns:st"), default)]
-    pub xmlns_st: String,
-    #[serde(rename(deserialize = "xmlns:ts"), default)]
-    pub xmlns_ts: String,
-    #[serde(rename(deserialize = "xmlns:tst"), default)]
-    pub xmlns_tst: String,
-    #[serde(rename(deserialize = "xmlns:dts"), default)]
-    pub xmlns_dts: String,
-    #[serde(rename(deserialize = "xmlns:tss"), default)]
-    pub xmlns_tss: String,
-    #[serde(rename(deserialize = "xmlns:op"), default)]
-    pub xmlns_op: String,
-    #[serde(rename(deserialize = "xmlns:sf"), default)]
-    pub xmlns_sf: String,
-    #[serde(rename(deserialize = "xmlns:gdt"), default)]
-    pub xmlns_gdt: String,
-    #[serde(rename(deserialize = "xmlns:co"), default)]
-    pub xmlns_co: String,
-    #[serde(rename(deserialize = "xmlns:gml"), default)]
-    pub xmlns_gml: String,
-    #[serde(rename(deserialize = "xmlns:xsi"), default)]
-    pub xmlns_xsi: String,
-    #[serde(rename(deserialize = "xmlns:xlink"), default)]
-    pub xmlns_xlink: String,
-    #[serde(rename(deserialize = "schemaLocation"), default)]
-    pub xsi_schema_location: String,
-    #[serde(rename(deserialize = "$text"), default)]
-    pub text: Option<String>,
-    #[serde(rename(deserialize = "RealEstates"), default)]
-    pub real_estates: Vec<RealEstates>,
+    #[serde(rename = "RealEstates")]
+    pub real_estates: RealEstates,
+}
+
+pub fn read_number_cli(min: usize, max: usize) -> usize {
+    let mut buf = String::new();
+
+    std::io::stdin()
+        .read_line(&mut buf)
+        .expect("Failed to read line");
+
+    let number: usize = buf.trim().parse().expect("Please type a number!");
+
+    if number > max || number < min {
+        panic!("Chosen number out of range")
+    }
+
+    number
 }
 
 impl ForestPropertyData {
     pub fn from_xml_file(path: &str) -> ForestPropertyData {
-        let xml_file = File::open(path).expect("error opening the xml file");
-        let config = ParserConfig::new()
-            .trim_whitespace(false)
-            .whitespace_to_characters(true);
+        let xml = fs::read_to_string(path).expect("Could not read the XML file");
+        ForestPropertyData::parse_from_str(xml.as_str())
+    }
 
-        let event_reader = EventReader::new_with_config(xml_file, config);
+    #[cfg(test)]
+    pub fn from_json_file(path: &str) -> ForestPropertyData {
+        let json = fs::read_to_string(path).expect("Could not read the JSON file");
 
-        let deserializer = &mut Deserializer::new(event_reader);
-
-        let property = ForestPropertyData::deserialize(deserializer)
-            .expect("Unable to deserialize the xml file");
-
+        
+        let property : ForestPropertyData = serde_json::from_str(json.as_str()).expect("Error parsing json file");
+        
         property
     }
 
-    pub fn write_to_json_file(&self, path: &str) -> anyhow::Result<()> {
+    #[cfg(test)]
+    pub fn write_to_json_file(&self, path: &str) -> anyhow::Result<(), anyhow::Error> {
         let json_file = File::create(path)?;
 
         serde_json::to_writer(json_file, &self)?;
@@ -69,529 +50,434 @@ impl ForestPropertyData {
         Ok(())
     }
 
-    pub fn choose_real_estate(&self) -> &RealEstate {
-        let real_estates: &Vec<RealEstates> = &self.real_estates;
-        let mut real_estate_number = String::new();
+    pub fn parse_from_str(xml: &str) -> ForestPropertyData {
+        quick_xml::de::from_str(xml).expect("Could not parse the XML")
+    }
 
-        println!("\nRealestates:");
-        for (i, real_estate_parent) in real_estates.iter().enumerate() {
-            print!(
-                "{}. {:?}, ",
-                i.to_string(),
-                real_estate_parent.real_estate.real_estate_name
-            );
+    // Parcels are not probably needed in this context but its good to keep them just in case
+    pub fn choose_parcel(&self) -> Parcel {
+        let parcels: &Vec<Parcel> = &self.real_estates.real_estate.first().unwrap().parcels.parcel;
+
+        println!("\nParcels:");
+        for (i, parcel) in parcels.iter().enumerate() {
+            print!("{}. {:?}, ", i, parcel.parcel_number);
         }
+        println!("Choose a parcel to view: ");
 
+        let parcel_index = read_number_cli(0, parcels.len());
+        parcels[parcel_index].to_owned()
+    }
+
+    pub fn get_stand_cli(&self) -> Stand {
+        let real_estates = &self.real_estates.real_estate;
+
+        println!("Realestates:");
+        for (i, real_estate) in real_estates.iter().enumerate() {
+            println!("{}. {:?}, ", i.to_string(), real_estate.real_estate_name);
+        }
         println!("Choose a realestate number to view: ");
 
-        // Read parcel number from user input into String `parcel_number`
-        std::io::stdin()
-            .read_line(&mut real_estate_number)
-            .expect("Failed to read line");
+        let real_estate_index = read_number_cli(0, real_estates.len());
 
-        // Shadowing `parcel_number` to convert it to an integer
-        let index: usize = real_estate_number
-            .trim()
-            .parse()
-            .expect("Please type a number!");
+        let real_estate = &self.real_estates.real_estate[real_estate_index];
 
-        &self.real_estates[index].real_estate
+        let stands_data: Vec<&Stand> = real_estate.get_stands();
+
+        for (i, stand) in stands_data.iter().enumerate() {
+            let StandBasicData {
+                area, stand_number, ..
+            } = &stand.stand_basic_data;
+
+            println!(
+                "{}. {:?}, {}ha, stand number: {}",
+                i, stand.id, area, stand_number
+            )
+        }
+
+        println!("Choose a stand:");
+
+        let stand_index = read_number_cli(0, stands_data.len());
+
+        let stand = stands_data[stand_index];
+
+        stand.to_owned()
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct RealEstates {
-    #[serde(rename(deserialize = "$text"))]
+    #[serde(rename = "$text")]
     pub text: Option<String>,
-    #[serde(rename(deserialize = "RealEstate"))]
-    pub real_estate: RealEstate,
+    #[serde(rename = "RealEstate")]
+    pub real_estate: Vec<RealEstate>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct RealEstate {
+    #[serde(rename = "@id")]
+    pub id: String,
+    #[serde(rename = "$text")]
+    pub text: Option<String>,
+    #[serde(rename = "MunicipalityNumber")]
+    pub municipality_number: String,
+    #[serde(rename = "AreaNumber")]
+    pub area_number: u16,
+    #[serde(rename = "GroupNumber")]
+    pub group_number: u16,
+    #[serde(rename = "UnitNumber")]
+    pub unit_number: u16,
+    #[serde(rename = "RealEstateName")]
+    pub real_estate_name: String,
+    #[serde(rename = "Parcels")]
+    pub parcels: Parcels,
 }
 
 impl RealEstate {
-    pub fn choose_parcel(&self) -> Parcel {
-        let parcels: &Vec<Parcel> = &self
-            .parcels.iter().flat_map(|f| {
-                f.parcel.clone()
-            }).collect();
-        let mut parcel_number = String::new();
+    
+    pub fn get_stands(&self) -> Vec<&Stand> {
 
-        println!("\nParcels:");
-        for parcel in parcels.iter() {
-            print!("{:?}, ", parcel.parcel_number);
-        }
+        let parcels = &self.parcels.parcel;
 
-        println!("Choose a parcel number to view: ");
-
-        // Read parcel number from user input into String `parcel_number`
-        std::io::stdin()
-            .read_line(&mut parcel_number)
-            .expect("Failed to read line");
-
-        // Shadowing `parcel_number` to convert it to an integer
-        let parcel_number: i64 = parcel_number.trim().parse().expect("Please type a number!");
-        let parcel = parcels
+        let stands_data: Vec<&Stand> = parcels
             .iter()
-            .find(|&x| x.parcel_number == parcel_number)
-            .unwrap();
+            .flat_map(|parcel: &Parcel| &parcel.stands.stand)
+            .collect();
 
-        parcel.clone()
-    }
+        stands_data
+    } 
+
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq)]
-pub struct RealEstate {
-    pub id: String,
-    #[serde(rename(deserialize = "$text"))]
-    pub text: Option<String>,
-    #[serde(rename(deserialize = "MunicipalityNumber"))]
-    pub municipality_number: String,
-    #[serde(rename(deserialize = "AreaNumber"))]
-    pub area_number: String,
-    #[serde(rename(deserialize = "GroupNumber"))]
-    pub group_number: String,
-    #[serde(rename(deserialize = "UnitNumber"))]
-    pub unit_number: String,
-    #[serde(rename(deserialize = "RealEstateName"))]
-    pub real_estate_name: String,
-    #[serde(rename(deserialize = "Parcels"))]
-    pub parcels: Vec<Parcels>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Parcels {
-    #[serde(rename(deserialize = "$text"))]
+    #[serde(rename = "$text")]
     pub text: Option<String>,
-    #[serde(rename(deserialize = "Parcel"))]
+    #[serde(rename = "Parcel")]
     pub parcel: Vec<Parcel>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Parcel {
+    #[serde(rename = "@id")]
     pub id: String,
-    #[serde(rename(deserialize = "$text"))]
+    #[serde(rename = "$text")]
     pub text: Option<String>,
-    #[serde(rename(deserialize = "ParcelNumber"))]
+    #[serde(rename = "ParcelNumber")]
     pub parcel_number: i64,
-    #[serde(rename(deserialize = "Stands"))]
-    pub stands: Option<Stands>,
-}
-
-impl Parcel {
-    pub fn choose_stand(&self) -> Stand {
-        let mut stand_number = String::new();
-
-        let stands: Vec<Stand> = self.stands.iter().flat_map(|f| f.stand.clone()).collect();
-
-        println!("\nStands:");
-
-            for (i, stand) in stands.iter().enumerate() {
-   
-                if stand.tree_stand_data.is_some() {
-                    print!("\n{}. {:?}, area: {}ha", i, stand.stand_basic_data.stand_number, stand.stand_basic_data.area);
-                }
-            }
-        
-
-        println!("Choose a stand number to view: ");
-
-        std::io::stdin().read_line(&mut stand_number).expect("Failed to read line");
-
-        let stand_number: usize = stand_number.trim().parse().expect("Please type a number!");
-
-        stands[stand_number].clone()
-
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
-pub struct Stands {
-    #[serde(rename(deserialize = "$text"))]
-    pub text: Option<String>,
-    #[serde(rename(deserialize = "Stand"))]
-    pub stand: Vec<Stand>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
-pub struct Stand {
-    pub id: String,
-    #[serde(rename(deserialize = "$text"))]
-    pub text: Option<String>,
-    #[serde(rename(deserialize = "StandBasicData"))]
-    pub stand_basic_data: StandBasicData,
-    #[serde(rename(deserialize = "SpecialFeatures"), default)]
-    pub special_features: Vec<SpecialFeatures>,
-    #[serde(rename(deserialize = "Operations"), default)]
-    pub operations: Option<Operations>,
-    #[serde(rename(deserialize = "TreeStandData"), default)]
-    pub tree_stand_data: Option<TreeStandData>,
-}
-
-impl Stand {
-    pub fn get_coordinate_string(&self) -> Vec<String>{
-
-        let gml_exterior = self.stand_basic_data.gpolygon_geometry.gml_polygon_property.gml_polygon.exterior.to_owned();
-        let gml_interior = self.stand_basic_data.gpolygon_geometry.gml_polygon_property.gml_polygon.interior.to_owned();
-
-        let gml: Vec<Gml> = [gml_exterior, gml_interior].concat();
-
-        let coordinates: Vec<String> = gml.to_owned().into_iter().map(|f| f.linear_ring.coordinates).collect();
-
-        coordinates
-    }
-
-      // Get stem count
-      pub fn get_stem_count(&self) -> i64 {
-        let data_date = self.tree_stand_data.as_ref().unwrap().tree_stand_data_date.last().unwrap();
-        let stem_count = data_date.tree_stand_summary.as_ref().unwrap().stem_count;
-        
-        stem_count
-    }
-
-    // Determines if stem count is in individual stratum
-    pub fn stem_count_in_stratum(&self) -> bool {
-        if let Some(tree_stand_data) = &self.tree_stand_data {
-            let data_date = tree_stand_data.tree_stand_data_date.last().unwrap();
-            for stratum in data_date.tree_strata.tree_stratum.iter() {
-                if stratum.stem_count.is_some() {
-                    return true;
-                }
-            }
-        }
-
-        false
-    }
-
-    // Returns strata information for the stand
-    pub fn get_stratums(&self) -> Vec<TreeStratum> {
-        let tree_stand_data = self.tree_stand_data.as_ref().unwrap();
-        let data_date = tree_stand_data.tree_stand_data_date.last().unwrap();
-
-        data_date.tree_strata.tree_stratum.to_owned()
-
-    }
+    #[serde(rename = "Stands")]
+    pub stands: Stands,
 }
 
 
-
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct StandBasicData {
-    #[serde(rename(deserialize = "$text"))]
+    #[serde(rename = "$text")]
     pub text: Option<String>,
-    #[serde(rename(deserialize = "Identifiers"), default)]
-    pub identifiers: Vec<StIdentifiers>,
-    #[serde(rename(deserialize = "CuttingRestriction"))]
-    pub cutting_restriction: Option<i32>,
-    #[serde(rename(deserialize = "StandInfo"))]
+    #[serde(rename = "Identifiers")]
+    pub identifiers: Option<StIdentifiers>,
+    #[serde(rename = "CuttingRestriction")]
+    pub cutting_restriction: Option<String>,
+    #[serde(rename = "StandInfo")]
     pub stand_info: Option<String>,
-    #[serde(rename(deserialize = "DitchingYear"))]
-    pub ditching_year: Option<i32>,
-    #[serde(rename(deserialize = "ChangeState"))]
+    #[serde(rename = "DitchingYear")]
+    pub ditching_year: Option<String>,
+    #[serde(rename = "ChangeState")]
     pub change_state: String,
-    #[serde(rename(deserialize = "ChangeTime"))]
+    #[serde(rename = "ChangeTime")]
     pub change_time: String,
-    #[serde(rename(deserialize = "CompleteState"))]
+    #[serde(rename = "CompleteState")]
     pub complete_state: String,
-    #[serde(rename(deserialize = "StandNumber"))]
-    pub stand_number: i64,
-    #[serde(rename(deserialize = "StandNumberExtension"))]
+    #[serde(rename = "StandNumber")]
+    pub stand_number: String,
+    #[serde(rename = "StandNumberExtension")]
     pub stand_number_extension: String,
-    #[serde(rename(deserialize = "MainGroup"))]
+    #[serde(rename = "MainGroup")]
     pub main_group: String,
-    #[serde(rename(deserialize = "StandBasicDataDate"))]
+    #[serde(rename = "StandBasicDataDate")]
     pub stand_basic_data_date: String,
-    #[serde(rename(deserialize = "Area"))]
+    #[serde(rename = "Area")]
     pub area: String,
-    #[serde(rename(deserialize = "PolygonGeometry"))]
-    pub gpolygon_geometry: GdtPolygonGeometry,
-    #[serde(rename(deserialize = "AreaDecrease"))]
+    #[serde(rename = "PolygonGeometry")]
+    pub polygon_geometry: PolygonGeometry,
+    #[serde(rename = "AreaDecrease")]
     pub area_decrease: Option<String>,
-    #[serde(rename(deserialize = "Accessibility"))]
+    #[serde(rename = "Accessibility")]
     pub accessibility: Option<String>,
-    #[serde(rename(deserialize = "MainTreeSpecies"))]
+    #[serde(rename = "MainTreeSpecies")]
     pub main_tree_species: Option<String>,
-    #[serde(rename(deserialize = "StandQuality"))]
+    #[serde(rename = "StandQuality")]
     pub stand_quality: Option<String>,
-    #[serde(rename(deserialize = "DevelopmentClass"))]
+    #[serde(rename = "DevelopmentClass")]
     pub development_class: Option<String>,
-    #[serde(rename(deserialize = "DrainageState"))]
+    #[serde(rename = "DrainageState")]
     pub drainage_state: Option<String>,
-    #[serde(rename(deserialize = "SoilType"))]
+    #[serde(rename = "SoilType")]
     pub soil_type: Option<String>,
-    #[serde(rename(deserialize = "FertilityClass"))]
+    #[serde(rename = "FertilityClass")]
     pub fertility_class: Option<String>,
-    #[serde(rename(deserialize = "SubGroup"))]
+    #[serde(rename = "SubGroup")]
     pub sub_group: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct StIdentifiers {
-    #[serde(rename(deserialize = "$text"))]
+    #[serde(rename = "$text")]
     pub text: Option<String>,
-    #[serde(rename(deserialize = "Identifier"))]
-    pub st_identifier: StIdentifier,
+    #[serde(rename = "Identifier")]
+    pub identifier: StIdentifier,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct StIdentifier {
-    #[serde(rename(deserialize = "$text"))]
+    #[serde(rename = "$text")]
     pub text: Option<String>,
-    #[serde(rename(deserialize = "IdentifierType"))]
-    pub co_identifier_type: String,
-    #[serde(rename(deserialize = "IdentifierValue"))]
-    pub co_identifier_value: String,
+    #[serde(rename = "IdentifierType")]
+    pub identifier_type: String,
+    #[serde(rename = "IdentifierValue")]
+    pub identifier_value: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
-pub struct GdtPolygonGeometry {
-    #[serde(rename(deserialize = "$text"))]
-    pub text: Option<String>,
-    #[serde(rename(deserialize = "pointProperty"))]
-    pub gml_point_property: GmlPointProperty,
-    #[serde(rename(deserialize = "polygonProperty"))]
-    pub gml_polygon_property: GmlPolygonProperty,
-}
-
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
-pub struct GmlPointProperty {
-    #[serde(rename(deserialize = "$text"))]
-    pub text: Option<String>,
-    #[serde(rename(deserialize = "Point"))]
-    pub gml_point: GmlPoint,
-}
-
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
-pub struct GmlPoint {
-    #[serde(rename(deserialize = "srsName"))]
-    pub srs_name: String,
-    #[serde(rename(deserialize = "$text"))]
-    pub text: Option<String>,
-    #[serde(rename(deserialize = "coordinates"))]
-    pub gml_coordinates: String,
-}
-
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
-pub struct GmlPolygonProperty {
-    #[serde(rename(deserialize = "$text"))]
-    pub text: Option<String>,
-    #[serde(rename(deserialize = "Polygon"))]
-    pub gml_polygon: GmlPolygon,
-}
-
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
-pub struct GmlPolygon {
-    #[serde(rename(deserialize = "srsName"))]
-    pub srs_name: String,
-    #[serde(rename(deserialize = "$text"))]
-    pub text: Option<String>,
-    #[serde(rename(deserialize = "interior"), default)]
-    pub interior: Vec<Gml>,
-    #[serde(rename(deserialize = "exterior"), default)]
-    pub exterior: Vec<Gml>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
-pub struct Gml {
-    #[serde(rename(deserialize = "$text"))]
-    pub text: Option<String>,
-    #[serde(rename(deserialize = "LinearRing"))]
-    pub linear_ring: GmlLinearRing,
-}
-
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
-pub struct GmlLinearRing {
-    #[serde(rename(deserialize = "$text"))]
-    pub text: Option<String>,
-    #[serde(rename(deserialize = "coordinates"))]
-    pub coordinates: String,
-}
-
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct SpecialFeatures {
-    #[serde(rename(deserialize = "$text"))]
+    #[serde(rename = "$text")]
     pub text: Option<String>,
-    #[serde(rename(deserialize = "SpecialFeature"))]
+    #[serde(rename = "SpecialFeature")]
     pub special_feature: Vec<SpecialFeature>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct SpecialFeature {
+    #[serde(rename = "@id")]
     pub id: String,
-    #[serde(rename(deserialize = "$text"))]
+    #[serde(rename = "$text")]
     pub text: Option<String>,
-    #[serde(rename(deserialize = "FeatureAdditionalCode"))]
-    pub feature_additional_code: Option<Vec<i32>>,
-    #[serde(rename(deserialize = "ChangeState"))]
-    pub change_state: i32,
-    #[serde(rename(deserialize = "FeatureCode"))]
-    pub feature_code: i32,
+    #[serde(rename = "FeatureAdditionalCode")]
+    pub feature_additional_code: Option<String>,
+    #[serde(rename = "ChangeState")]
+    pub change_state: String,
+    #[serde(rename = "FeatureCode")]
+    pub feature_code: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Operations {
-    #[serde(rename(deserialize = "$text"))]
+    #[serde(rename = "$text")]
     pub text: Option<String>,
-    #[serde(rename(deserialize = "Operation"), default)]
+    #[serde(rename = "Operation")]
     pub operation: Vec<Operation>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Operation {
-    #[serde(rename(deserialize = "mainType"))]
+    #[serde(rename = "@mainType")]
     pub main_type: String,
+    #[serde(rename = "@id")]
     pub id: String,
-    #[serde(rename(deserialize = "$text"))]
+    #[serde(rename = "$text")]
     pub text: Option<String>,
-    #[serde(rename(deserialize = "CompletionData"))]
-    pub completion_data: Option<Vec<CompletionData>>,
-    #[serde(rename(deserialize = "OperationInfo"))]
+    #[serde(rename = "CompletionData")]
+    pub completion_data: Option<CompletionData>,
+    #[serde(rename = "OperationInfo")]
     pub operation_info: Option<String>,
-    #[serde(rename(deserialize = "Specifications"))]
+    #[serde(rename = "Specifications")]
     pub specifications: Option<Specifications>,
-    #[serde(rename(deserialize = "Silviculture"))]
-    pub silviculture: Option<OpSilviculture>,
-    #[serde(rename(deserialize = "ChangeState"))]
+    #[serde(rename = "Silviculture")]
+    pub silviculture: Option<Silviculture>,
+    #[serde(rename = "ChangeState")]
     pub change_state: String,
-    #[serde(rename(deserialize = "ChangeTime"))]
+    #[serde(rename = "ChangeTime")]
     pub change_time: String,
-    #[serde(rename(deserialize = "OperationType"))]
-    pub operation_type: i32,
-    #[serde(rename(deserialize = "ProposalData"))]
-    pub proposal_data: OpProposalData,
-    #[serde(rename(deserialize = "Cutting"))]
+    #[serde(rename = "OperationType")]
+    pub operation_type: String,
+    #[serde(rename = "ProposalData")]
+    pub proposal_data: ProposalData,
+    #[serde(rename = "Cutting")]
     pub cutting: Option<Cutting>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct CompletionData {
-    #[serde(rename(deserialize = "$text"))]
+    #[serde(rename = "$text")]
     pub text: Option<String>,
-    #[serde(rename(deserialize = "CompletionDate"))]
+    #[serde(rename = "CompletionDate")]
     pub completion_date: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Specifications {
-    #[serde(rename(deserialize = "$text"))]
+    #[serde(rename = "$text")]
     pub text: Option<String>,
-    #[serde(rename(deserialize = "Specification"))]
+    #[serde(rename = "Specification")]
     pub specification: Vec<Specification>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Specification {
+    #[serde(rename = "@id")]
     pub id: String,
-    #[serde(rename(deserialize = "$text"))]
+    #[serde(rename = "$text")]
     pub text: Option<String>,
-    #[serde(rename(deserialize = "ChangeState"))]
-    pub change_state: i32,
-    #[serde(rename(deserialize = "SpecificationCode"))]
-    pub specification_code: i32,
+    #[serde(rename = "ChangeState")]
+    pub change_state: String,
+    #[serde(rename = "SpecificationCode")]
+    pub specification_code: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
-pub struct OpSilviculture {}
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct Silviculture {}
 
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
-pub struct OpProposalData {
-    #[serde(rename(deserialize = "$text"))]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct ProposalData {
+    #[serde(rename = "$text")]
     pub text: Option<String>,
-    #[serde(rename(deserialize = "ProposalType"))]
-    pub proposal_type: i32,
-    #[serde(rename(deserialize = "ProposalYear"))]
-    pub proposal_year: i32,
+    #[serde(rename = "ProposalType")]
+    pub proposal_type: String,
+    #[serde(rename = "ProposalYear")]
+    pub proposal_year: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Cutting {
-    #[serde(rename(deserialize = "$text"))]
+    #[serde(rename = "$text")]
     pub text: Option<String>,
-    #[serde(rename(deserialize = "CuttingVolume"))]
-    pub cutting_volume: f64,
-    #[serde(rename(deserialize = "Assortments"), default)]
+    #[serde(rename = "CuttingVolume")]
+    pub cutting_volume: String,
+    #[serde(rename = "Assortments")]
     pub assortments: Option<Assortments>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Assortments {
-    #[serde(rename(deserialize = "$text"))]
+    #[serde(rename = "$text")]
     pub text: Option<String>,
-    #[serde(rename(deserialize = "Assortment"))]
+    #[serde(rename = "Assortment")]
     pub assortment: Vec<Assortment>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Assortment {
+    #[serde(rename = "@id")]
     pub id: String,
-    #[serde(rename(deserialize = "$text"))]
+    #[serde(rename = "$text")]
     pub text: Option<String>,
-    #[serde(rename(deserialize = "ChangeState"))]
-    pub change_state: i32,
-    #[serde(rename(deserialize = "TreeSpecies"))]
-    pub tree_species: Option<String>,
-    #[serde(rename(deserialize = "StemType"))]
-    pub stem_type: i32,
-    #[serde(rename(deserialize = "AssortmentVolume"))]
-    pub assortment_volume: Option<f64>,
+    #[serde(rename = "ChangeState")]
+    pub change_state: String,
+    #[serde(rename = "TreeSpecies")]
+    pub tree_species: String,
+    #[serde(rename = "StemType")]
+    pub stem_type: String,
+    #[serde(rename = "AssortmentVolume")]
+    pub assortment_volume: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct TreeStandData {
-    #[serde(rename(deserialize = "$text"))]
+    #[serde(rename = "$text")]
     pub text: Option<String>,
-    #[serde(rename(deserialize = "TreeStandDataDate"))]
+    #[serde(rename = "TreeStandDataDate")]
     pub tree_stand_data_date: Vec<TreeStandDataDate>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct TreeStandDataDate {
+    #[serde(rename = "@date", default)]
     pub date: String,
-    #[serde(rename(deserialize = "type"))]
-    pub ts_tree_stand_data_date_type: String,
-    #[serde(rename(deserialize = "$text"))]
+    #[serde(rename = "@type", default)]
+    pub tree_stand_data_date_type: String,
+    #[serde(rename = "$text")]
     pub text: Option<String>,
-    #[serde(rename(deserialize = "DeadTreeStrata"))]
+    #[serde(rename = "DeadTreeStrata")]
     pub dead_tree_strata: Option<DeadTreeStrata>,
-    #[serde(rename(deserialize = "TreeStrata"))]
+    #[serde(rename = "TreeStrata")]
     pub tree_strata: TreeStrata,
-    #[serde(rename(deserialize = "TreeStandSummary"))]
+    #[serde(rename = "TreeStandSummary")]
     pub tree_stand_summary: Option<TreeStandSummary>,
 }
-
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
+/*            "TreeStratum": {
+  "ChangeState": 0,
+  "StratumNumber": 0,
+  "TreeSpecies": 1,
+  "Storey": 1,
+  "Age": 90,
+  "BasalArea": 2,
+  "MeanDiameter": 31,
+  "MeanHeight": 23,
+  "DataSource": 0
+} */
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct DeadTreeStrata {
-    #[serde(rename(deserialize = "$text"))]
+    #[serde(rename = "$text")]
     pub text: Option<String>,
-    #[serde(rename(deserialize = "DeadTreeStratum"))]
+    #[serde(rename = "DeadTreeStratum")]
     pub dead_tree_stratum: Vec<DeadTreeStratum>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct DeadTreeStratum {
+    #[serde(rename = "@id")]
     pub id: String,
-    #[serde(rename(deserialize = "$text"))]
+    #[serde(rename = "$text")]
     pub text: Option<String>,
-    #[serde(rename(deserialize = "ChangeState"))]
+    #[serde(rename = "ChangeState")]
     pub change_state: i32,
-    #[serde(rename(deserialize = "DeadTreeType"))]
+    #[serde(rename = "DeadTreeType")]
     pub dead_tree_type: i32,
-    #[serde(rename(deserialize = "TreeSpecies"))]
+    #[serde(rename = "TreeSpecies")]
     pub tree_species: i32,
-    #[serde(rename(deserialize = "Volume"))]
+    #[serde(rename = "Volume")]
     pub volume: Option<f64>,
-    #[serde(rename(deserialize = "MeanDiameter"))]
+    #[serde(rename = "MeanDiameter")]
     pub mean_diameter: Option<f64>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct TreeStrata {
-    #[serde(rename(deserialize = "$text"))]
+    #[serde(rename = "$text")]
     pub text: Option<String>,
-    #[serde(rename(deserialize = "TreeStratum"))]
+    #[serde(rename = "TreeStratum")]
     pub tree_stratum: Vec<TreeStratum>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TreeStratum {
+    #[serde(rename = "@id", default)]
+    pub id: String,
+    #[serde(rename = "ChangeState")]
+    pub change_state: i64,
+    #[serde(rename = "StratumNumber")]
+    pub stratum_number: i64,
+    #[serde(rename = "TreeSpecies")]
+    pub tree_species: i64,
+    #[serde(rename = "Storey")]
+    pub storey: i64,
+    #[serde(rename = "Age")]
+    pub age: i64,
+    #[serde(rename = "StemCount")]
+    pub stem_count: Option<i64>,
+    #[serde(rename = "MeanDiameter")]
+    pub mean_diameter: Option<f64>,
+    #[serde(rename = "MeanHeight")]
+    pub mean_height: f64,
+    #[serde(rename = "DataSource")]
+    pub data_source: i64,
+    #[serde(rename = "BasalArea")]
+    pub basal_area: Option<f64>,
+    #[serde(rename = "SawLogPercent")]
+    pub saw_log_percent: Option<f64>,
+    #[serde(rename = "SawLogVolume")]
+    pub saw_log_volume: Option<f64>,
+    #[serde(rename = "VolumeGrowth")]
+    pub volume_growth: Option<f64>,
+    #[serde(rename = "Volume")]
+    pub volume: Option<f64>,
+    #[serde(rename = "PulpWoodVolume")]
+    pub pulp_wood_volume: Option<f64>,
+}
+
+/* #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct TreeStratum {
+    #[serde(rename = "@id")]
     pub id: String,
     #[serde(rename(deserialize = "$text"))]
     pub text: Option<String>,
@@ -626,34 +512,35 @@ pub struct TreeStratum {
     #[serde(rename(deserialize = "BasalArea"))]
     pub basal_area: Option<f64>,
 }
-
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
+ */
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct TreeStandSummary {
+    #[serde(rename = "@id")]
     pub id: String,
-    #[serde(rename(deserialize = "$text"))]
+    #[serde(rename = "$text")]
     pub text: Option<String>,
-    #[serde(rename(deserialize = "PulpWoodVolume"))]
-    pub pulp_wood_volume: Option<f64>,
-    #[serde(rename(deserialize = "SawLogVolume"))]
-    pub saw_log_volume: Option<f64>,
-    #[serde(rename(deserialize = "ChangeState"))]
-    pub change_state: i32,
-    #[serde(rename(deserialize = "MeanAge"))]
+    #[serde(rename = "PulpWoodVolume")]
+    pub pulp_wood_volume: Option<String>,
+    #[serde(rename = "SawLogVolume")]
+    pub saw_log_volume: Option<String>,
+    #[serde(rename = "ChangeState")]
+    pub change_state: String,
+    #[serde(rename = "MeanAge")]
     pub mean_age: f64,
-    #[serde(rename(deserialize = "BasalArea"))]
+    #[serde(rename = "BasalArea")]
     pub basal_area: f64,
-    #[serde(rename(deserialize = "StemCount"))]
+    #[serde(rename = "StemCount")]
     pub stem_count: i64,
-    #[serde(rename(deserialize = "MeanDiameter"))]
+    #[serde(rename = "MeanDiameter")]
     pub mean_diameter: f64,
-    #[serde(rename(deserialize = "MeanHeight"))]
+    #[serde(rename = "MeanHeight")]
     pub mean_height: f64,
-    #[serde(rename(deserialize = "Volume"))]
+    #[serde(rename = "Volume")]
     pub volume: f64,
-    #[serde(rename(deserialize = "VolumeGrowth"))]
+    #[serde(rename = "VolumeGrowth")]
     pub volume_growth: f64,
-    #[serde(rename(deserialize = "ValueGrowthPercent"))]
+    #[serde(rename = "ValueGrowthPercent")]
     pub value_growth_percent: Option<f64>,
-    #[serde(rename(deserialize = "Value"))]
-    pub value: Option<f64>,
+    #[serde(rename = "Value")]
+    pub value: Option<String>,
 }

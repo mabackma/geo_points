@@ -1,6 +1,8 @@
 use serde_json::Value;
 use serde::{Deserialize, Serialize};
 
+use crate::forest_property::forest_property_data::TreeStratum;
+
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TreeStandData {
@@ -32,7 +34,7 @@ impl TreeStrata {
     }
 }
 
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+/* #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TreeStratum {
     #[serde(rename = "ChangeState")]
@@ -65,8 +67,8 @@ pub struct TreeStratum {
     pub volume: Option<f64>,
     #[serde(rename = "PulpWoodVolume")]
     pub pulp_wood_volume: Option<f64>,
-}
-
+} */
+/*  */
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TreeStandSummary {
