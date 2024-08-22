@@ -475,44 +475,6 @@ pub struct TreeStratum {
     pub pulp_wood_volume: Option<f64>,
 }
 
-/* #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct TreeStratum {
-    #[serde(rename = "@id")]
-    pub id: String,
-    #[serde(rename(deserialize = "$text"))]
-    pub text: Option<String>,
-    #[serde(rename(deserialize = "ChangeState"))]
-    pub change_state: i32,
-    #[serde(rename(deserialize = "StratumNumber"))]
-    pub stratum_number: i32,
-    #[serde(rename(deserialize = "TreeSpecies"))]
-    pub tree_species: i32,
-    #[serde(rename(deserialize = "Storey"))]
-    pub storey: i32,
-    #[serde(rename(deserialize = "Age"))]
-    pub age: i32,
-    #[serde(rename(deserialize = "MeanHeight"))]
-    pub mean_height: f64,
-    #[serde(rename(deserialize = "DataSource"))]
-    pub data_source: i32,
-    #[serde(rename(deserialize = "VolumeGrowth"))]
-    pub volume_growth: Option<f64>,
-    #[serde(rename(deserialize = "PulpWoodVolume"))]
-    pub pulp_wood_volume: Option<f64>,
-    #[serde(rename(deserialize = "SawLogVolume"))]
-    pub saw_log_volume: Option<f64>,
-    #[serde(rename(deserialize = "SawLogPercent"))]
-    pub saw_log_percent: Option<f64>,
-    #[serde(rename(deserialize = "Volume"))]
-    pub volume: Option<f64>,
-    #[serde(rename(deserialize = "MeanDiameter"))]
-    pub mean_diameter: Option<f64>,
-    #[serde(rename(deserialize = "StemCount"))]
-    pub stem_count: Option<i32>,
-    #[serde(rename(deserialize = "BasalArea"))]
-    pub basal_area: Option<f64>,
-}
- */
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct TreeStandSummary {
     #[serde(rename = "@id")]
