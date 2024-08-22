@@ -76,9 +76,9 @@ impl Stand {
     }
 
     pub fn create_polygon(&self) -> Polygon {
-        let (interior, exterior) = self.get_geometries();
+        let (exterior, interior) = self.get_geometries();
 
-        let polygon = Polygon::new(interior, exterior);
+        let polygon = Polygon::new(exterior, interior);
 
         polygon
     }

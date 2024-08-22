@@ -1,21 +1,20 @@
 use crate::forest_property::tree::Tree;
-use crate::forest_property::geometry::Polygon;
 
-use geo::{Coord, LineString};
+use geo::{Coord, LineString, Polygon};
 use geo::Intersects;
 use geo::line_string;
 
 use super::stand::Stand;
 
 // Struct that represents a stand of trees
-pub struct StandTrees {
-    trees: Vec<Tree>,
-    polygon: Polygon,
+pub struct Compartment {
+    pub trees: Vec<Tree>,
+    pub polygon: Polygon,
 }
 
-impl StandTrees {
+impl Compartment {
     pub fn new(trees: Vec<Tree>, polygon: Polygon) -> Self {
-        StandTrees {
+        Compartment {
             trees,
             polygon,
         }
@@ -29,7 +28,7 @@ impl StandTrees {
         &self.polygon
     }
 
-    // TODO: Use this method for all StandTrees structs that are found inside the bounding box
+    // TODO: Use this method for all Compartment structs that are found inside the bounding box
     pub fn trees_in_bounding_box(&self, min_x: f64, max_x: f64, min_y: f64, max_y: f64) -> Vec<&Tree> {
         self.trees.iter().filter(|tree| {
             let (x, y, _) = tree.position();

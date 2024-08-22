@@ -95,7 +95,7 @@ pub struct LinearRing {
                           }
                         } 
                         
-                        #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PolygonGeometry {
     pub point_property: PointProperty,
