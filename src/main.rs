@@ -10,6 +10,9 @@ use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
+
+use crate::forest_property::stand_trees::find_stands_in_bounding_box;
+
 // Read JSON file
 fn read_json_file(file_name: String) -> Root {
     let path = Path::new(&file_name);
@@ -78,6 +81,22 @@ fn main() {
     let root = read_json_file(file_name);
     let parcel = root.choose_parcel();
     let stand = parcel.choose_stand();
+/* 
+    /* Testing find_stands_in_bounding_box */
+    for stand in &parcel.stands.stand {
+        println!("\nStand polygon Coordinates {:?}", stand.stand_basic_data.polygon_geometry.polygon_property.polygon.exterior.linear_ring.coordinates);
+    }
+    println!("\nTotal stands: {:?}", parcel.stands.stand.len());
+
+    let stands = find_stands_in_bounding_box(&parcel.stands.stand, 0.0, 428000.0, 0.0, 7371000.0);
+    if !stands.is_none() {
+        println!("Stands in bounding box: {:?}", stands.clone().unwrap().len());
+        for stand in &stands.unwrap() {
+            println!("\nStand number {:?}", stand.stand_basic_data.stand_number);
+            println!("Stand polygon Coordinates {:?}", stand.stand_basic_data.polygon_geometry.polygon_property.polygon.exterior.linear_ring.coordinates);
+        }
+    }
+*/
 
     // Create a polygon from the stand's coordinates
     let coordinate_string = stand.stand_basic_data.polygon_geometry.polygon_property.polygon.exterior.linear_ring.coordinates.trim();

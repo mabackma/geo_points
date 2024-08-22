@@ -36,9 +36,11 @@ pub fn generate_area_trees(data_from_js: Vec<f64>) -> Vec<f64> {
         exterior,
         vec![], // No holes in the polygon
     );
-    
+
     // Generate Poisson disc points inside the polygon
     let points = generate_poisson_disc_points(&p, 10.0);
+
+    //TODO: project the points to
 
     // For each tree, calculate the 3D position
     let mut vec_3d = Vec::new();
