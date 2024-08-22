@@ -4,10 +4,10 @@ use forest_property::{forest_property_data::ForestPropertyData, image_processor:
 use geo_types::coord;
 use geometry_utils::generate_random_trees;
 use image::Rgb;
+use crate::forest_property::stand_trees::find_stands_in_bounding_box;
 
 #[cfg(test)]
 use std::fs;
-
 // Get color based on species number
 fn get_color_by_species(number: i64) -> Rgb<u8> {
     match number {
