@@ -1,4 +1,5 @@
 use crate::forest_property::tree::Tree;
+use crate::geometry_utils::generate_random_trees;
 
 use geo::{Coord, LineString, Polygon};
 use geo::Intersects;
@@ -79,4 +80,37 @@ fn get_coordinates_from_string(coord_string: &str) -> Vec<Coord> {
     }
 
     coords
+}
+
+pub fn get_compartments_in_bounding_box(all_stands: Vec<&Stand>, min_x: f64, max_x: f64, min_y: f64, max_y: f64) -> Vec<Compartment> {
+    let mut compartments = Vec::new();
+    let mut stands = Vec::new();
+
+    for stand in all_stands {
+        stands.push(stand.clone());
+    }
+    println!("\nTotal stands: {:?}", stands.len());
+
+    // Find stands in the bounding box
+    let stands = find_stands_in_bounding_box(&stands, min_x, max_x, min_y, max_y);
+
+    // If there are stands in the bounding box, generate random trees for each stand
+    if !stands.is_none() {
+        println!("Stands in bounding box: {:?}", stands.clone().unwrap().len());
+        for stand in &stands.unwrap() {
+            println!("\n\nStand number {:?}", stand.stand_basic_data.stand_number);
+
+            let polygon = stand.create_polygon();
+            let strata = stand.get_strata().expect("No treeStrata/stratums found");
+            let trees = generate_random_trees(&polygon, &strata);
+            
+            let compartment = Compartment {
+                trees,
+                polygon,
+            };
+            
+            compartments.push(compartment);
+        }
+    }
+    compartments
 }

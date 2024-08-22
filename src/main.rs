@@ -1,10 +1,12 @@
 mod forest_property;
 mod geometry_utils;
-use forest_property::{forest_property_data::ForestPropertyData, image_processor::ImageProcessor, stand, compartment::Compartment};
+
+use forest_property::compartment::{find_stands_in_bounding_box, get_compartments_in_bounding_box};
+use forest_property::forest_property_data::ForestPropertyData;
+use forest_property::image_processor::ImageProcessor;
 use geo_types::coord;
 use geometry_utils::generate_random_trees;
 use image::Rgb;
-use crate::forest_property::compartment::find_stands_in_bounding_box;
 
 #[cfg(test)]
 use std::fs;
@@ -49,8 +51,7 @@ fn get_color_by_species(number: i64) -> Rgb<u8> {
     }
 }
 
-
- 
+// Main function
 fn main() { 
     let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
     let stand = property.get_stand_cli();
@@ -158,39 +159,17 @@ fn test_find_stands_in_bounding_box() {
         }
     }
 }
-/* TESTING TREE GENERATION FOR STANDS IN BOUNDING BOX
+
+/*
+/* TESTING TREE GENERATION FOR STANDS IN BOUNDING BOX */
 fn main() {
     let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
     let real_estate = property.real_estates.real_estate[0].clone();
-    let all_stands = real_estate.get_stands();
+    let stands = real_estate.get_stands();
 
-    let mut compartments = Vec::new();
-    let mut stands = Vec::new();
-    for stand in all_stands {
-        stands.push(stand.clone());
-    }
-    println!("\nTotal stands: {:?}", stands.len());
+    // Find compartments in the bounding box
+    let compartments = get_compartments_in_bounding_box(stands, 0.0, 427700.0, 0.0, 7370000.0);
 
-    // Find stands in the bounding box
-    let stands = find_stands_in_bounding_box(&stands, 0.0, 428000.0, 0.0, 7371000.0);
-
-    // If there are stands in the bounding box, generate random trees for each stand
-    if !stands.is_none() {
-        println!("Stands in bounding box: {:?}", stands.clone().unwrap().len());
-        for stand in &stands.unwrap() {
-            println!("\n\nStand number {:?}", stand.stand_basic_data.stand_number);
-
-            let polygon = stand.create_polygon();
-            let strata = stand.get_strata().expect("No treeStrata/stratums found");
-            let trees = generate_random_trees(&polygon, &strata);
-            
-            let compartment = Compartment {
-                trees,
-                polygon,
-            };
-            
-            compartments.push(compartment);
-        }
-    }
+    // TODO: Draw the compartments inside the bounding box to an image
 }
 */
