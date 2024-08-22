@@ -154,7 +154,7 @@ fn test_find_stands_in_bounding_box() {
     if !stands.is_none() {
         println!("Stands in bounding box: {:?}", stands.clone().unwrap().len());
         for stand in &stands.unwrap() {
-            println!("\nStand number {:?}", stand.stand_basic_data.stand_number);
+            println!("Stand number {:?}", stand.stand_basic_data.stand_number);
         }
     }
 }
