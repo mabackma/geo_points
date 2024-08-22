@@ -84,8 +84,7 @@ fn main() {
         // Draw the random points
         for tree in random_trees {
             let point = coord! {x: tree.position().0, y: tree.position().1};
-            image.draw_random_point(&polygon, img_width, img_height, point, Rgb([255, 0, 0]))
-            // Draw points in red
+            image.draw_random_point(&polygon, img_width, img_height, point, Rgb([255, 0, 0])) // Draw points in red
         }
     }
     println!("\nTotal stem count: {:?}", summary_stem_count);

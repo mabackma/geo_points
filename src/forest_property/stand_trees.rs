@@ -1,7 +1,5 @@
+use crate::forest_property::tree::Tree;
 use crate::forest_property::geometry::Polygon;
-
-use super::tree::Tree;
-
 
 // Struct that represents a stand of trees
 pub struct StandTrees {
