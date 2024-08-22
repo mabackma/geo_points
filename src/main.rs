@@ -51,7 +51,7 @@ fn get_color_by_species(number: i64) -> Rgb<u8> {
 
 
 
-fn main() {
+fn main() { 
     let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
     let stand = property.get_stand_cli();
     let polygon = stand.create_polygon();
@@ -136,5 +136,25 @@ fn test_parsers() {
             i
         )
     }
+}
 
+// Run wih `cargo test -- --nocapture` to see the print statements
+#[test]
+fn test_find_stands_in_bounding_box() {
+    let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
+    let real_estate = property.real_estates.real_estate[0].clone();
+    let all_stands = real_estate.get_stands();
+
+    let mut stands = Vec::new();
+    for stand in all_stands {
+        stands.push(stand.clone());
+    }
+    println!("\nTotal stands: {:?}", stands.len());
+    let stands = find_stands_in_bounding_box(&stands, 0.0, 428000.0, 0.0, 7371000.0);
+    if !stands.is_none() {
+        println!("Stands in bounding box: {:?}", stands.clone().unwrap().len());
+        for stand in &stands.unwrap() {
+            println!("\nStand number {:?}", stand.stand_basic_data.stand_number);
+        }
+    }
 }

@@ -5,7 +5,7 @@ use geo::{Coord, LineString};
 use geo::Intersects;
 use geo::line_string;
 
-use super::stand::{Stand, Stands};
+use super::stand::Stand;
 
 // Struct that represents a stand of trees
 pub struct StandTrees {

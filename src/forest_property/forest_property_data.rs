@@ -102,6 +102,22 @@ impl ForestPropertyData {
 
         stand.to_owned()
     }
+
+    pub fn get_all_stands(&self) -> Vec<&Stand> {
+        let real_estates = &self.real_estates.real_estate;
+
+        println!("Realestates:");
+        for (i, real_estate) in real_estates.iter().enumerate() {
+            println!("{}. {:?}, ", i.to_string(), real_estate.real_estate_name);
+        }
+        println!("Choose a realestate number to view: ");
+
+        let real_estate_index = read_number_cli(0, real_estates.len());
+        let real_estate = &self.real_estates.real_estate[real_estate_index];
+        let stands_data: Vec<&Stand> = real_estate.get_stands();
+
+        stands_data
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
