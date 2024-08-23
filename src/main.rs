@@ -1,9 +1,10 @@
 mod forest_property;
 mod geometry_utils;
 
-use forest_property::compartment::{find_stands_in_bounding_box, get_compartments_in_bounding_box};
+use forest_property::compartment::{clip_polygon_to_bounding_box, clip_trees_to_bounding_box, find_stands_in_bounding_box, get_compartments_in_bounding_box};
 use forest_property::forest_property_data::ForestPropertyData;
 use forest_property::image_processor::ImageProcessor;
+use geo::Coord;
 use geo_types::coord;
 use geometry_utils::generate_random_trees;
 use image::Rgb;
@@ -160,16 +161,54 @@ fn test_find_stands_in_bounding_box() {
     }
 }
 
-/*
+/* 
 /* TESTING TREE GENERATION FOR STANDS IN BOUNDING BOX */
+// TODO: Fix drawing the compartment polygons and trees so that they don't overlap
 fn main() {
     let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
     let real_estate = property.real_estates.real_estate[0].clone();
     let stands = real_estate.get_stands();
 
-    // Find compartments in the bounding box
-    let compartments = get_compartments_in_bounding_box(stands, 0.0, 427700.0, 0.0, 7370000.0);
+    // Define the bounding box
+    let min_x = 0.0;
+    let max_x = 427900.0;
+    let min_y = 0.0;
+    let max_y = 7370000.0;
 
-    // TODO: Draw the compartments inside the bounding box to an image
+    // Create an image processor with the desired image dimensions
+    let img_width = 1000; // For example
+    let img_height = 1000; // For example
+    let mut image = ImageProcessor::new(img_width, img_height);
+
+    // Find compartments in the bounding box
+    let compartments = get_compartments_in_bounding_box(stands, min_x, max_x, min_y, max_y);
+
+    for compartment in compartments {
+        let multi_polygon = match clip_polygon_to_bounding_box(&compartment.polygon, min_x, max_x, min_y, max_y) {
+            Some(polygon) => polygon,
+            None => continue,
+        };
+        let trees = clip_trees_to_bounding_box(&compartment.trees, min_x, max_x, min_y, max_y);
+
+        // MultiPolygon always contains one Polygon because we are clipping to a bounding box
+        let polygon = multi_polygon.0.first().unwrap();
+
+        // Draw the polygon
+        let mapped_coordinates = image.map_coordinates_to_image(polygon);
+        image.draw_polygon_image(&mapped_coordinates);
+
+        // Draw the trees
+        for tree in trees {
+            let point = coord! {x: tree.position().0, y: tree.position().1};
+            let color = get_color_by_species(tree.species());
+            image.draw_random_point(&polygon, img_width, img_height, point, color);
+        }
+    }
+
+    image
+        .img()
+        .save("clipped_image.png")
+        .expect("Failed to save image");
+    println!("Polygon image saved as 'clipped_image.png'");
 }
 */

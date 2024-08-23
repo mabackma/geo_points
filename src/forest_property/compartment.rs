@@ -1,11 +1,13 @@
+use std::ops::Mul;
+
 use crate::forest_property::tree::Tree;
 use crate::geometry_utils::generate_random_trees;
+use super::stand::Stand;
 
-use geo::{Coord, LineString, Polygon};
+use geo::{Coord, LineString, MultiPolygon, Polygon};
 use geo::Intersects;
 use geo::line_string;
-
-use super::stand::Stand;
+use geo_clipper::Clipper;
 
 // Struct that represents a stand of trees
 pub struct Compartment {
@@ -113,4 +115,39 @@ pub fn get_compartments_in_bounding_box(all_stands: Vec<&Stand>, min_x: f64, max
         }
     }
     compartments
+}
+
+// Helper function to clip polygon to bounding box
+pub fn clip_polygon_to_bounding_box(polygon: &Polygon<f64>, min_x: f64, max_x: f64, min_y: f64, max_y: f64) -> Option<MultiPolygon<f64>> {
+    let bbox = Polygon::new(
+        LineString(vec![
+            Coord { x: min_x, y: min_y },
+            Coord { x: max_x, y: min_y },
+            Coord { x: max_x, y: max_y },
+            Coord { x: min_x, y: max_y },
+            Coord { x: min_x, y: min_y },
+        ]),
+        vec![]
+    );
+
+    let clipped = polygon.intersection(&bbox, 1.0);
+
+    if clipped.0.is_empty() {
+        None
+    } else {
+        Some(clipped)
+    }
+}
+
+pub fn clip_trees_to_bounding_box(trees: &Vec<Tree>, min_x: f64, max_x: f64, min_y: f64, max_y: f64) -> Vec<Tree> {
+    let mut clipped_trees = Vec::new();
+
+    for tree in trees {
+        let (x, y, _) = tree.position();
+        if x >= min_x && x <= max_x && y >= min_y && y <= max_y {
+            clipped_trees.push(tree.clone());
+        }
+    }
+
+    clipped_trees
 }
