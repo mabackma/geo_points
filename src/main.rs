@@ -1,7 +1,7 @@
 mod forest_property;
 mod geometry_utils;
 
-use forest_property::compartment::{clip_polygon_to_bounding_box, clip_trees_to_bounding_box, find_stands_in_bounding_box, get_compartments_in_bounding_box};
+use forest_property::compartment::{find_stands_in_bounding_box, get_compartments_in_bounding_box};
 use forest_property::forest_property_data::ForestPropertyData;
 use forest_property::image_processor::ImageProcessor;
 use geo::Coord;
@@ -160,7 +160,6 @@ fn test_find_stands_in_bounding_box() {
         }
     }
 }
-
 /* 
 /* TESTING TREE GENERATION FOR STANDS IN BOUNDING BOX */
 // TODO: Fix drawing the compartment polygons and trees so that they don't overlap
@@ -184,17 +183,14 @@ fn main() {
     let compartments = get_compartments_in_bounding_box(stands, min_x, max_x, min_y, max_y);
 
     for compartment in compartments {
-        let multi_polygon = match clip_polygon_to_bounding_box(&compartment.polygon, min_x, max_x, min_y, max_y) {
+        let polygon = match compartment.clip_polygon_to_bounding_box( min_x, max_x, min_y, max_y) {
             Some(polygon) => polygon,
             None => continue,
         };
-        let trees = clip_trees_to_bounding_box(&compartment.trees, min_x, max_x, min_y, max_y);
-
-        // MultiPolygon always contains one Polygon because we are clipping to a bounding box
-        let polygon = multi_polygon.0.first().unwrap();
+        let trees = compartment.trees_in_bounding_box(min_x, max_x, min_y, max_y);
 
         // Draw the polygon
-        let mapped_coordinates = image.map_coordinates_to_image(polygon);
+        let mapped_coordinates = image.map_coordinates_to_image(&polygon);
         image.draw_polygon_image(&mapped_coordinates);
 
         // Draw the trees
