@@ -51,7 +51,7 @@ fn get_color_by_species(number: i64) -> Rgb<u8> {
         _ => Rgb([0, 0, 0]), // Black for Unknown
     }
 }
-
+/*
 // Main function
 fn main() {
     let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
@@ -101,7 +101,7 @@ fn main() {
         .expect("Failed to save image");
     println!("Polygon image saved as 'polygon_image.png'");
 }
-
+*/
 #[test]
 fn test_writing_to_json() {
     let test_json_path = "test_json_from_xml.json";
@@ -169,9 +169,8 @@ fn test_find_stands_in_bounding_box() {
     }
 }
 
-/* 
+
 /* TESTING TREE GENERATION FOR STANDS IN BOUNDING BOX */
-// TODO: Fix drawing the compartment polygons and trees so that they don't overlap
 fn main() {
     let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
     let real_estate = property.real_estates.real_estate[0].clone();
@@ -207,18 +206,22 @@ let min_y: f64 = 7369564.333;
 
 
 */
-
-   /*  let min_x: f64 = 427754.979;
+    /*
+    let min_x: f64 = 427754.979;
     let max_x: f64 = 427997.035;
     let max_y: f64 = 7369787.000;
-    let min_y: f64 = 7369564.333; */
+    let min_y: f64 = 7369564.333; 
 
     let min_x: f64 = 427541.481;
     let max_x: f64 = 428282.985;
     let max_y: f64 = 7369959.526;
     let min_y: f64 = 7369564.333;
-
-
+    */
+    let min_x = 428400.0;
+    let max_x = 429400.0;
+    let min_y = 7370500.0;
+    let max_y = 7371500.0;
+    
     // Create an image processor with the desired image dimensions
     let img_width = 1000; // For example
     let img_height = 1000; // For example
@@ -226,11 +229,7 @@ let min_y: f64 = 7369564.333;
 
     // Find compartments in the bounding box
     let compartments = get_compartments_in_bounding_box(stands, min_x, max_x, min_y, max_y);
-    /*
-       let polygons: Vec<geo_types::Polygon> = compartments.iter().map(|f| f.polygon.to_owned()).collect::<Vec<_>>();
 
-       let multi = MultiPolygon::new(polygons);
-    */
     let bbox = geo::Polygon::new(
         LineString(vec![
             Coord { x: min_x, y: min_y },
@@ -253,9 +252,6 @@ let min_y: f64 = 7369564.333;
 
         let trees = compartment.trees_in_bounding_box(min_x, max_x, min_y, max_y);
 
-        // MultiPolygon always contains one Polygon because we are clipping to a bounding box
-        //let polygon = multi_polygon.0.first().unwrap();
-
         // Draw the polygon
         let mapped_coordinates = image.map_coordinates_to_image(&polygon, &scale);
 
@@ -277,4 +273,3 @@ let min_y: f64 = 7369564.333;
         .expect("Failed to save image");
     println!("Polygon image saved as 'clipped_image.png'");
 }
-*/
