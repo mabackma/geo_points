@@ -1,10 +1,8 @@
-use std::ops::Mul;
-
 use crate::forest_property::tree::Tree;
 use crate::geometry_utils::generate_random_trees;
 use super::stand::Stand;
 
-use geo::{polygon, Coord, LineString, MultiPolygon, Polygon};
+use geo::{Coord, LineString, Polygon};
 use geo::Intersects;
 use geo::line_string;
 use geo_clipper::Clipper;
@@ -32,19 +30,9 @@ impl Compartment {
     }
 
     // Polygon clipping to bounding box
-    pub fn clip_polygon_to_bounding_box(&self, min_x: f64, max_x: f64, min_y: f64, max_y: f64) -> Option<Polygon> {
-        let bbox = Polygon::new(
-            LineString(vec![
-                Coord { x: min_x, y: min_y },
-                Coord { x: max_x, y: min_y },
-                Coord { x: max_x, y: max_y },
-                Coord { x: min_x, y: max_y },
-                Coord { x: min_x, y: min_y },
-            ]),
-            vec![]
-        );
+    pub fn clip_polygon_to_bounding_box(&self, bbox: &Polygon) -> Option<Polygon> {
 
-        let clipped = self.polygon.intersection(&bbox, 1.0);
+        let clipped = self.polygon.intersection(bbox, 1.0);
 
         if clipped.0.is_empty() {
             None
@@ -109,17 +97,13 @@ fn get_coordinates_from_string(coord_string: &str) -> Vec<Coord> {
     coords
 }
 
-pub fn get_compartments_in_bounding_box(all_stands: Vec<&Stand>, min_x: f64, max_x: f64, min_y: f64, max_y: f64) -> Vec<Compartment> {
+pub fn get_compartments_in_bounding_box(all_stands: Vec<Stand>, min_x: f64, max_x: f64, min_y: f64, max_y: f64) -> Vec<Compartment> {
     let mut compartments = Vec::new();
-    let mut stands = Vec::new();
 
-    for stand in all_stands {
-        stands.push(stand.clone());
-    }
-    println!("\nTotal stands: {:?}", stands.len());
+    println!("\nTotal stands: {:?}", all_stands.len());
 
     // Find stands in the bounding box
-    let stands = find_stands_in_bounding_box(&stands, min_x, max_x, min_y, max_y);
+    let stands = find_stands_in_bounding_box(&all_stands, min_x, max_x, min_y, max_y);
 
     // If there are stands in the bounding box, generate random trees for each stand
     if !stands.is_none() {

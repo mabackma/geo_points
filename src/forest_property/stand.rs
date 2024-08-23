@@ -1,4 +1,3 @@
-
 use geo::{Coord, LineString, Polygon};
 use serde::{Deserialize, Serialize};
 use crate::forest_property::tree_stand_data::TreeStrata;
@@ -30,9 +29,18 @@ pub struct Stand {
     pub operations: Option<Operations>,
     #[serde(rename = "TreeStandData")]
     pub tree_stand_data: Option<TreeStandData>,
+    #[serde(skip_serializing, skip_deserializing)]
+    pub computed_polygon: Option<Polygon>
 }
 
 impl Stand {
+    pub fn compute_polygon(&mut self) -> &Self {
+
+        self.computed_polygon = Some(self.create_polygon());
+        self
+       
+    }
+
     pub fn parse_geometry(&self, coord_string: &String) -> Vec<Coord<f64>> {
         let coordinates_str: Vec<&str> = coord_string.split(" ").collect();
 
