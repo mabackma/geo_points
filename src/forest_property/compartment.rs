@@ -128,7 +128,11 @@ pub fn get_compartments_in_bounding_box(all_stands: Vec<&Stand>, min_x: f64, max
             println!("\n\nStand number {:?}", stand.stand_basic_data.stand_number);
 
             let polygon = stand.create_polygon();
-            let strata = stand.get_strata().expect("No treeStrata/stratums found");
+            let strata = match stand.get_strata() {
+                Some(strata) => strata,
+                None => continue,
+            };
+
             let trees = generate_random_trees(&polygon, &strata);
             
             let compartment = Compartment {

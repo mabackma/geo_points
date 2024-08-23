@@ -160,7 +160,7 @@ fn test_find_stands_in_bounding_box() {
         }
     }
 }
-/* 
+/*
 /* TESTING TREE GENERATION FOR STANDS IN BOUNDING BOX */
 // TODO: Fix drawing the compartment polygons and trees so that they don't overlap
 fn main() {
@@ -169,10 +169,10 @@ fn main() {
     let stands = real_estate.get_stands();
 
     // Define the bounding box
-    let min_x = 0.0;
-    let max_x = 427900.0;
-    let min_y = 0.0;
-    let max_y = 7370000.0;
+    let min_x = 427900.0;
+    let max_x = 428900.0;
+    let min_y = 7370000.0;
+    let max_y = 7371000.0;
 
     // Create an image processor with the desired image dimensions
     let img_width = 1000; // For example
@@ -190,6 +190,7 @@ fn main() {
         let trees = compartment.trees_in_bounding_box(min_x, max_x, min_y, max_y);
 
         // Draw the polygon
+        // TODO: Polygons must be drawn with the same scale!!!
         let mapped_coordinates = image.map_coordinates_to_image(&polygon);
         image.draw_polygon_image(&mapped_coordinates);
 
@@ -207,4 +208,4 @@ fn main() {
         .expect("Failed to save image");
     println!("Polygon image saved as 'clipped_image.png'");
 }
-*/
+ */
