@@ -1,4 +1,4 @@
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, PartialEq)]
 pub struct Tree {
     species: i64,
     mean_height: f64,

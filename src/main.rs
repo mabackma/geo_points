@@ -1,11 +1,14 @@
 mod forest_property;
 mod geometry_utils;
 
-use forest_property::compartment::{clip_polygon_to_bounding_box, clip_trees_to_bounding_box, find_stands_in_bounding_box, get_compartments_in_bounding_box};
+use forest_property::compartment::{
+    clip_polygon_to_bounding_box, clip_trees_to_bounding_box, find_stands_in_bounding_box,
+    get_compartments_in_bounding_box,
+};
 use forest_property::forest_property_data::ForestPropertyData;
+use forest_property::geometry::Polygon;
 use forest_property::image_processor::ImageProcessor;
-use geo::Coord;
-use geo_types::coord;
+use geo::{coord, scale, Coord, LineString, MultiPolygon};
 use geometry_utils::generate_random_trees;
 use image::Rgb;
 
@@ -52,8 +55,8 @@ fn get_color_by_species(number: i64) -> Rgb<u8> {
     }
 }
 
-// Main function
-fn main() { 
+/* // Main function
+fn main() {
     let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
     let stand = property.get_stand_cli();
     let polygon = stand.create_polygon();
@@ -97,26 +100,27 @@ fn main() {
         .expect("Failed to save image");
     println!("Polygon image saved as 'polygon_image.png'");
 }
-
+ */
 #[test]
-fn test_writing_to_json(){
+fn test_writing_to_json() {
     let test_json_path = "test_json_from_xml.json";
 
     let xml_property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
 
-    match xml_property.write_to_json_file("test_json_from_xml.json") {
+    match xml_property.write_to_json_file(&test_json_path) {
         std::result::Result::Ok(_) => assert!(true),
-        _ => assert!(false)
+        _ => assert!(false),
     }
-    
-    fs::remove_file(test_json_path).unwrap()
 
+    fs::remove_file(test_json_path).unwrap()
 }
 
 #[test]
 fn test_parsers() {
     let xml_property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
-    xml_property.write_to_json_file("json_from_xml.json").expect("writing JSON failed");
+    xml_property
+        .write_to_json_file("json_from_xml.json")
+        .expect("writing JSON failed");
 
     let json_property = ForestPropertyData::from_json_file("json_from_xml.json");
 
@@ -154,14 +158,16 @@ fn test_find_stands_in_bounding_box() {
     println!("\nTotal stands: {:?}", stands.len());
     let stands = find_stands_in_bounding_box(&stands, 0.0, 428000.0, 0.0, 7371000.0);
     if !stands.is_none() {
-        println!("Stands in bounding box: {:?}", stands.clone().unwrap().len());
+        println!(
+            "Stands in bounding box: {:?}",
+            stands.clone().unwrap().len()
+        );
         for stand in &stands.unwrap() {
             println!("Stand number {:?}", stand.stand_basic_data.stand_number);
         }
     }
 }
 
-/* 
 /* TESTING TREE GENERATION FOR STANDS IN BOUNDING BOX */
 // TODO: Fix drawing the compartment polygons and trees so that they don't overlap
 fn main() {
@@ -169,11 +175,47 @@ fn main() {
     let real_estate = property.real_estates.real_estate[0].clone();
     let stands = real_estate.get_stands();
 
-    // Define the bounding box
-    let min_x = 0.0;
-    let max_x = 427900.0;
-    let min_y = 0.0;
-    let max_y = 7370000.0;
+   
+
+/* 
+
+pienempi
+N=7369787.000, E=427754.979
+N=7369564.333, E=427997.035
+N kasvaa pohjoisen suuntaa, E kasvaa idän suuntaan
+
+--->
+
+let min_x: f64 = 427754.979;
+let max_x: f64 = 427997.035;
+let max_y: f64 = 7369787.000;
+let min_y: f64 = 7369564.333;
+
+
+isompi
+N=7369959.526, E=427541.481
+N=7369356.859, E=428282.985
+
+
+let min_x: f64 = 427541.481;
+let max_x: f64 = 428282.985;
+let max_y: f64 = 7369959.526;
+let min_y: f64 = 7369564.333;
+
+
+
+*/
+
+   /*  let min_x: f64 = 427754.979;
+    let max_x: f64 = 427997.035;
+    let max_y: f64 = 7369787.000;
+    let min_y: f64 = 7369564.333; */
+
+    let min_x: f64 = 427541.481;
+    let max_x: f64 = 428282.985;
+    let max_y: f64 = 7369959.526;
+    let min_y: f64 = 7369564.333;
+
 
     // Create an image processor with the desired image dimensions
     let img_width = 1000; // For example
@@ -182,26 +224,48 @@ fn main() {
 
     // Find compartments in the bounding box
     let compartments = get_compartments_in_bounding_box(stands, min_x, max_x, min_y, max_y);
+    /*
+       let polygons: Vec<geo_types::Polygon> = compartments.iter().map(|f| f.polygon.to_owned()).collect::<Vec<_>>();
+
+       let multi = MultiPolygon::new(polygons);
+    */
+    let bbox = geo::Polygon::new(
+        LineString(vec![
+            Coord { x: min_x, y: min_y },
+            Coord { x: max_x, y: min_y },
+            Coord { x: max_x, y: max_y },
+            Coord { x: min_x, y: max_y },
+            Coord { x: min_x, y: min_y },
+        ]),
+        vec![],
+    );
+   
+    let scale = ImageProcessor::create_scale(min_x, max_x, min_y, max_y, img_width, img_height);
 
     for compartment in compartments {
-        let multi_polygon = match clip_polygon_to_bounding_box(&compartment.polygon, min_x, max_x, min_y, max_y) {
-            Some(polygon) => polygon,
-            None => continue,
-        };
+        let multi_polygon =
+            match clip_polygon_to_bounding_box(&compartment.polygon, &bbox) {
+                Some(polygon) => polygon,
+                None => continue,
+            };
+
         let trees = clip_trees_to_bounding_box(&compartment.trees, min_x, max_x, min_y, max_y);
 
         // MultiPolygon always contains one Polygon because we are clipping to a bounding box
         let polygon = multi_polygon.0.first().unwrap();
 
         // Draw the polygon
-        let mapped_coordinates = image.map_coordinates_to_image(polygon);
+        let mapped_coordinates = image.map_coordinates_to_image(polygon, &scale);
+
+        println!("MAPPED: {:?}", mapped_coordinates);
+
         image.draw_polygon_image(&mapped_coordinates);
 
         // Draw the trees
         for tree in trees {
             let point = coord! {x: tree.position().0, y: tree.position().1};
             let color = get_color_by_species(tree.species());
-            image.draw_random_point(&polygon, img_width, img_height, point, color);
+            image.draw_random_point(&scale, img_width, img_height, point, color);
         }
     }
 
@@ -211,4 +275,3 @@ fn main() {
         .expect("Failed to save image");
     println!("Polygon image saved as 'clipped_image.png'");
 }
-*/

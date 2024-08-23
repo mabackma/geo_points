@@ -81,7 +81,7 @@ impl ForestPropertyData {
 
         let real_estate = &self.real_estates.real_estate[real_estate_index];
 
-        let stands_data: Vec<&Stand> = real_estate.get_stands();
+        let stands_data: Vec<Stand> = real_estate.get_stands();
 
         for (i, stand) in stands_data.iter().enumerate() {
             let StandBasicData {
@@ -98,7 +98,7 @@ impl ForestPropertyData {
 
         let stand_index = read_number_cli(0, stands_data.len());
 
-        let stand = stands_data[stand_index];
+        let stand = &stands_data[stand_index];
 
         stand.to_owned()
     }
@@ -134,13 +134,16 @@ pub struct RealEstate {
 
 impl RealEstate {
     
-    pub fn get_stands(&self) -> Vec<&Stand> {
+    pub fn get_stands(&self) -> Vec<Stand> {
 
         let parcels = &self.parcels.parcel;
 
-        let stands_data: Vec<&Stand> = parcels
+        let stands_data: Vec<Stand> = parcels
             .iter()
-            .flat_map(|parcel: &Parcel| &parcel.stands.stand)
+            .flat_map(|parcel: &Parcel| {
+                let stands: Vec<Stand> = parcel.stands.stand.iter().map( | f| f.to_owned().compute_polygon().to_owned()).collect();
+                stands
+            })
             .collect();
 
         stands_data

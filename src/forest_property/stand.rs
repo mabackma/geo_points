@@ -1,9 +1,14 @@
 
+use std::cell::Cell;
+use std::sync::Arc;
+
 use geo::{Coord, LineString, Polygon};
 use serde::{Deserialize, Serialize};
 use crate::forest_property::tree_stand_data::TreeStrata;
 use crate::forest_property::forest_property_data::{ TreeStandDataDate, TreeStratum};
 use crate::forest_property::forest_property_data::{Operations, SpecialFeatures, StandBasicData, TreeStandData};
+
+use super::compartment::Compartment;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -30,9 +35,19 @@ pub struct Stand {
     pub operations: Option<Operations>,
     #[serde(rename = "TreeStandData")]
     pub tree_stand_data: Option<TreeStandData>,
+    #[serde(skip_serializing, skip_deserializing)]
+    pub computed_polygon: Option<Polygon>
 }
 
+
 impl Stand {
+    pub fn compute_polygon(&mut self) -> &Self {
+
+        self.computed_polygon = Some(self.create_polygon());
+        self
+       
+    }
+
     pub fn parse_geometry(&self, coord_string: &String) -> Vec<Coord<f64>> {
         let coordinates_str: Vec<&str> = coord_string.split(" ").collect();
 
@@ -76,6 +91,11 @@ impl Stand {
     }
 
     pub fn create_polygon(&self) -> Polygon {
+
+/*         if let Some(p) = &self.computed_polygon {
+            return p.to_owned();
+        }
+ */
         let (exterior, interior) = self.get_geometries();
 
         let polygon = Polygon::new(exterior, interior);

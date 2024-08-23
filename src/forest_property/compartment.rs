@@ -1,15 +1,16 @@
-use std::ops::Mul;
+
 
 use crate::forest_property::tree::Tree;
 use crate::geometry_utils::generate_random_trees;
 use super::stand::Stand;
 
-use geo::{Coord, LineString, MultiPolygon, Polygon};
+use geo::{ Coord, LineString, MultiPolygon, Polygon};
 use geo::Intersects;
 use geo::line_string;
 use geo_clipper::Clipper;
 
 // Struct that represents a stand of trees
+#[derive(Debug, Clone, PartialEq)]
 pub struct Compartment {
     pub trees: Vec<Tree>,
     pub polygon: Polygon,
@@ -51,9 +52,14 @@ pub fn find_stands_in_bounding_box(stands: &Vec<Stand>, min_x: f64, max_x: f64, 
 
     // Collect the stands that intersect with the bounding box
     let intersecting_stands: Vec<&Stand> = stands.iter().filter(|stand| {
+/*         stand.get_geometries();
         let stand_coordinate_sring = stand.stand_basic_data.polygon_geometry.polygon_property.polygon.exterior.linear_ring.coordinates.clone();
-        let stand_coordinates = get_coordinates_from_string(&stand_coordinate_sring);
-        let stand_line_string = LineString::from(stand_coordinates);
+        let stand_coordinates = get_coordinates_from_string(&stand_coordinate_sring); */
+        if let Some(stand_polygon) = &stand.computed_polygon {
+            return stand_polygon.intersects(&b_box_line_string);
+        }
+
+        let stand_line_string = stand.get_geometries().0;
         stand_line_string.intersects(&b_box_line_string)
     }).collect();  // Collect the stands that intersect with the bounding box
 
@@ -84,17 +90,18 @@ fn get_coordinates_from_string(coord_string: &str) -> Vec<Coord> {
     coords
 }
 
-pub fn get_compartments_in_bounding_box(all_stands: Vec<&Stand>, min_x: f64, max_x: f64, min_y: f64, max_y: f64) -> Vec<Compartment> {
+pub fn get_compartments_in_bounding_box(all_stands: Vec<Stand>, min_x: f64, max_x: f64, min_y: f64, max_y: f64) -> Vec<Compartment> {
     let mut compartments = Vec::new();
+/*     let mut compartments = Vec::new();
     let mut stands = Vec::new();
 
     for stand in all_stands {
         stands.push(stand.clone());
-    }
-    println!("\nTotal stands: {:?}", stands.len());
+    } */
+    println!("\nTotal stands: {:?}", all_stands.len());
 
     // Find stands in the bounding box
-    let stands = find_stands_in_bounding_box(&stands, min_x, max_x, min_y, max_y);
+    let stands = find_stands_in_bounding_box(&all_stands, min_x, max_x, min_y, max_y);
 
     // If there are stands in the bounding box, generate random trees for each stand
     if !stands.is_none() {
@@ -105,7 +112,7 @@ pub fn get_compartments_in_bounding_box(all_stands: Vec<&Stand>, min_x: f64, max
             let polygon = stand.create_polygon();
             let strata = stand.get_strata().expect("No treeStrata/stratums found");
             let trees = generate_random_trees(&polygon, &strata);
-            
+            println!("Tree count: {}", trees.len());
             let compartment = Compartment {
                 trees,
                 polygon,
@@ -118,19 +125,9 @@ pub fn get_compartments_in_bounding_box(all_stands: Vec<&Stand>, min_x: f64, max
 }
 
 // Helper function to clip polygon to bounding box
-pub fn clip_polygon_to_bounding_box(polygon: &Polygon<f64>, min_x: f64, max_x: f64, min_y: f64, max_y: f64) -> Option<MultiPolygon<f64>> {
-    let bbox = Polygon::new(
-        LineString(vec![
-            Coord { x: min_x, y: min_y },
-            Coord { x: max_x, y: min_y },
-            Coord { x: max_x, y: max_y },
-            Coord { x: min_x, y: max_y },
-            Coord { x: min_x, y: min_y },
-        ]),
-        vec![]
-    );
+pub fn clip_polygon_to_bounding_box(polygon: &Polygon<f64>, bbox: &Polygon) -> Option<MultiPolygon<f64>> {
 
-    let clipped = polygon.intersection(&bbox, 1.0);
+    let clipped = polygon.intersection(bbox, 1.0); 
 
     if clipped.0.is_empty() {
         None
