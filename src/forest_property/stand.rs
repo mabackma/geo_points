@@ -98,23 +98,30 @@ impl Stand {
     }
 
     pub fn stem_count_in_stratum(&self) -> bool {
-        if let Some(tree_stand_data) = &self.tree_stand_data {
-            let data_date = tree_stand_data.tree_stand_data_date.last().unwrap();
-            for stratum in data_date.tree_strata.tree_stratum.iter() {
-                if stratum.stem_count.is_some() {
-                    return true;
-                }
+        let stratums = self.get_stratums();
+
+        let stratum_vec = match stratums {
+            Some(stratum) => stratum,
+            None => return false
+        };
+
+        for stratum in stratum_vec.iter() {
+            if stratum.stem_count.is_some() {
+                return true;
             }
         }
 
         false
     }
 
-    pub fn get_stratums(&self) -> Vec<TreeStratum> {
-        let tree_stand_data = self.tree_stand_data.as_ref().unwrap();
-        let data_date = tree_stand_data.tree_stand_data_date.last().unwrap();
+    pub fn get_stratums(&self) -> Option<Vec<TreeStratum>> {
+        let last_data_date = match self.get_last_tree_stand_data_date() {
+            Some(data) => data,
+            None => return None 
+        };
 
-        data_date.tree_strata.tree_stratum.to_owned()
+        let stratums = last_data_date.tree_strata.tree_stratum.to_owned();
+        Some(stratums)
     }
 
     pub fn get_strata(&self) -> Option<TreeStrata> {
