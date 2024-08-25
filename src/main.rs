@@ -228,8 +228,6 @@ let min_y: f64 = 7369564.333;
     let mut image = ImageProcessor::new(img_width, img_height);
 
     // Find compartments in the bounding box
-    let compartments = get_compartments_in_bounding_box(stands, min_x, max_x, min_y, max_y);
-
     let bbox = geo::Polygon::new(
         LineString(vec![
             Coord { x: min_x, y: min_y },
@@ -240,6 +238,7 @@ let min_y: f64 = 7369564.333;
         ]),
         vec![],
     );
+    let compartments = get_compartments_in_bounding_box(stands, &bbox);
    
     let scale = ImageProcessor::create_scale(min_x, max_x, min_y, max_y, img_width, img_height);
 

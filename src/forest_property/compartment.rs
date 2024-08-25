@@ -38,10 +38,8 @@ impl Compartment {
         if clipped.0.is_empty() {
             None
         } else {
-            let exterior = clipped.0.first().unwrap().exterior().clone();
-            let interior = clipped.0.first().unwrap().interiors().clone();
-            let polygon = Polygon::new(exterior, interior.to_vec());
-            Some(polygon)
+            let p = clipped.0.first().unwrap();
+            Some(p.to_owned())
         }
     }
 
@@ -54,21 +52,14 @@ impl Compartment {
     }
 }
 
-pub fn find_stands_in_bounding_box(stands: &Vec<Stand>, min_x: f64, max_x: f64, min_y: f64, max_y: f64) -> Option<Vec<&Stand>> {
-    let b_box_line_string = line_string![
-        (x: min_x, y: min_y), 
-        (x: max_x, y: min_y),
-        (x: max_x, y: max_y),
-        (x: min_x, y: max_y),
-        (x: min_x, y: min_y)  // Close the polygon
-    ];
+pub fn find_stands_in_bounding_box<'a>(stands: &'a Vec<Stand>, bbox: &'a Polygon) -> Option<Vec<&'a Stand>> {
 
     // Collect the stands that intersect with the bounding box
     let intersecting_stands: Vec<&Stand> = stands.iter().filter(|stand| {
         let stand_coordinate_sring = stand.stand_basic_data.polygon_geometry.polygon_property.polygon.exterior.linear_ring.coordinates.clone();
         let stand_coordinates = get_coordinates_from_string(&stand_coordinate_sring);
         let stand_line_string = LineString::from(stand_coordinates);
-        stand_line_string.intersects(&b_box_line_string)
+        bbox.intersects(&stand_line_string)
     }).collect();  // Collect the stands that intersect with the bounding box
 
     if intersecting_stands.is_empty() {
@@ -99,13 +90,13 @@ fn get_coordinates_from_string(coord_string: &str) -> Vec<Coord> {
 }
 
 // Get compartments in a bounding box.
-pub fn get_compartments_in_bounding_box(all_stands: Vec<Stand>, min_x: f64, max_x: f64, min_y: f64, max_y: f64) -> Vec<Compartment> {
+pub fn get_compartments_in_bounding_box(all_stands: Vec<Stand>, bbox: &Polygon) -> Vec<Compartment> {
     let mut compartments = Vec::new();
 
     println!("\nTotal stands: {:?}", all_stands.len());
 
     // Find stands in the bounding box
-    let stands = find_stands_in_bounding_box(&all_stands, min_x, max_x, min_y, max_y);
+    let stands = find_stands_in_bounding_box(&all_stands, bbox);
 
     // If there are stands in the bounding box, generate random trees for each stand
     if !stands.is_none() {
