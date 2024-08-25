@@ -94,8 +94,6 @@ pub fn get_compartments_in_bounding_box(
     all_stands: Vec<Stand>,
     bbox: &Polygon
 ) -> Vec<Compartment> {
-    //let compartments = Vec::new();
-
     println!("\nTotal stands: {:?}", all_stands.len());
 
     // Find stands in the bounding box
