@@ -157,7 +157,7 @@ fn test_find_stands_in_bounding_box() {
     }
     println!("\nTotal stands: {:?}", stands.len());
     let stands = find_stands_in_bounding_box(&stands, 0.0, 428000.0, 0.0, 7371000.0);
-    if !stands.is_none() {
+/*     if !stands.is_none() {
         println!(
             "Stands in bounding box: {:?}",
             stands.clone().unwrap().len()
@@ -165,7 +165,7 @@ fn test_find_stands_in_bounding_box() {
         for stand in &stands.unwrap() {
             println!("Stand number {:?}", stand.stand_basic_data.stand_number);
         }
-    }
+    } */
 }
 
 
@@ -205,8 +205,8 @@ let min_y: f64 = 7369564.333;
 
 
 */
-    /*
-    let min_x: f64 = 427754.979;
+    
+   /*  let min_x: f64 = 427754.979;
     let max_x: f64 = 427997.035;
     let max_y: f64 = 7369787.000;
     let min_y: f64 = 7369564.333; 
@@ -215,15 +215,23 @@ let min_y: f64 = 7369564.333;
     let max_x: f64 = 428282.985;
     let max_y: f64 = 7369959.526;
     let min_y: f64 = 7369564.333;
-    */
+   
     let min_x = 428400.0;
     let max_x = 429400.0;
     let min_y = 7370500.0;
     let max_y = 7371500.0;
+     */
+
     
+
+     let min_x = 425400.0;
+     let max_x = min_x + 6000.0;
+     let min_y = 7369000.0;
+     let max_y = min_y + 6000.0;
+
     // Create an image processor with the desired image dimensions
-    let img_width = 1500; // For example
-    let img_height = 1500; // For example
+    let img_width = 6000; // For example
+    let img_height = 6000; // For example
     let mut image = ImageProcessor::new(img_width, img_height);
 
     // Find compartments in the bounding box
