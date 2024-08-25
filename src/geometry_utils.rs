@@ -1,11 +1,11 @@
+use fast_poisson::Poisson2D;
+use geo::{BoundingRect, Contains, Within};
 use geo::{Coord, LineString, Polygon};
 use rand::seq::IteratorRandom;
 use rand::{thread_rng, Rng};
-use geo::{Contains, BoundingRect};
-use fast_poisson::Poisson2D;
 
-use crate::forest_property::tree_stand_data::TreeStrata;
 use crate::forest_property::tree::Tree;
+use crate::forest_property::tree_stand_data::TreeStrata;
 
 // Get minimum and maximum x and y coordinates of a polygon
 pub fn get_min_max_coordinates(p: &Polygon<f64>) -> (f64, f64, f64, f64) {
@@ -18,7 +18,7 @@ pub fn get_min_max_coordinates(p: &Polygon<f64>) -> (f64, f64, f64, f64) {
     (min_x, max_x, min_y, max_y)
 }
 
-// Create a polygon from a string of coordinates
+/* // Create a polygon from a string of coordinates
 pub fn create_polygon(coord_string: &str) -> Polygon<f64> {
     let coordinates_str: Vec<&str> = coord_string.split(" ").collect();
 
@@ -39,51 +39,42 @@ pub fn create_polygon(coord_string: &str) -> Polygon<f64> {
     let polygon = Polygon::new(line_string, vec![]);
 
     polygon
-}
+} */
 
-pub fn generate_poisson_disc_points(p: &Polygon<f64>, radius: f64, amount: i64 ) -> Vec<Coord> {
+/* pub fn generate_poisson_disc_points(p: &Polygon<f64>, radius: f64, amount: i64) -> Vec<Coord> {
     let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&p);
     let width = max_x - min_x;
     let height = max_y - min_y;
-    
-    let poisson = Poisson2D::new().with_dimensions([width, height], radius );
 
-    let filtered: Vec<Coord> = poisson.iter().fold( vec![],|mut acc: Vec<Coord>, pair: [f64;2]|{
-       let point = Coord {x: pair[0] + min_x, y: pair[1] + min_y };
-       if p.contains(&point) {
-        acc.push(point);
-       }
-          
-       acc 
-       
-    });
+    let poisson = Poisson2D::new().with_dimensions([width, height], radius);
     
-   // let poi = filtered.iter().choose_multiple( &mut thread_rng(), amount as usize )
-    
-    //poi
+    let filtered: Vec<Coord> =
+        poisson
+            .iter()
+            .fold(vec![], |mut acc: Vec<Coord>, pair: [f64; 2]| {
+                let point = Coord {
+                    x: pair[0] + min_x,
+                    y: pair[1] + min_y,
+                };
+                if p.contains(&point) {
+                    acc.push(point);
+                }
 
-   println!("Generated {} Poisson disc samples", filtered.len());
-   filtered 
-   /* 
-    let mut points = Vec::new();
-    for sample in filtered {
-        // Translate the Poisson disc sample back to the polygon's coordinate space
-        let point = Coord { x: sample[0] + min_x, y: sample[1] + min_y };
-        points.push(point);
-        //if p.contains(&point) {
-        //    points.push(point);
-       // }
-    }
+                acc
+            });
 
-   println!("Generated {} points inside polygon", points.len()); // Print the number of points generated
-    points*/
+
+
+    println!("Generated {} Poisson disc samples", filtered.len());
+    filtered
+
 }
-
-// Pick random points from a list of points
+ */
+/* // Pick random points from a list of points
 fn pick_random_points(points: &mut Vec<Coord<f64>>, amount: usize) -> Vec<Coord<f64>> {
     let mut rng = thread_rng();
     let mut random_points = Vec::new();
-    let amount_to_pick = usize::min(amount, points.len());  // Clamp amount to points length
+    let amount_to_pick = usize::min(amount, points.len()); // Clamp amount to points length
 
     for _ in 0..amount_to_pick {
         let index = rng.gen_range(0..points.len());
@@ -91,56 +82,59 @@ fn pick_random_points(points: &mut Vec<Coord<f64>>, amount: usize) -> Vec<Coord<
     }
 
     random_points
-}
+} */
 
 fn generate_radius(mean_height: f64, divisor: f64) -> f64 {
     // Calculate the radius based on the mean height of the tree species
     mean_height / divisor
 }
-
+use rayon::prelude::*;
 // Generates random trees for all strata within a polygon's minimum and maximum x and y coordinates
 pub fn generate_random_trees(p: &Polygon, strata: &TreeStrata) -> Vec<Tree> {
-    let mut trees = Vec::new();
-    
+    let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&p);
+    let width = max_x - min_x;
+    let height = max_y - min_y;
 
 
-    for stratum in strata.tree_stratum.iter() {
-        let amount = stratum.stem_count.unwrap_or(0);
-        let divisor = stratum.mean_height / 2.0; // Initial divisor for Poisson disc radius
-        //let mut random_points = Vec::new();
+    let trees = strata.tree_stratum.par_iter().map(|stratum| {
 
-        //println!("\nSpecies: {}, Mean Height: {}, Basal Area: {}, Stem count: {}", stratum.tree_species, stratum.mean_height, stratum.basal_area.unwrap_or(0.0), amount);
         
-        // Loop until enough points are generated for the stratum
-      //  loop {
-            // Calculate the radius based on the mean height of the tree species
+            let amount = stratum.stem_count.unwrap_or(0);
+            let divisor = stratum.mean_height / 2.0; // Initial divisor for Poisson disc radius
+            
             let radius = generate_radius(stratum.mean_height, divisor);
+            
+            let poisson = Poisson2D::new().with_dimensions([width, height], radius);
 
-            // Generate Poisson disc points within the polygon
-            let poisson_disc_points = generate_poisson_disc_points(&p, radius, amount);
-         
-            // Pick random points from the Poisson disc points based on the stem count
-            let trees_strata = poisson_disc_points.iter().choose_multiple(&mut thread_rng(), amount as usize).into_iter().map(|coord|{
+            
+            let trees_strata: Vec<Tree> = poisson
+            .iter()
+            .filter_map(|pair: [f64; 2]| {
+                let point = Coord {
+                    x: pair[0] + min_x,
+                    y: pair[1] + min_y,
+                };
 
-                Tree::new(stratum.tree_species ,stratum.mean_height , (coord.x, coord.y, 0.0))
-            }); //pick_random_points(&mut poisson_disc_points, amount as usize);
-            //println!("Picked {} random points for species {}", random_points.len(), stratum.tree_species);
-/* 
-            if random_points.len() == amount as usize {
-                break
-            } else {
-                println!("Not enough points generated for species {}. Trying again...", stratum.tree_species);
-                divisor += 1.0; // Increase the divisor to generate more points
-            }*/
-       // }
+                if point.is_within(p) {
+                    return Some(Tree::new(
+                        stratum.tree_species,
+                        stratum.mean_height,
+                        (point.x, point.y, 0.0),
+                    ))
+                }
 
-        // Generate random trees for each stratum
-        /*for point in random_points {
-            let tree = Tree::new(stratum.tree_species, stratum.mean_height, (point.x, point.y, 0.0));
-            trees.push(tree);
-        }*/
-        trees.extend(trees_strata)
-    }
+                None
+            })
+            .into_iter()
+            .choose_multiple(&mut thread_rng(), amount as usize)
+            .into_iter()
+            .collect();
+            
 
-    trees
+        
+        
+            trees_strata
+    }).flatten();
+
+    trees.collect()
 }

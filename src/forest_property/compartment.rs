@@ -36,10 +36,11 @@ impl Compartment {
         if clipped.0.is_empty() {
             None
         } else {
-            let exterior = clipped.0.first().unwrap().exterior().clone();
+      /*       let exterior = clipped.0.first().unwrap().exterior().clone();
             let interior = clipped.0.first().unwrap().interiors().clone();
-            let polygon = Polygon::new(exterior, interior.to_vec());
-            Some(polygon)
+            let polygon = Polygon::new(exterior, interior.to_vec()); */
+            let p = clipped.0.first().unwrap();
+            Some(p.to_owned())
         }
     }
 
