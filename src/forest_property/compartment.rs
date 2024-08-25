@@ -2,9 +2,8 @@ use crate::forest_property::tree::Tree;
 use crate::geometry_utils::generate_random_trees;
 use super::stand::Stand;
 
-use geo::{Coord, Polygon};
+use geo::{Coord, Polygon, LineString };
 use geo::Intersects;
-use geo::line_string;
 use geo_clipper::Clipper;
 
 // Struct that represents a stand of trees
@@ -54,13 +53,13 @@ impl Compartment {
 }
 
 pub fn find_stands_in_bounding_box(stands: &Vec<Stand>, min_x: f64, max_x: f64, min_y: f64, max_y: f64) -> Option<Vec<&Stand>> {
-    let b_box_line_string = line_string![
-        (x: min_x, y: min_y), 
-        (x: max_x, y: min_y),
-        (x: max_x, y: max_y),
-        (x: min_x, y: max_y),
-        (x: min_x, y: min_y)  // Close the polygon
-    ];
+    let b_box_line_string = LineString::new(vec![
+        Coord {x: min_x, y: min_y}, 
+        Coord {x: max_x, y: min_y},
+        Coord {x: max_x, y: max_y},
+        Coord {x: min_x, y: max_y},
+        Coord {x: min_x, y: min_y}  // Close the polygon
+    ]);
 
     // Collect the stands that intersect with the bounding box
     let intersecting_stands: Vec<&Stand> = stands.iter().filter(|&stand| {

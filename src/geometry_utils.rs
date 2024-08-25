@@ -101,6 +101,8 @@ fn generate_radius(mean_height: f64, divisor: f64) -> f64 {
 // Generates random trees for all strata within a polygon's minimum and maximum x and y coordinates
 pub fn generate_random_trees(p: &Polygon, strata: &TreeStrata) -> Vec<Tree> {
     let mut trees = Vec::new();
+    
+
 
     for stratum in strata.tree_stratum.iter() {
         let amount = stratum.stem_count.unwrap_or(0);
@@ -118,11 +120,14 @@ pub fn generate_random_trees(p: &Polygon, strata: &TreeStrata) -> Vec<Tree> {
             let poisson_disc_points = generate_poisson_disc_points(&p, radius, amount);
          
             // Pick random points from the Poisson disc points based on the stem count
-            let random_points = poisson_disc_points.iter().choose_multiple(&mut thread_rng(), amount as usize); //pick_random_points(&mut poisson_disc_points, amount as usize);
+            let trees_strata = poisson_disc_points.iter().choose_multiple(&mut thread_rng(), amount as usize).into_iter().map(|coord|{
+
+                Tree::new(stratum.tree_species ,stratum.mean_height , (coord.x, coord.y, 0.0))
+            }); //pick_random_points(&mut poisson_disc_points, amount as usize);
             //println!("Picked {} random points for species {}", random_points.len(), stratum.tree_species);
 /* 
             if random_points.len() == amount as usize {
-                break;
+                break
             } else {
                 println!("Not enough points generated for species {}. Trying again...", stratum.tree_species);
                 divisor += 1.0; // Increase the divisor to generate more points
@@ -130,10 +135,11 @@ pub fn generate_random_trees(p: &Polygon, strata: &TreeStrata) -> Vec<Tree> {
        // }
 
         // Generate random trees for each stratum
-        for point in random_points {
+        /*for point in random_points {
             let tree = Tree::new(stratum.tree_species, stratum.mean_height, (point.x, point.y, 0.0));
             trees.push(tree);
-        }
+        }*/
+        trees.extend(trees_strata)
     }
 
     trees
