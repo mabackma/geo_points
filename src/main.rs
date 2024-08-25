@@ -1,11 +1,10 @@
 mod forest_property;
 mod geometry_utils;
 
-use forest_property::compartment::{find_stands_in_bounding_box, get_compartments_in_bounding_box};
+use forest_property::compartment::{get_compartments_in_bounding_box, find_stands_in_bounding_box};
 use forest_property::forest_property_data::ForestPropertyData;
-use forest_property::geometry::Polygon;
 use forest_property::image_processor::ImageProcessor;
-use geo::{coord, scale, Coord, LineString, MultiPolygon};
+use geo::{coord,Coord, LineString, MultiPolygon};
 use geometry_utils::{generate_random_trees, get_min_max_coordinates};
 use image::Rgb;
 
@@ -223,8 +222,8 @@ let min_y: f64 = 7369564.333;
     let max_y = 7371500.0;
     
     // Create an image processor with the desired image dimensions
-    let img_width = 1000; // For example
-    let img_height = 1000; // For example
+    let img_width = 1500; // For example
+    let img_height = 1500; // For example
     let mut image = ImageProcessor::new(img_width, img_height);
 
     // Find compartments in the bounding box
@@ -255,7 +254,7 @@ let min_y: f64 = 7369564.333;
         // Draw the polygon
         let mapped_coordinates = image.map_coordinates_to_image(&polygon, &scale);
 
-        println!("MAPPED: {:?}", mapped_coordinates);
+        // println!("MAPPED: {:?}", mapped_coordinates);
 
         image.draw_polygon_image(&mapped_coordinates);
 

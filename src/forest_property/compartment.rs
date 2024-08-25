@@ -2,7 +2,7 @@ use crate::forest_property::tree::Tree;
 use crate::geometry_utils::generate_random_trees;
 use super::stand::Stand;
 
-use geo::{Coord, LineString, Polygon};
+use geo::{Coord, Polygon};
 use geo::Intersects;
 use geo::line_string;
 use geo_clipper::Clipper;
@@ -63,11 +63,11 @@ pub fn find_stands_in_bounding_box(stands: &Vec<Stand>, min_x: f64, max_x: f64, 
     ];
 
     // Collect the stands that intersect with the bounding box
-    let intersecting_stands: Vec<&Stand> = stands.iter().filter(|stand| {
-        let stand_coordinate_sring = stand.stand_basic_data.polygon_geometry.polygon_property.polygon.exterior.linear_ring.coordinates.clone();
-        let stand_coordinates = get_coordinates_from_string(&stand_coordinate_sring);
-        let stand_line_string = LineString::from(stand_coordinates);
-        stand_line_string.intersects(&b_box_line_string)
+    let intersecting_stands: Vec<&Stand> = stands.iter().filter(|&stand| {
+        //let stand_coordinate_sring = stand.stand_basic_data.polygon_geometry.polygon_property.polygon.exterior.linear_ring.coordinates.clone();
+       // let stand_coordinates = get_coordinates_from_string(&stand_coordinate_sring);
+        //let stand_line_string = LineString::from(stand_coordinates);
+        stand.clone().computed_polygon.unwrap().intersects(&b_box_line_string)
     }).collect();  // Collect the stands that intersect with the bounding box
 
     if intersecting_stands.is_empty() {
@@ -96,36 +96,50 @@ fn get_coordinates_from_string(coord_string: &str) -> Vec<Coord> {
 
     coords
 }
+use rayon::prelude::*;
 
 pub fn get_compartments_in_bounding_box(all_stands: Vec<Stand>, min_x: f64, max_x: f64, min_y: f64, max_y: f64) -> Vec<Compartment> {
-    let mut compartments = Vec::new();
+    //let compartments = Vec::new();
 
     println!("\nTotal stands: {:?}", all_stands.len());
 
     // Find stands in the bounding box
-    let stands = find_stands_in_bounding_box(&all_stands, min_x, max_x, min_y, max_y);
+    let stands = find_stands_in_bounding_box(&all_stands, min_x, max_x, min_y, max_y).unwrap();
 
     // If there are stands in the bounding box, generate random trees for each stand
-    if !stands.is_none() {
-        println!("Stands in bounding box: {:?}", stands.clone().unwrap().len());
-        for stand in &stands.unwrap() {
-            println!("\n\nStand number {:?}", stand.stand_basic_data.stand_number);
+   // if !&stands.is_none() {
+        //println!("Stands in bounding box: {:?}", &stands.iter().len());
+        let compartments: Vec<Compartment> = stands.into_par_iter().map(|stand |{
 
-            let polygon = stand.create_polygon();
-            let strata = match stand.get_strata() {
-                Some(strata) => strata,
-                None => continue,
-            };
 
-            let trees = generate_random_trees(&polygon, &strata);
+        
+        
+           // println!("\n\nStand number {:?}", stand.stand_basic_data.stand_number);
+
+            let polygon = stand.computed_polygon.to_owned().unwrap();
+            let strata = stand.get_strata();
+                
+                if strata.is_none() {
+                  return Compartment{trees: vec![] as Vec<Tree>, polygon: polygon.to_owned()
+ 
+                   }
+                }
+
+                
+
+            let trees = generate_random_trees(&polygon, &strata.unwrap());
             
             let compartment = Compartment {
                 trees,
-                polygon,
+                polygon: polygon.to_owned(),
             };
-            
-            compartments.push(compartment);
-        }
-    }
-    compartments
+        
+    
+    
+            compartment
+        }).collect();
+
+        compartments
+   // }
+
 }
