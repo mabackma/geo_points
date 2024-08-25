@@ -6,6 +6,7 @@ use geo::{Coord, LineString, Polygon};
 use geo::Intersects;
 use geo::line_string;
 use geo_clipper::Clipper;
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 // Struct that represents a stand of trees
 pub struct Compartment {
@@ -97,6 +98,7 @@ fn get_coordinates_from_string(coord_string: &str) -> Vec<Coord> {
     coords
 }
 
+// Get compartments in a bounding box.
 pub fn get_compartments_in_bounding_box(all_stands: Vec<Stand>, min_x: f64, max_x: f64, min_y: f64, max_y: f64) -> Vec<Compartment> {
     let mut compartments = Vec::new();
 
@@ -108,24 +110,29 @@ pub fn get_compartments_in_bounding_box(all_stands: Vec<Stand>, min_x: f64, max_
     // If there are stands in the bounding box, generate random trees for each stand
     if !stands.is_none() {
         println!("Stands in bounding box: {:?}", stands.clone().unwrap().len());
-        for stand in &stands.unwrap() {
-            println!("\n\nStand number {:?}", stand.stand_basic_data.stand_number);
 
-            let polygon = stand.create_polygon();
-            let strata = match stand.get_strata() {
-                Some(strata) => strata,
-                None => continue,
-            };
+        // Use Rayon to process stands in parallel
+        compartments = stands.unwrap()
+            .into_par_iter() // Convert to parallel iterator
+            .filter_map(|stand| {
+                println!("\n\nStand number {:?}", stand.stand_basic_data.stand_number);
 
-            let trees = generate_random_trees(&polygon, &strata);
-            
-            let compartment = Compartment {
-                trees,
-                polygon,
-            };
-            
-            compartments.push(compartment);
-        }
+                let polygon = stand.create_polygon();
+                let strata = match stand.get_strata() {
+                    Some(strata) => strata,
+                    None => return None,
+                };
+
+                let trees = generate_random_trees(&polygon, &strata);
+                
+                // Create a compartment and return it
+                Some(Compartment {
+                    trees,
+                    polygon,
+                })
+            })
+            .collect(); // Collect results into a vector
     }
+    
     compartments
 }

@@ -1,10 +1,10 @@
+use crate::forest_property::tree_stand_data::TreeStrata;
+use crate::forest_property::tree::Tree;
+
 use geo_types::{Coord, LineString, Polygon};
 use rand::{thread_rng, Rng};
 use geo::{Contains, BoundingRect};
 use fast_poisson::Poisson2D;
-
-use crate::forest_property::tree_stand_data::TreeStrata;
-use crate::forest_property::tree::Tree;
 
 // Get minimum and maximum x and y coordinates of a polygon
 pub fn get_min_max_coordinates(p: &Polygon<f64>) -> (f64, f64, f64, f64) {

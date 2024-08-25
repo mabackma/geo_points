@@ -15,3 +15,4 @@ anyhow = "1.0.86"
 quick-xml = { version = "0.36.1", features = ["serialize"] }
 fast_poisson = "1.0.0"
 geo-clipper = "0.8.0"
+rayon = "1.10.0"
