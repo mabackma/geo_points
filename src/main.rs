@@ -1,17 +1,17 @@
 mod forest_property;
 mod geometry_utils;
 
-use forest_property::compartment::{get_compartments_in_bounding_box, find_stands_in_bounding_box};
+use forest_property::compartment::{find_stands_in_bounding_box, get_compartments_in_bounding_box};
 use forest_property::forest_property_data::ForestPropertyData;
 use forest_property::image_processor::ImageProcessor;
-use geo::{coord,Coord, LineString, MultiPolygon};
+use geo::{coord, Coord, LineString, MultiPolygon};
 use geometry_utils::{generate_random_trees, get_min_max_coordinates};
 use image::Rgb;
 
 #[cfg(test)]
 use std::fs;
 // Get color based on species number
-fn get_color_by_species(number: i64) -> Rgb<u8> {
+fn get_color_by_species(number: u8) -> Rgb<u8> {
     match number {
         // Coniferous Trees (Shades of Orange and Red)
         1 => Rgb([255, 165, 0]),    // Orange - Mänty
@@ -156,86 +156,10 @@ fn test_find_stands_in_bounding_box() {
         stands.push(stand.clone());
     }
     println!("\nTotal stands: {:?}", stands.len());
-    let stands = find_stands_in_bounding_box(&stands, 0.0, 428000.0, 0.0, 7371000.0);
-/*     if !stands.is_none() {
-        println!(
-            "Stands in bounding box: {:?}",
-            stands.clone().unwrap().len()
-        );
-        for stand in &stands.unwrap() {
-            println!("Stand number {:?}", stand.stand_basic_data.stand_number);
-        }
-    } */
-}
-
-
-/* TESTING TREE GENERATION FOR STANDS IN BOUNDING BOX */
-fn main() {
-    let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
-    let real_estate = property.real_estates.real_estate[0].clone();
-    let stands = real_estate.get_stands();
-
-   
-
-/* 
-
-pienempi
-N=7369787.000, E=427754.979
-N=7369564.333, E=427997.035
-N kasvaa pohjoisen suuntaa, E kasvaa idän suuntaan
-
---->
-
-let min_x: f64 = 427754.979;
-let max_x: f64 = 427997.035;
-let max_y: f64 = 7369787.000;
-let min_y: f64 = 7369564.333;
-
-
-isompi
-N=7369959.526, E=427541.481
-N=7369356.859, E=428282.985
-
-
-let min_x: f64 = 427541.481;
-let max_x: f64 = 428282.985;
-let max_y: f64 = 7369959.526;
-let min_y: f64 = 7369564.333;
-
-
-
-*/
-    
-   /*  let min_x: f64 = 427754.979;
-    let max_x: f64 = 427997.035;
-    let max_y: f64 = 7369787.000;
-    let min_y: f64 = 7369564.333; 
-
-    let min_x: f64 = 427541.481;
-    let max_x: f64 = 428282.985;
-    let max_y: f64 = 7369959.526;
-    let min_y: f64 = 7369564.333;
-   
-    let min_x = 428400.0;
-    let max_x = 429400.0;
-    let min_y = 7370500.0;
-    let max_y = 7371500.0;
-     */
-
-    
-
-     let min_x = 425400.0;
-     let max_x = min_x + 6000.0;
-     let min_y = 7369000.0;
-     let max_y = min_y + 6000.0;
-
-    // Create an image processor with the desired image dimensions
-    let img_width = 6000; // For example
-    let img_height = 6000; // For example
-    let mut image = ImageProcessor::new(img_width, img_height);
-
-    // Find compartments in the bounding box
-    let compartments = get_compartments_in_bounding_box(stands, min_x, max_x, min_y, max_y);
+    let min_x = 425400.0;
+    let max_x = min_x + 6000.0;
+    let min_y = 7369000.0;
+    let max_y = min_y + 6000.0;
 
     let bbox = geo::Polygon::new(
         LineString(vec![
@@ -247,15 +171,100 @@ let min_y: f64 = 7369564.333;
         ]),
         vec![],
     );
-   
+    let stands = find_stands_in_bounding_box(&stands, &bbox);
+    /*     if !stands.is_none() {
+        println!(
+            "Stands in bounding box: {:?}",
+            stands.clone().unwrap().len()
+        );
+        for stand in &stands.unwrap() {
+            println!("Stand number {:?}", stand.stand_basic_data.stand_number);
+        }
+    } */
+}
+
+/* TESTING TREE GENERATION FOR STANDS IN BOUNDING BOX */
+fn main() {
+    let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
+    let real_estate = property.real_estates.real_estate[0].clone();
+    let stands = real_estate.get_stands();
+
+    /*
+
+    pienempi
+    N=7369787.000, E=427754.979
+    N=7369564.333, E=427997.035
+    N kasvaa pohjoisen suuntaa, E kasvaa idän suuntaan
+
+    --->
+
+    let min_x: f64 = 427754.979;
+    let max_x: f64 = 427997.035;
+    let max_y: f64 = 7369787.000;
+    let min_y: f64 = 7369564.333;
+
+
+    isompi
+    N=7369959.526, E=427541.481
+    N=7369356.859, E=428282.985
+
+
+    let min_x: f64 = 427541.481;
+    let max_x: f64 = 428282.985;
+    let max_y: f64 = 7369959.526;
+    let min_y: f64 = 7369564.333;
+
+
+
+    */
+
+    /*  let min_x: f64 = 427754.979;
+    let max_x: f64 = 427997.035;
+    let max_y: f64 = 7369787.000;
+    let min_y: f64 = 7369564.333;
+
+    let min_x: f64 = 427541.481;
+    let max_x: f64 = 428282.985;
+    let max_y: f64 = 7369959.526;
+    let min_y: f64 = 7369564.333;
+
+    let min_x = 428400.0;
+    let max_x = 429400.0;
+    let min_y = 7370500.0;
+    let max_y = 7371500.0;
+     */
+
+    let min_x = 425400.0;
+    let max_x = min_x + 6000.0;
+    let min_y = 7369000.0;
+    let max_y = min_y + 6000.0;
+
+    // Create an image processor with the desired image dimensions
+    let img_width = 6000; // For example
+    let img_height = 6000; // For example
+    let mut image = ImageProcessor::new(img_width, img_height);
+
+    // Find compartments in the bounding box
+
+    let bbox = geo::Polygon::new(
+        LineString(vec![
+            Coord { x: min_x, y: min_y },
+            Coord { x: max_x, y: min_y },
+            Coord { x: max_x, y: max_y },
+            Coord { x: min_x, y: max_y },
+            Coord { x: min_x, y: min_y },
+        ]),
+        vec![],
+    );
+    let compartments = get_compartments_in_bounding_box(stands, &bbox);
+
     let scale = ImageProcessor::create_scale(min_x, max_x, min_y, max_y, img_width, img_height);
 
     for compartment in compartments {
-        let polygon =
-            match compartment.clip_polygon_to_bounding_box(&bbox) {
-                Some(polygon) => polygon,
-                None => continue,
-            };
+        let polygon = match compartment.clip_polygon_to_bounding_box(&bbox) {
+            Some(polygon) => polygon,
+            None => continue,
+        };
 
         let trees = compartment.trees_in_bounding_box(min_x, max_x, min_y, max_y);
 

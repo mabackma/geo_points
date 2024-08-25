@@ -1,4 +1,4 @@
-use fast_poisson::Poisson2D;
+use fast_poisson::{Poisson, Poisson2D};
 use geo::{BoundingRect, Contains, Within};
 use geo::{Coord, LineString, Polygon};
 use rand::seq::IteratorRandom;
@@ -84,7 +84,7 @@ fn pick_random_points(points: &mut Vec<Coord<f64>>, amount: usize) -> Vec<Coord<
     random_points
 } */
 
-fn generate_radius(mean_height: f64, divisor: f64) -> f64 {
+fn generate_radius(mean_height: f32, divisor: f32) -> f32 {
     // Calculate the radius based on the mean height of the tree species
     mean_height / divisor
 }
@@ -104,10 +104,10 @@ pub fn generate_random_trees(p: &Polygon, strata: &TreeStrata) -> Vec<Tree> {
             
             let radius = generate_radius(stratum.mean_height, divisor);
             
-            let poisson = Poisson2D::new().with_dimensions([width, height], radius);
 
-            
-            let trees_strata: Vec<Tree> = poisson
+            let trees_strata: Vec<Tree> = Poisson2D::new()
+            .with_samples(10)
+            .with_dimensions([width, height], radius.into())
             .iter()
             .filter_map(|pair: [f64; 2]| {
                 let point = Coord {
@@ -126,9 +126,7 @@ pub fn generate_random_trees(p: &Polygon, strata: &TreeStrata) -> Vec<Tree> {
                 None
             })
             .into_iter()
-            .choose_multiple(&mut thread_rng(), amount as usize)
-            .into_iter()
-            .collect();
+            .choose_multiple(&mut thread_rng(), amount as usize);
             
 
         

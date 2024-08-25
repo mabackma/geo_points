@@ -1,5 +1,6 @@
 use core::f64;
 use std::fs::{self, File};
+use rayon::iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator};
 use serde::{Deserialize, Serialize};
 use super::{geometry::PolygonGeometry, stand::{Stand, Stands}};
 
@@ -139,11 +140,11 @@ impl RealEstate {
         let parcels = &self.parcels.parcel;
 
         let stands_data: Vec<Stand> = parcels
-            .iter()
-            .flat_map(|parcel: &Parcel| {
+            .into_par_iter()
+            .map(|parcel: &Parcel| {
                 let stands: Vec<Stand> = parcel.stands.stand.iter().map( | f| f.to_owned().compute_polygon().to_owned()).collect();
                 stands
-            })
+            }).flatten()
             .collect();
 
         stands_data
@@ -396,17 +397,7 @@ pub struct TreeStandDataDate {
     #[serde(rename = "TreeStandSummary")]
     pub tree_stand_summary: Option<TreeStandSummary>,
 }
-/*            "TreeStratum": {
-  "ChangeState": 0,
-  "StratumNumber": 0,
-  "TreeSpecies": 1,
-  "Storey": 1,
-  "Age": 90,
-  "BasalArea": 2,
-  "MeanDiameter": 31,
-  "MeanHeight": 23,
-  "DataSource": 0
-} */
+
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct DeadTreeStrata {
     #[serde(rename = "$text")]
@@ -441,41 +432,43 @@ pub struct TreeStrata {
     pub tree_stratum: Vec<TreeStratum>,
 }
 
+
+
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TreeStratum {
     #[serde(rename = "@id", default)]
     pub id: String,
     #[serde(rename = "ChangeState")]
-    pub change_state: i64,
+    pub change_state: u8,
     #[serde(rename = "StratumNumber")]
-    pub stratum_number: i64,
+    pub stratum_number: u32,
     #[serde(rename = "TreeSpecies")]
-    pub tree_species: i64,
+    pub tree_species: u8,
     #[serde(rename = "Storey")]
-    pub storey: i64,
+    pub storey: u32,
     #[serde(rename = "Age")]
-    pub age: i64,
+    pub age: u8,
     #[serde(rename = "StemCount")]
-    pub stem_count: Option<i64>,
+    pub stem_count: Option<i32>,
     #[serde(rename = "MeanDiameter")]
-    pub mean_diameter: Option<f64>,
+    pub mean_diameter: Option<f32>,
     #[serde(rename = "MeanHeight")]
-    pub mean_height: f64,
+    pub mean_height: f32,
     #[serde(rename = "DataSource")]
-    pub data_source: i64,
+    pub data_source: u32,
     #[serde(rename = "BasalArea")]
     pub basal_area: Option<f64>,
     #[serde(rename = "SawLogPercent")]
-    pub saw_log_percent: Option<f64>,
+    pub saw_log_percent: Option<f32>,
     #[serde(rename = "SawLogVolume")]
-    pub saw_log_volume: Option<f64>,
+    pub saw_log_volume: Option<f32>,
     #[serde(rename = "VolumeGrowth")]
-    pub volume_growth: Option<f64>,
+    pub volume_growth: Option<f32>,
     #[serde(rename = "Volume")]
-    pub volume: Option<f64>,
+    pub volume: Option<f32>,
     #[serde(rename = "PulpWoodVolume")]
-    pub pulp_wood_volume: Option<f64>,
+    pub pulp_wood_volume: Option<f32>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -491,21 +484,21 @@ pub struct TreeStandSummary {
     #[serde(rename = "ChangeState")]
     pub change_state: String,
     #[serde(rename = "MeanAge")]
-    pub mean_age: f64,
+    pub mean_age: f32,
     #[serde(rename = "BasalArea")]
-    pub basal_area: f64,
+    pub basal_area: f32,
     #[serde(rename = "StemCount")]
-    pub stem_count: i64,
+    pub stem_count: u32,
     #[serde(rename = "MeanDiameter")]
-    pub mean_diameter: f64,
+    pub mean_diameter: f32,
     #[serde(rename = "MeanHeight")]
-    pub mean_height: f64,
+    pub mean_height: f32,
     #[serde(rename = "Volume")]
-    pub volume: f64,
+    pub volume: f32,
     #[serde(rename = "VolumeGrowth")]
-    pub volume_growth: f64,
+    pub volume_growth: f32,
     #[serde(rename = "ValueGrowthPercent")]
-    pub value_growth_percent: Option<f64>,
+    pub value_growth_percent: Option<f32>,
     #[serde(rename = "Value")]
     pub value: Option<String>,
 }
