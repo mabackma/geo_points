@@ -90,8 +90,11 @@ fn get_coordinates_from_string(coord_string: &str) -> Vec<Coord> {
 }
 
 // Get compartments in a bounding box.
-pub fn get_compartments_in_bounding_box(all_stands: Vec<Stand>, bbox: &Polygon) -> Vec<Compartment> {
-    let mut compartments = Vec::new();
+pub fn get_compartments_in_bounding_box(
+    all_stands: Vec<Stand>,
+    bbox: &Polygon
+) -> Vec<Compartment> {
+    //let compartments = Vec::new();
 
     println!("\nTotal stands: {:?}", all_stands.len());
 
@@ -99,31 +102,33 @@ pub fn get_compartments_in_bounding_box(all_stands: Vec<Stand>, bbox: &Polygon) 
     let stands = find_stands_in_bounding_box(&all_stands, bbox);
 
     // If there are stands in the bounding box, generate random trees for each stand
-    if !stands.is_none() {
-        println!("Stands in bounding box: {:?}", stands.clone().unwrap().len());
+    if !&stands.is_none() {
+        let compartments: Vec<Compartment> = stands.unwrap()
+            .into_par_iter()
+            .map(|stand| {
+                let polygon = stand.computed_polygon.to_owned().unwrap();
+                let strata = stand.get_strata();
 
-        // Use Rayon to process stands in parallel
-        compartments = stands.unwrap()
-            .into_par_iter() // Convert to parallel iterator
-            .filter_map(|stand| {
-                println!("\n\nStand number {:?}", stand.stand_basic_data.stand_number);
+                if strata.is_none() {
+                    return Compartment {
+                        trees: vec![] as Vec<Tree>,
+                        polygon: polygon.to_owned(),
+                    };
+                }
 
-                let polygon = stand.create_polygon();
-                let strata = match stand.get_strata() {
-                    Some(strata) => strata,
-                    None => return None,
+                let trees = generate_random_trees(&polygon, &strata.unwrap());
+
+                let compartment = Compartment {
+                    trees,
+                    polygon: polygon.to_owned(),
                 };
 
-                let trees = generate_random_trees(&polygon, &strata);
-                
-                // Create a compartment and return it
-                Some(Compartment {
-                    trees,
-                    polygon,
-                })
+                compartment
             })
-            .collect(); // Collect results into a vector
+            .collect();
+
+        compartments
+    } else {
+        vec![]
     }
-    
-    compartments
 }
