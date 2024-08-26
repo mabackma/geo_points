@@ -64,7 +64,7 @@ pub fn generate_random_trees(p: &Polygon, strata: &TreeStrata) -> Vec<Tree> {
                 println!("\tNeeded {} trees for stratum {} Generated only {}", amount, stratum.tree_species, trees_strata.len());
                 divisor += 1.0;
             } else {
-                generated_trees = trees_strata.clone();
+                generated_trees = trees_strata;
                 break;
             }
         }
