@@ -91,7 +91,7 @@ impl Stand {
         polygon
     }
 
-    pub fn summary_stem_count(&self) -> Option<i64> {
+    pub fn summary_stem_count(&self) -> Option<u32> {
 
         let last_data_date = match self.get_last_tree_stand_data_date() {
             Some(data) => data,

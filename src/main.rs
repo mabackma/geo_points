@@ -12,7 +12,7 @@ use image::Rgb;
 #[cfg(test)]
 use std::fs;
 // Get color based on species number
-fn get_color_by_species(number: i64) -> Rgb<u8> {
+fn get_color_by_species(number: u8) -> Rgb<u8> {
     match number {
         // Coniferous Trees (Shades of Orange and Red)
         1 => Rgb([255, 165, 0]),    // Orange - Mänty

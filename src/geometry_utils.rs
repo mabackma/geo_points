@@ -18,7 +18,7 @@ pub fn get_min_max_coordinates(p: &Polygon<f64>) -> (f64, f64, f64, f64) {
     (min_x, max_x, min_y, max_y)
 }
 
-fn generate_radius(mean_height: f64, divisor: f64) -> f64 {
+fn generate_radius(mean_height: f32, divisor: f32) -> f32 {
     // Calculate the radius based on the mean height of the tree species
     mean_height / divisor
 }
@@ -38,7 +38,7 @@ pub fn generate_random_trees(p: &Polygon, strata: &TreeStrata) -> Vec<Tree> {
             let radius = generate_radius(stratum.mean_height, divisor);
 
             let trees_strata: Vec<Tree> = Poisson2D::new()
-                .with_samples(2)
+                .with_samples(10)
                 .with_dimensions([width, height], radius.into())
                 .iter()
                 .filter_map(|pair: [f64; 2]| {
