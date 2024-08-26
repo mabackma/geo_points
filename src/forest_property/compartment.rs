@@ -8,6 +8,7 @@ use geo_clipper::Clipper;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 // Struct that represents a stand of trees
+#[derive(Debug, Clone)]
 pub struct Compartment {
     pub stand_number: String,
     pub trees: Vec<Tree>,
