@@ -183,7 +183,6 @@ fn test_find_stands_in_bounding_box() {
     } */
 }
 
-
 /* TESTING TREE GENERATION FOR STANDS IN BOUNDING BOX */
 fn main() {
     let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
