@@ -89,10 +89,9 @@ pub fn generate_random_trees(p: &Polygon, strata: &TreeStrata) -> Vec<Tree> {
     let trees = strata.tree_stratum.par_iter().map(|stratum| {
         let amount = stratum.stem_count.unwrap_or(0);
         let mut divisor = stratum.mean_height / 2.0; // Initial divisor for Poisson disc radius
-        let mut trees_strata: Vec<Tree> = Vec::new();
         let mut generated_trees: Vec<Tree> = Vec::new();
 
-        while true {
+        loop {
             let radius = generate_radius(stratum.mean_height, divisor);
 
             let trees_strata: Vec<Tree> = Poisson2D::new()
@@ -119,7 +118,7 @@ pub fn generate_random_trees(p: &Polygon, strata: &TreeStrata) -> Vec<Tree> {
                 .choose_multiple(&mut thread_rng(), amount as usize);
 
             if(trees_strata.len() < amount as usize) {
-                println!("Needed {} trees for stratum {} Generated {}", amount, stratum.tree_species, trees_strata.len());
+                println!("\tNeeded {} trees for stratum {} Generated {}", amount, stratum.tree_species, trees_strata.len());
                 divisor += 1.0;
             } else {
                 generated_trees = trees_strata.clone();
