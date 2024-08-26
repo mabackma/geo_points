@@ -135,14 +135,14 @@ let min_y: f64 = 7369564.333;
     let img_height = 1000; // For example
     let mut image = ImageProcessor::new(img_width, img_height);
 */
-    let min_x = 425400.0;
-    let max_x = min_x + 6000.0;
+    let min_x = 427400.0;
+    let max_x = min_x + 3000.0;
     let min_y = 7369000.0;
-    let max_y = min_y + 6000.0;
+    let max_y = min_y + 3000.0;
 
     // Create an image processor with the desired image dimensions
-    let img_width = 6000; // For example
-    let img_height = 6000; // For example
+    let img_width = 3000; // For example
+    let img_height = 3000; // For example
     let mut image = ImageProcessor::new(img_width, img_height);
 
     // Find compartments in the bounding box
