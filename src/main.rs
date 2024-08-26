@@ -3,9 +3,8 @@ mod geometry_utils;
 
 use forest_property::compartment::{find_stands_in_bounding_box, get_compartments_in_bounding_box};
 use forest_property::forest_property_data::ForestPropertyData;
-use forest_property::geometry::Polygon;
 use forest_property::image_processor::ImageProcessor;
-use geo::{coord, scale, Coord, LineString, MultiPolygon};
+use geo::{coord, Coord, LineString};
 use geometry_utils::{generate_random_trees, get_min_max_coordinates};
 use image::Rgb;
 
@@ -51,7 +50,7 @@ fn get_color_by_species(number: u8) -> Rgb<u8> {
         _ => Rgb([0, 0, 0]), // Black for Unknown
     }
 }
-/* 
+/*
 // Main function
 fn main() {
     let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
@@ -295,3 +294,4 @@ let min_y: f64 = 7369564.333;
         .expect("Failed to save image");
     println!("Polygon image saved as 'clipped_image.png'");
 }
+    
