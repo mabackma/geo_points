@@ -4,7 +4,6 @@ use super::stand::Stand;
 
 use geo::{Coord, LineString, Polygon};
 use geo::Intersects;
-use geo::line_string;
 use geo_clipper::Clipper;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
