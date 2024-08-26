@@ -9,16 +9,22 @@ use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 // Struct that represents a stand of trees
 pub struct Compartment {
+    pub stand_number: String,
     pub trees: Vec<Tree>,
     pub polygon: Polygon,
 }
 
 impl Compartment {
-    pub fn new(trees: Vec<Tree>, polygon: Polygon) -> Self {
+    pub fn new(stand_number: String, trees: Vec<Tree>, polygon: Polygon) -> Self {
         Compartment {
+            stand_number,
             trees,
             polygon,
         }
+    }
+
+    pub fn stand_number(&self) -> &String {
+        &self.stand_number
     }
 
     pub fn trees(&self) -> &Vec<Tree> {
@@ -87,6 +93,7 @@ pub fn get_compartments_in_bounding_box(
 
                 if strata.is_none() {
                     return Compartment {
+                        stand_number: stand.stand_basic_data.stand_number.clone(),
                         trees: vec![] as Vec<Tree>,
                         polygon: polygon.to_owned(),
                     };
@@ -95,6 +102,7 @@ pub fn get_compartments_in_bounding_box(
                 let trees = generate_random_trees(&polygon, &strata.unwrap());
 
                 let compartment = Compartment {
+                    stand_number: stand.stand_basic_data.stand_number.clone(),
                     trees,
                     polygon: polygon.to_owned(),
                 };

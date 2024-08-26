@@ -1,7 +1,7 @@
 mod forest_property;
 mod geometry_utils;
 
-use forest_property::compartment::{find_stands_in_bounding_box, get_compartments_in_bounding_box};
+use forest_property::compartment::{find_stands_in_bounding_box, get_compartments_in_bounding_box, Compartment};
 use forest_property::forest_property_data::ForestPropertyData;
 use forest_property::image_processor::ImageProcessor;
 use geo::{coord, Coord, LineString};
@@ -50,57 +50,31 @@ fn get_color_by_species(number: u8) -> Rgb<u8> {
         _ => Rgb([0, 0, 0]), // Black for Unknown
     }
 }
-/*
+
 // Main function
 fn main() {
     let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
-    let stand = property.get_stand_cli();
-    let polygon = stand.create_polygon();
+    let all_stands = property.real_estates.real_estate[0].get_stands();
+    let mut compartments: Vec<Compartment> = Vec::new();
 
-    // Create an image for the polygon and random points
-    let img_width = 800;
-    let img_height = 600;
-    let mut image = ImageProcessor::new(img_width, img_height);
+    println!("Total stands: {:?}", all_stands.len());
+    for stand in all_stands.iter() {
+        let stand_number = &stand.stand_basic_data.stand_number;
+        println!("Stand number: {:?}", stand_number);
 
-    // Get the minimum and maximum x and y coordinates of the polygon
-    let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&polygon);
-    let scale = ImageProcessor::create_scale(min_x, max_x, min_y, max_y, img_width, img_height);
+        let polygon = stand.create_polygon();
 
-    // Map polygon coordinates to image
-    let mapped_coordinates = image.map_coordinates_to_image(&polygon, &scale);
-    image.draw_polygon_image(&mapped_coordinates);
+        let strata = match stand.get_strata() {
+            Some(strata) => strata,
+            None => continue,
+        };
+        let trees = generate_random_trees(&polygon, &strata);
 
-    let summary_stem_count = stand.summary_stem_count();
-    let strata = stand.get_strata().expect("No treeStrata/stratums found");
-    let random_trees = generate_random_trees(&polygon, &strata);
-
-    if stand.stem_count_in_stratum() {
-        println!("\nStem count is in individual stratum");
-
-        // Draw the random points
-        for tree in random_trees {
-            let point = coord! {x: tree.position().0, y: tree.position().1};
-            let color = get_color_by_species(tree.species());
-            image.draw_random_point(&scale, img_width, img_height, point, color);
-        }
-    } else {
-        println!("Stem count is not in any individual stratum. Drawing random points based on tree stand summary.");
-
-        // Draw the random points
-        for tree in random_trees {
-            let point = coord! {x: tree.position().0, y: tree.position().1};
-            image.draw_random_point(&scale, img_width, img_height, point, Rgb([255, 0, 0])) // Draw points in red
-        }
+        let compartment = Compartment::new(stand_number.clone(), trees, polygon);
+        compartments.push(compartment);
     }
-    println!("\nTotal stem count: {:?}", summary_stem_count);
-
-    image
-        .img()
-        .save("polygon_image.png")
-        .expect("Failed to save image");
-    println!("Polygon image saved as 'polygon_image.png'");
 }
-*/
+
 #[test]
 fn test_writing_to_json() {
     let test_json_path = "test_json_from_xml.json";
@@ -182,7 +156,7 @@ fn test_find_stands_in_bounding_box() {
         }
     } */
 }
-
+/* 
 /* TESTING TREE GENERATION FOR STANDS IN BOUNDING BOX */
 fn main() {
     let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
@@ -293,4 +267,4 @@ let min_y: f64 = 7369564.333;
         .expect("Failed to save image");
     println!("Polygon image saved as 'clipped_image.png'");
 }
-    
+*/
