@@ -1,15 +1,16 @@
 mod forest_property;
 mod geometry_utils;
 
-use forest_property::compartment::{find_stands_in_bounding_box, get_compartments_in_bounding_box};
+use forest_property::compartment::{find_stands_in_bounding_box, get_compartments_in_bounding_box, Compartment};
 use forest_property::forest_property_data::ForestPropertyData;
 use forest_property::image_processor::ImageProcessor;
-use geo::{coord, Coord, LineString};
+use geo::{coord, Coord, Intersects, LineString};
 use geometry_utils::{generate_random_trees, get_min_max_coordinates};
 use image::Rgb;
 
 #[cfg(test)]
 use std::fs;
+use std::io::{self, Write};
 // Get color based on species number
 fn get_color_by_species(number: u8) -> Rgb<u8> {
     match number {
@@ -50,57 +51,148 @@ fn get_color_by_species(number: u8) -> Rgb<u8> {
         _ => Rgb([0, 0, 0]), // Black for Unknown
     }
 }
-/*
+
+fn create_all_compartments() -> Vec<Compartment> {
+    let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
+    let all_stands = property.real_estates.real_estate[0].get_stands();
+    let mut compartments: Vec<Compartment> = Vec::new();
+
+    println!("Total stands: {:?}", all_stands.len());
+    for stand in all_stands.iter() {
+        let stand_number = &stand.stand_basic_data.stand_number;
+        println!("Stand number: {:?}", stand_number);
+
+        let polygon = stand.create_polygon();
+
+        let strata = match stand.get_strata() {
+            Some(strata) => strata,
+            None => continue,
+        };
+        let trees = generate_random_trees(&polygon, &strata);
+
+        let compartment = Compartment::new(stand_number.clone(), trees, polygon);
+        compartments.push(compartment);
+    }
+
+    compartments
+}
 // Main function
 fn main() {
-    let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
-    let stand = property.get_stand_cli();
-    let polygon = stand.create_polygon();
+    let compartments = create_all_compartments();
 
-    // Create an image for the polygon and random points
-    let img_width = 800;
-    let img_height = 600;
+    println!("\nPress Enter to continue...");
+    
+    // Flush stdout to ensure the message is printed before waiting for input
+    io::stdout().flush().unwrap();
+    
+    // Wait for user to press Enter
+    let mut input = String::new();
+    io::stdin().read_line(&mut input).unwrap();
+
+/* 
+pienempi
+N=7369787.000, E=427754.979
+N=7369564.333, E=427997.035
+N kasvaa pohjoisen suuntaa, E kasvaa idän suuntaan
+
+--->
+
+let min_x: f64 = 427754.979;
+let max_x: f64 = 427997.035;
+let max_y: f64 = 7369787.000;
+let min_y: f64 = 7369564.333;
+
+
+isompi
+N=7369959.526, E=427541.481
+N=7369356.859, E=428282.985
+
+
+let min_x: f64 = 427541.481;
+let max_x: f64 = 428282.985;
+let max_y: f64 = 7369959.526;
+let min_y: f64 = 7369564.333;
+*/
+
+    /*
+    let min_x: f64 = 427754.979;
+    let max_x: f64 = 427997.035;
+    let max_y: f64 = 7369787.000;
+    let min_y: f64 = 7369564.333; 
+
+    let min_x: f64 = 427541.481;
+    let max_x: f64 = 428282.985;
+    let max_y: f64 = 7369959.526;
+    let min_y: f64 = 7369564.333;
+    
+    let min_x = 428400.0;
+    let max_x = 429400.0;
+    let min_y = 7370500.0;
+    let max_y = 7371500.0;
+    
+    // Create an image processor with the desired image dimensions
+    let img_width = 1000; // For example
+    let img_height = 1000; // For example
+    let mut image = ImageProcessor::new(img_width, img_height);
+*/
+    let min_x = 427400.0;
+    let max_x = min_x + 3000.0;
+    let min_y = 7369000.0;
+    let max_y = min_y + 3000.0;
+
+    // Create an image processor with the desired image dimensions
+    let img_width = 3000; // For example
+    let img_height = 3000; // For example
     let mut image = ImageProcessor::new(img_width, img_height);
 
-    // Get the minimum and maximum x and y coordinates of the polygon
-    let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&polygon);
+    // Find compartments in the bounding box
+    let bbox = geo::Polygon::new(
+        LineString(vec![
+            Coord { x: min_x, y: min_y },
+            Coord { x: max_x, y: min_y },
+            Coord { x: max_x, y: max_y },
+            Coord { x: min_x, y: max_y },
+            Coord { x: min_x, y: min_y },
+        ]),
+        vec![],
+    );
+    let bounded_compartments = compartments
+        .iter()
+        .filter(|compartment| compartment.polygon.intersects(&bbox))
+        .cloned()
+        .collect::<Vec<Compartment>>();
+   
     let scale = ImageProcessor::create_scale(min_x, max_x, min_y, max_y, img_width, img_height);
 
-    // Map polygon coordinates to image
-    let mapped_coordinates = image.map_coordinates_to_image(&polygon, &scale);
-    image.draw_polygon_image(&mapped_coordinates);
+    for compartment in bounded_compartments {
+        let polygon =
+            match compartment.clip_polygon_to_bounding_box(&bbox) {
+                Some(polygon) => polygon,
+                None => continue,
+            };
 
-    let summary_stem_count = stand.summary_stem_count();
-    let strata = stand.get_strata().expect("No treeStrata/stratums found");
-    let random_trees = generate_random_trees(&polygon, &strata);
+        let trees = compartment.trees_in_bounding_box(min_x, max_x, min_y, max_y);
 
-    if stand.stem_count_in_stratum() {
-        println!("\nStem count is in individual stratum");
+        // Draw the polygon
+        let mapped_coordinates = image.map_coordinates_to_image(&polygon, &scale);
 
-        // Draw the random points
-        for tree in random_trees {
+        image.draw_polygon_image(&mapped_coordinates);
+
+        // Draw the trees
+        for tree in trees {
             let point = coord! {x: tree.position().0, y: tree.position().1};
             let color = get_color_by_species(tree.species());
             image.draw_random_point(&scale, img_width, img_height, point, color);
         }
-    } else {
-        println!("Stem count is not in any individual stratum. Drawing random points based on tree stand summary.");
-
-        // Draw the random points
-        for tree in random_trees {
-            let point = coord! {x: tree.position().0, y: tree.position().1};
-            image.draw_random_point(&scale, img_width, img_height, point, Rgb([255, 0, 0])) // Draw points in red
-        }
     }
-    println!("\nTotal stem count: {:?}", summary_stem_count);
 
     image
         .img()
-        .save("polygon_image.png")
+        .save("clipped_image.png")
         .expect("Failed to save image");
-    println!("Polygon image saved as 'polygon_image.png'");
+    println!("Polygon image saved as 'clipped_image.png'");
 }
-*/
+
 #[test]
 fn test_writing_to_json() {
     let test_json_path = "test_json_from_xml.json";
@@ -182,115 +274,3 @@ fn test_find_stands_in_bounding_box() {
         }
     } */
 }
-
-/* TESTING TREE GENERATION FOR STANDS IN BOUNDING BOX */
-fn main() {
-    let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
-    let real_estate = property.real_estates.real_estate[0].clone();
-    let stands = real_estate.get_stands();
-
-   
-
-/* 
-
-pienempi
-N=7369787.000, E=427754.979
-N=7369564.333, E=427997.035
-N kasvaa pohjoisen suuntaa, E kasvaa idän suuntaan
-
---->
-
-let min_x: f64 = 427754.979;
-let max_x: f64 = 427997.035;
-let max_y: f64 = 7369787.000;
-let min_y: f64 = 7369564.333;
-
-
-isompi
-N=7369959.526, E=427541.481
-N=7369356.859, E=428282.985
-
-
-let min_x: f64 = 427541.481;
-let max_x: f64 = 428282.985;
-let max_y: f64 = 7369959.526;
-let min_y: f64 = 7369564.333;
-
-
-
-*/
-    /*
-    let min_x: f64 = 427754.979;
-    let max_x: f64 = 427997.035;
-    let max_y: f64 = 7369787.000;
-    let min_y: f64 = 7369564.333; 
-
-    let min_x: f64 = 427541.481;
-    let max_x: f64 = 428282.985;
-    let max_y: f64 = 7369959.526;
-    let min_y: f64 = 7369564.333;
-    
-    let min_x = 428400.0;
-    let max_x = 429400.0;
-    let min_y = 7370500.0;
-    let max_y = 7371500.0;
-    
-    // Create an image processor with the desired image dimensions
-    let img_width = 1000; // For example
-    let img_height = 1000; // For example
-    let mut image = ImageProcessor::new(img_width, img_height);
-*/
-    let min_x = 425400.0;
-    let max_x = min_x + 6000.0;
-    let min_y = 7369000.0;
-    let max_y = min_y + 6000.0;
-
-    // Create an image processor with the desired image dimensions
-    let img_width = 6000; // For example
-    let img_height = 6000; // For example
-    let mut image = ImageProcessor::new(img_width, img_height);
-
-    // Find compartments in the bounding box
-    let bbox = geo::Polygon::new(
-        LineString(vec![
-            Coord { x: min_x, y: min_y },
-            Coord { x: max_x, y: min_y },
-            Coord { x: max_x, y: max_y },
-            Coord { x: min_x, y: max_y },
-            Coord { x: min_x, y: min_y },
-        ]),
-        vec![],
-    );
-    let compartments = get_compartments_in_bounding_box(stands, &bbox);
-   
-    let scale = ImageProcessor::create_scale(min_x, max_x, min_y, max_y, img_width, img_height);
-
-    for compartment in compartments {
-        let polygon =
-            match compartment.clip_polygon_to_bounding_box(&bbox) {
-                Some(polygon) => polygon,
-                None => continue,
-            };
-
-        let trees = compartment.trees_in_bounding_box(min_x, max_x, min_y, max_y);
-
-        // Draw the polygon
-        let mapped_coordinates = image.map_coordinates_to_image(&polygon, &scale);
-
-        image.draw_polygon_image(&mapped_coordinates);
-
-        // Draw the trees
-        for tree in trees {
-            let point = coord! {x: tree.position().0, y: tree.position().1};
-            let color = get_color_by_species(tree.species());
-            image.draw_random_point(&scale, img_width, img_height, point, color);
-        }
-    }
-
-    image
-        .img()
-        .save("clipped_image.png")
-        .expect("Failed to save image");
-    println!("Polygon image saved as 'clipped_image.png'");
-}
-    
