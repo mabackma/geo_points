@@ -102,12 +102,14 @@ fn main() {
     let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
     let real_estate = property.real_estates.real_estate[0].clone();
     let stands = real_estate.get_stands();
+    println!("Total stands: {:?}\n", stands.len());
 
     // Get the bounding box of the whole map
     let bbox = get_bounding_box_of_map();
 
     // Find compartments in the bounding box
     let compartments = get_compartments_in_bounding_box(stands, &bbox);
+    println!("\nTotal compartments: {:?}", compartments.len());
 
     let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&bbox);
 

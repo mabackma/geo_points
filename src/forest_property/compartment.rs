@@ -79,8 +79,6 @@ pub fn get_compartments_in_bounding_box(
     all_stands: Vec<Stand>,
     bbox: &Polygon
 ) -> Vec<Compartment> {
-    println!("\nTotal stands: {:?}", all_stands.len());
-
     // Find stands in the bounding box
     let stands = find_stands_in_bounding_box(&all_stands, bbox);
 

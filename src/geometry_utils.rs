@@ -68,7 +68,7 @@ pub fn generate_random_trees(p: &Polygon, strata: &TreeStrata) -> Vec<Tree> {
                 break;
             }
         }
-        println!("Generated {} trees, needed {}", generated_trees.len(), amount);
+        
         generated_trees
     }).flatten();
 
