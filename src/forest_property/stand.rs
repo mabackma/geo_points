@@ -113,13 +113,7 @@ impl Stand {
             None => return false
         };
 
-        for stratum in stratum_vec.iter() {
-            if stratum.stem_count.is_some() {
-                return true;
-            }
-        }
-
-        false
+        true
     }
 
     pub fn get_stratums(&self) -> Option<Vec<TreeStratum>> {

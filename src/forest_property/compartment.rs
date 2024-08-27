@@ -92,7 +92,7 @@ pub fn get_compartments_in_bounding_box(
 
                 if strata.is_none() {
                     return Compartment {
-                        stand_number: stand.stand_basic_data.stand_number.clone(),
+                        stand_number: stand.stand_basic_data.stand_number.to_string(),
                         trees: vec![] as Vec<Tree>,
                         polygon: polygon.to_owned(),
                     };
@@ -101,7 +101,7 @@ pub fn get_compartments_in_bounding_box(
                 let trees = generate_random_trees(&polygon, &strata.unwrap());
 
                 let compartment = Compartment {
-                    stand_number: stand.stand_basic_data.stand_number.clone(),
+                    stand_number: stand.stand_basic_data.stand_number.to_string(),
                     trees,
                     polygon: polygon.to_owned(),
                 };

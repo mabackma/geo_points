@@ -1,5 +1,6 @@
 mod forest_property;
 mod geometry_utils;
+mod jittered_hexagonal_sampling;
 
 use forest_property::compartment::{find_stands_in_bounding_box, get_compartments_in_bounding_box, Compartment};
 use forest_property::forest_property_data::ForestPropertyData;
