@@ -1,5 +1,6 @@
 mod forest_property;
 mod geometry_utils;
+mod jittered_hexagonal_sampling;
 
 use forest_property::compartment::{find_stands_in_bounding_box, get_compartments_in_bounding_box};
 use forest_property::forest_property_data::ForestPropertyData;
@@ -239,9 +240,21 @@ fn main() {
     let min_y = 7369000.0;
     let max_y = min_y + 6000.0;
 
+
+    
     // Create an image processor with the desired image dimensions
+
     let img_width = 6000; // For example
     let img_height = 6000; // For example
+    /*let min_x: f64 = 427541.481;
+    let max_x: f64 = 428282.985;
+    let max_y: f64 = 7369959.526;
+    let min_y: f64 = 7369564.333;
+
+    let img_width: u32 = 1000; // For example
+    let img_height = 1000; // For example */
+
+
     let mut image = ImageProcessor::new(img_width, img_height);
 
     // Find compartments in the bounding box

@@ -105,7 +105,7 @@ impl Stand {
         
     }
 
-    pub fn stem_count_in_stratum(&self) -> bool {
+/*     pub fn stem_count_in_stratum(&self) -> bool {
         let stratums = self.get_stratums();
 
         let stratum_vec = match stratums {
@@ -120,7 +120,7 @@ impl Stand {
         }
 
         false
-    }
+    } */
 
     pub fn get_stratums(&self) -> Option<Vec<TreeStratum>> {
         let last_data_date = match self.get_last_tree_stand_data_date() {
