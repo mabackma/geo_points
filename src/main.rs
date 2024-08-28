@@ -1,6 +1,7 @@
 mod forest_property;
 mod geometry_utils;
 mod jittered_hexagonal_sampling;
+mod projection;
 
 use forest_property::compartment::{find_stands_in_bounding_box, get_compartments_in_bounding_box, Compartment};
 use forest_property::forest_property_data::ForestPropertyData;
@@ -96,7 +97,7 @@ fn get_bounding_box_of_map() -> Polygon<f64> {
 
     bbox
 }
-
+/* 
 /* DRAWS ENTIRE MAP */
 fn main() {
     let start = Instant::now();
@@ -149,7 +150,7 @@ fn main() {
     let duration = start.elapsed();
     println!("Time elapsed in create_all_compartments is: {:?}", duration);
 }
-
+*/
 /* 
 pienempi
 N=7369787.000, E=427754.979
@@ -307,3 +308,10 @@ fn main() {
     println!("Polygon image saved as 'polygon_image.png'");
 }
 */
+/* ASKS USER FOR STAND AND DRAWS STAND */
+fn main() {
+    let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
+    let stand = property.get_stand_cli();
+    let polygon = stand.create_polygon();
+
+}

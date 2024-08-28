@@ -1,8 +1,10 @@
-use geo::{Coord, LineString, Polygon};
+use geo::{coord, Coord, LineString, Polygon};
 use serde::{Deserialize, Serialize};
 use crate::forest_property::tree_stand_data::TreeStrata;
 use crate::forest_property::forest_property_data::{ TreeStandDataDate, TreeStratum};
 use crate::forest_property::forest_property_data::{Operations, SpecialFeatures, StandBasicData, TreeStandData};
+use crate::projection::{Projection, CRS};
+
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -85,8 +87,28 @@ impl Stand {
 
     pub fn create_polygon(&self) -> Polygon {
         let (exterior, interior) = self.get_geometries();
+        
+        let proj = Projection::new(CRS::Epsg3067, CRS::Epsg4326);
 
-        let polygon = Polygon::new(exterior, interior);
+        let mut proj_exterior = Vec::new();
+        for coord in exterior.0.iter() {
+            let (lon, lat) = proj.transform(coord.x, coord.y);
+            proj_exterior.push(coord!(x: lon, y: lat));
+        }
+
+        let mut proj_interior = Vec::new();
+        for coords in interior.iter() {
+            let mut transformed_coords = Vec::new();
+
+            for c in coords.0.iter() {
+                let (lon, lat) = proj.transform(c.x, c.y);
+                transformed_coords.push(coord!(x: lon, y: lat));
+            }
+
+            proj_interior.push(LineString(transformed_coords));
+        }
+
+        let polygon = Polygon::new(LineString(proj_exterior), proj_interior);
 
         polygon
     }
