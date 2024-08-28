@@ -123,12 +123,13 @@ pub fn generate_random_trees(p: &Polygon, strata: &TreeStrata) -> Vec<Tree> {
 
             let points =  grid.fill();
 
-            if points.len() != amount as usize {
-                println!(
-                    "generated points count: {}, needed: {}",
-                    points.len(),
-                    amount
-                );
+            let mut none_generated = 0;
+            if points.len() == 0 {
+                none_generated += 1;
+            }
+
+            if none_generated > 0 {
+                println!("No trees generated for stratum with basal area {}, stem count {}, mean height {}", stratum.basal_area, stratum.stem_count, stratum.mean_height);
             }
 
             let trees_strata: Vec<Tree> = points.iter().map(|pair: &[f64; 2]| {
