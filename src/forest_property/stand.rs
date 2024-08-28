@@ -86,14 +86,14 @@ impl Stand {
         (exterior_geometry, interior_geometry)
     }
 
-    pub fn create_polygon(&self) -> Polygon {
+    pub fn create_polygon(&mut self) -> Polygon {
         let (exterior, interior) = self.get_geometries();
         
-        let proj = Projection::new(CRS::Epsg3067, CRS::Epsg4326);
+        self.proj = Projection::new(CRS::Epsg3067, CRS::Epsg4326);
 
         let mut proj_exterior = Vec::new();
         for coord in exterior.0.iter() {
-            let (lon, lat) = proj.transform(coord.x, coord.y);
+            let (lon, lat) = self.proj.transform(coord.x, coord.y);
             println!("Coordinate: {:?}", coord);
             println!("lon: {}, lat: {}", lon, lat);
             proj_exterior.push(coord!(x: lon, y: lat));
@@ -104,9 +104,9 @@ impl Stand {
             let mut transformed_coords = Vec::new();
 
             for c in coords.0.iter() {
-                let (lon, lat) = proj.transform(c.x, c.y);
-                println!("Coordinate: {:?}", c);
-                println!("lon: {}, lat: {}", lon, lat);
+                let (lon, lat) = self.proj.transform(c.x, c.y);
+                println!("\tCoordinate: {:?}", c);
+                println!("\tlon: {}, lat: {}", lon, lat);
                 transformed_coords.push(coord!(x: lon, y: lat));
             }
 

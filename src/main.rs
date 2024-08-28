@@ -59,14 +59,14 @@ fn get_color_by_species(number: u8) -> Rgb<u8> {
 // Get the bounding box of the whole map
 fn get_bounding_box_of_map() -> Polygon<f64> {
     let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
-    let all_stands = property.real_estates.real_estate[0].get_stands();
+    let mut all_stands = property.real_estates.real_estate[0].get_stands();
 
     let mut min_x = f64::MAX;
     let mut max_x = f64::MIN;
     let mut min_y = f64::MAX;
     let mut max_y = f64::MIN;
 
-    for stand in all_stands.iter() {
+    for stand in all_stands.iter_mut() {
         let polygon = stand.create_polygon();
         let (p_min_x, p_max_x, p_min_y, p_max_y) = get_min_max_coordinates(&polygon);
 
@@ -311,7 +311,7 @@ fn main() {
 /* ASKS USER FOR STAND AND DRAWS STAND */
 fn main() {
     let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
-    let stand = property.get_stand_cli();
+    let mut stand = property.get_stand_cli();
     let polygon = stand.create_polygon();
 
 }
