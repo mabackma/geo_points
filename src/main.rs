@@ -69,7 +69,7 @@ fn get_bounding_box_of_map() -> Polygon<f64> {
     for stand in all_stands.iter_mut() {
         let polygon = stand.create_polygon();
         let (p_min_x, p_max_x, p_min_y, p_max_y) = get_min_max_coordinates(&polygon);
-        
+
         if p_min_x < min_x {
             min_x = p_min_x;
         }
@@ -116,8 +116,8 @@ fn main() {
     let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&bbox);
 
     // Create an image processor with the desired image dimensions
-    let img_width = ((max_x - min_x) * 10000.0) as u32;
-    let img_height = ((max_y - min_y) * 10000.0) as u32;
+    let img_width = ((max_x - min_x) * 100000.0) as u32;
+    let img_height = ((max_y - min_y) * 100000.0) as u32;
     let mut image = ImageProcessor::new(img_width, img_height);
 
     let aspect_ratio_image = img_width as f64 / img_height as f64;
