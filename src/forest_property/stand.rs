@@ -8,7 +8,6 @@ use crate::projection::{Projection, CRS};
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
-
 pub struct Stands {
     #[serde(rename = "$text")]
     pub text: Option<String>,
@@ -32,7 +31,9 @@ pub struct Stand {
     #[serde(rename = "TreeStandData")]
     pub tree_stand_data: Option<TreeStandData>,
     #[serde(skip_serializing, skip_deserializing)]
-    pub computed_polygon: Option<Polygon>
+    pub computed_polygon: Option<Polygon>,
+    #[serde(skip_serializing, skip_deserializing)]
+    pub proj: Projection,
 }
 
 impl Stand {
@@ -93,6 +94,8 @@ impl Stand {
         let mut proj_exterior = Vec::new();
         for coord in exterior.0.iter() {
             let (lon, lat) = proj.transform(coord.x, coord.y);
+            println!("Coordinate: {:?}", coord);
+            println!("lon: {}, lat: {}", lon, lat);
             proj_exterior.push(coord!(x: lon, y: lat));
         }
 
@@ -102,6 +105,8 @@ impl Stand {
 
             for c in coords.0.iter() {
                 let (lon, lat) = proj.transform(c.x, c.y);
+                println!("Coordinate: {:?}", c);
+                println!("lon: {}, lat: {}", lon, lat);
                 transformed_coords.push(coord!(x: lon, y: lat));
             }
 
