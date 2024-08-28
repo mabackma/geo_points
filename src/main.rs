@@ -97,7 +97,7 @@ fn get_bounding_box_of_map() -> Polygon<f64> {
 
     bbox
 }
-/* 
+ 
 /* DRAWS ENTIRE MAP */
 fn main() {
     let start = Instant::now();
@@ -115,11 +115,15 @@ fn main() {
 
     let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&bbox);
 
+    println!(
+        "Bounding box: min_x: {}, max_x: {}, min_y: {}, max_y: {}",
+        min_x, max_x, min_y, max_y
+    );
     // Create an image processor with the desired image dimensions
-    let img_width = (max_x - min_x) as u32;
-    let img_height = (max_y - min_y) as u32;
+    let img_width = ((max_x - min_x) * 10000.0) as u32;
+    let img_height = ((max_y - min_y) * 10000.0) as u32;
     let mut image = ImageProcessor::new(img_width, img_height);
-    
+    println!("Image dimensions: {} x {}", img_width, img_height);
     let scale = ImageProcessor::create_scale(min_x, max_x, min_y, max_y, img_width, img_height);
 
     for compartment in compartments {
@@ -150,7 +154,7 @@ fn main() {
     let duration = start.elapsed();
     println!("Time elapsed in create_all_compartments is: {:?}", duration);
 }
-*/
+
 /* 
 pienempi
 N=7369787.000, E=427754.979
@@ -261,7 +265,7 @@ fn test_find_stands_in_bounding_box() {
 /* ASKS USER FOR STAND AND DRAWS STAND */
 fn main() {
     let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
-    let stand = property.get_stand_cli();
+    let mut stand = property.get_stand_cli();
     let polygon = stand.create_polygon();
 
     // Create an image for the polygon and random points
@@ -308,10 +312,3 @@ fn main() {
     println!("Polygon image saved as 'polygon_image.png'");
 }
 */
-/* ASKS USER FOR STAND AND DRAWS STAND */
-fn main() {
-    let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
-    let mut stand = property.get_stand_cli();
-    let polygon = stand.create_polygon();
-
-}

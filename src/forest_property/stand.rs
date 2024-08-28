@@ -43,7 +43,7 @@ impl Stand {
         self
        
     }
-
+/* 
     pub fn parse_geometry(&self, coord_string: &String) -> Vec<Coord<f64>> {
         let coordinates_str: Vec<&str> = coord_string.split(" ").collect();
 
@@ -63,7 +63,52 @@ impl Stand {
 
         coords
     }
+*/
+    pub fn parse_geometry(&self, coord_string: &String) -> Vec<Coord<f64>> {
+        let coordinates_str: Vec<&str> = coord_string.split(" ").collect();
 
+        // Parse coordinates into a Vec of `Coord<f64>`
+        let mut coords: Vec<Coord<f64>> = Vec::new();
+
+        for coordinate in coordinates_str {
+            let parts: Vec<&str> = coordinate.split(',').collect();
+            if parts.len() == 2 {
+                let x: f64 = parts[0].parse().expect("Invalid x coordinate");
+                let y: f64 = parts[1].parse().expect("Invalid y coordinate");
+
+                let coord = Coord { x, y };
+                let (lon, lat) = self.proj.transform(coord.x, coord.y);
+                coords.push(Coord { x: lon, y: lat });
+            } else {
+                println!("Invalid coordinate format: {}", coordinate);
+            }
+        }
+
+        coords
+    }
+ 
+    pub fn get_geometries(&self) -> (LineString, Vec<LineString>) {
+        let polygon = &self
+            .stand_basic_data
+            .polygon_geometry
+            .polygon_property
+            .polygon;
+
+        let exterior = &polygon.exterior.linear_ring.coordinates;
+        let exterior_geometry = LineString::new(self.parse_geometry(&exterior).to_owned());
+
+        let interior_geometry: Vec<LineString> = polygon
+            .interior
+            .iter()
+            .map(|f| {
+                let geometry = self.parse_geometry(&f.linear_ring.coordinates);
+                LineString::new(geometry)
+            })
+            .collect();
+
+        (exterior_geometry, interior_geometry)
+    }
+/*
     pub fn get_geometries(&self) -> (LineString, Vec<LineString>) {
         let polygon = &self
             .stand_basic_data
@@ -94,8 +139,8 @@ impl Stand {
         let mut proj_exterior = Vec::new();
         for coord in exterior.0.iter() {
             let (lon, lat) = self.proj.transform(coord.x, coord.y);
-            println!("Coordinate: {:?}", coord);
-            println!("lon: {}, lat: {}", lon, lat);
+            //println!("Coordinate: {:?}", coord);
+            //println!("lon: {}, lat: {}", lon, lat);
             proj_exterior.push(coord!(x: lon, y: lat));
         }
 
@@ -105,8 +150,8 @@ impl Stand {
 
             for c in coords.0.iter() {
                 let (lon, lat) = self.proj.transform(c.x, c.y);
-                println!("\tCoordinate: {:?}", c);
-                println!("\tlon: {}, lat: {}", lon, lat);
+                //println!("\tCoordinate: {:?}", c);
+                //println!("\tlon: {}, lat: {}", lon, lat);
                 transformed_coords.push(coord!(x: lon, y: lat));
             }
 
@@ -114,6 +159,18 @@ impl Stand {
         }
 
         let polygon = Polygon::new(LineString(proj_exterior), proj_interior);
+
+        polygon
+    }
+*/
+
+    pub fn create_polygon(&mut self) -> Polygon {
+        // Projection from ETRS-TM35FIN to WGS84
+        self.proj = Projection::new(CRS::Epsg3067, CRS::Epsg4326);
+
+        let (exterior, interior) = self.get_geometries();
+
+        let polygon = Polygon::new(exterior, interior);
 
         polygon
     }
