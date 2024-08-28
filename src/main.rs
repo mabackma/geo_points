@@ -118,6 +118,13 @@ fn main() {
     let img_width = (max_x - min_x) as u32;
     let img_height = (max_y - min_y) as u32;
     let mut image = ImageProcessor::new(img_width, img_height);
+
+    let aspect_ratio_image = img_width as f64 / img_height as f64;
+    let aspect_ratio_bbox = (max_x - min_x) / (max_y - min_y);
+    
+    println!("Aspect ratio of image: {}", aspect_ratio_image);
+    println!("Aspect ratio of bounding box: {}", aspect_ratio_bbox);
+    println!("Image dimensions: {} x {}", img_width, img_height);
     
     let scale = ImageProcessor::create_scale(min_x, max_x, min_y, max_y, img_width, img_height);
 
