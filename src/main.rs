@@ -69,7 +69,7 @@ fn get_bounding_box_of_map() -> Polygon<f64> {
     for stand in all_stands.iter_mut() {
         let polygon = stand.create_polygon();
         let (p_min_x, p_max_x, p_min_y, p_max_y) = get_min_max_coordinates(&polygon);
-
+        
         if p_min_x < min_x {
             min_x = p_min_x;
         }
@@ -83,7 +83,7 @@ fn get_bounding_box_of_map() -> Polygon<f64> {
             max_y = p_max_y;
         }
     }
-
+    
     let bbox = geo::Polygon::new(
         LineString(vec![
             Coord { x: min_x, y: min_y },
@@ -115,15 +115,18 @@ fn main() {
 
     let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&bbox);
 
-    println!(
-        "Bounding box: min_x: {}, max_x: {}, min_y: {}, max_y: {}",
-        min_x, max_x, min_y, max_y
-    );
     // Create an image processor with the desired image dimensions
     let img_width = ((max_x - min_x) * 10000.0) as u32;
     let img_height = ((max_y - min_y) * 10000.0) as u32;
     let mut image = ImageProcessor::new(img_width, img_height);
+
+    let aspect_ratio_image = img_width as f64 / img_height as f64;
+    let aspect_ratio_bbox = (max_x - min_x) / (max_y - min_y);
+    
+    println!("Aspect ratio of image: {}", aspect_ratio_image);
+    println!("Aspect ratio of bounding box: {}", aspect_ratio_bbox);
     println!("Image dimensions: {} x {}", img_width, img_height);
+
     let scale = ImageProcessor::create_scale(min_x, max_x, min_y, max_y, img_width, img_height);
 
     for compartment in compartments {
