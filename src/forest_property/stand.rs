@@ -76,8 +76,8 @@ impl Stand {
                 let e: f64 = parts[0].parse().expect("Invalid x coordinate");
                 let n: f64 = parts[1].parse().expect("Invalid y coordinate");
 
-                let (lon, lat) = self.proj.transform(n, e);
-                coords.push(Coord { x: lat, y: lon });
+                let (lon, lat) = self.proj.transform(e, n);
+                coords.push(Coord { x: lon, y: lat });
             } else {
                 println!("Invalid coordinate format: {}", coordinate);
             }

@@ -67,7 +67,7 @@ fn get_bounding_box_of_map() -> Polygon<f64> {
     let mut max_y = f64::MIN;
 
     for stand in all_stands.iter_mut() {
-        let polygon = stand.create_polygon();
+        let polygon = stand.computed_polygon.to_owned().unwrap();
         let (p_min_x, p_max_x, p_min_y, p_max_y) = get_min_max_coordinates(&polygon);
 
         if p_min_x < min_x {
@@ -134,7 +134,7 @@ fn main() {
             Some(polygon) => polygon,
             None => continue,
         };
-
+        
         let trees = compartment.trees_in_bounding_box(min_x, max_x, min_y, max_y);
 
         // Draw the polygon
