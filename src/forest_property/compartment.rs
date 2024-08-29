@@ -38,7 +38,7 @@ impl Compartment {
 
     // Polygon clipping to bounding box
     pub fn clip_polygon_to_bounding_box(&self, bbox: &Polygon) -> Option<Polygon> {
-        let clipped = self.polygon.intersection(bbox, 10000.0);
+        let clipped = self.polygon.intersection(bbox, 100000.0);
 
         if clipped.0.is_empty() {
             println!("Polygon is empty");

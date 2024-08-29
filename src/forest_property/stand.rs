@@ -73,10 +73,10 @@ impl Stand {
         for coordinate in coordinates_str {
             let parts: Vec<&str> = coordinate.split(',').collect();
             if parts.len() == 2 {
-                let x: f64 = parts[0].parse().expect("Invalid x coordinate");
-                let y: f64 = parts[1].parse().expect("Invalid y coordinate");
+                let e: f64 = parts[0].parse().expect("Invalid x coordinate");
+                let n: f64 = parts[1].parse().expect("Invalid y coordinate");
 
-                let (lon, lat) = self.proj.transform(y, x);
+                let (lon, lat) = self.proj.transform(n, e);
                 coords.push(Coord { x: lat, y: lon });
             } else {
                 println!("Invalid coordinate format: {}", coordinate);
