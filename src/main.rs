@@ -3,6 +3,7 @@ mod geometry_utils;
 mod jittered_hexagonal_sampling;
 mod projection;
 
+use std::fs::{self, File};
 use forest_property::compartment::{find_stands_in_bounding_box, get_compartments_in_bounding_box, Compartment};
 use forest_property::forest_property_data::ForestPropertyData;
 use forest_property::image_processor::ImageProcessor;
@@ -296,8 +297,17 @@ fn main() {
 
     // Serialize GeoJson to a String
     let geojson_string = serde_json::to_string_pretty(&geojson).expect("Failed to serialize GeoJson");
-    println!("{}", geojson_string);
+    
+    // Write GeoJson to a file
+    let mut file = File::create("single_stand.geojson").expect("Failed to create file");
+    file.write_all(geojson_string.as_bytes()).expect("Failed to write to file");
 
+    // Read the GeoJSON file contents back into a string
+    let file_geojson_string = fs::read_to_string("single_stand.geojson")
+        .expect("Failed to read file");
+
+    println!("Read GeoJSON string from file:\n{}", file_geojson_string);
+    
     if stand.stem_count_in_stratum() {
         println!("\nStem count is in individual stratum");
 
