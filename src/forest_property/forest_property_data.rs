@@ -1,9 +1,17 @@
-use core::f64;
-use std::fs::{self, File};
+use crate::projection::{self, Projection, CRS};
 use chrono::{Date, NaiveDate, TimeZone};
+use core::f64;
 use rayon::iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator};
 use serde::{Deserialize, Serialize};
-use super::{geometry::PolygonGeometry, stand::{Stand, Stands}};
+use std::{
+    borrow::BorrowMut,
+    fs::{self, File},
+};
+
+use super::{
+    geometry::PolygonGeometry,
+    stand::{Stand, Stands},
+};
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct ForestPropertyData {
@@ -37,9 +45,9 @@ impl ForestPropertyData {
     pub fn from_json_file(path: &str) -> ForestPropertyData {
         let json = fs::read_to_string(path).expect("Could not read the JSON file");
 
-        
-        let property : ForestPropertyData = serde_json::from_str(json.as_str()).expect("Error parsing json file");
-        
+        let property: ForestPropertyData =
+            serde_json::from_str(json.as_str()).expect("Error parsing json file");
+
         property
     }
 
@@ -58,7 +66,13 @@ impl ForestPropertyData {
 
     // Parcels are not probably needed in this context but its good to keep them just in case
     pub fn choose_parcel(&self) -> Parcel {
-        let parcels: &Vec<Parcel> = &self.real_estates.real_estate.first().unwrap().parcels.parcel;
+        let parcels: &Vec<Parcel> = &self
+            .real_estates
+            .real_estate
+            .first()
+            .unwrap()
+            .parcels
+            .parcel;
 
         println!("\nParcels:");
         for (i, parcel) in parcels.iter().enumerate() {
@@ -83,7 +97,7 @@ impl ForestPropertyData {
 
         let real_estate = &self.real_estates.real_estate[real_estate_index];
 
-        let stands_data: Vec<Stand> = real_estate.get_stands();
+        let stands_data: Vec<Stand> = real_estate.get_stands(None);
 
         for (i, stand) in stands_data.iter().enumerate() {
             let StandBasicData {
@@ -104,11 +118,11 @@ impl ForestPropertyData {
 
         stand.to_owned()
     }
+    
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct RealEstates {
-    
     #[serde(rename = "RealEstate")]
     pub real_estate: Vec<RealEstate>,
 }
@@ -131,28 +145,44 @@ pub struct RealEstate {
     pub parcels: Parcels,
 }
 
-impl RealEstate {
-    
-    pub fn get_stands(&self) -> Vec<Stand> {
 
+pub struct RealEstateStandOptions {
+    pub proj: Option<Projection>,
+}
+
+impl RealEstate {
+
+  
+
+    pub fn get_stands(&self, _options: Option<RealEstateStandOptions>) -> Vec<Stand> {
         let parcels = &self.parcels.parcel;
 
+        let options = _options.unwrap_or(RealEstateStandOptions {
+            proj: Some(Projection::new(CRS::Epsg3067, CRS::Epsg4326)),
+        });
+
+        let proj = options.proj.unwrap();
+
         let stands_data: Vec<Stand> = parcels
-            .into_par_iter()
-            .map(|parcel: &Parcel| {
-                let stands: Vec<Stand> = parcel.stands.stand.iter().map( | f| f.to_owned().compute_polygon().to_owned()).collect();
+            .iter()
+            .map(|parcel| {
+                let stands: Vec<Stand> = parcel
+                    .stands
+                    .stand
+                    .iter()
+                    .map(|f| f.clone().set_projection(proj.to_owned()).compute_polygon())
+                    .collect::<Vec<Stand>>();
                 stands
-            }).flatten()
+            })
+            .flatten()
             .collect();
 
         stands_data
-    } 
-
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Parcels {
-    
     #[serde(rename = "Parcel")]
     pub parcel: Vec<Parcel>,
 }
@@ -167,10 +197,8 @@ pub struct Parcel {
     pub stands: Stands,
 }
 
-
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct StandBasicData {
-    
     #[serde(rename = "Identifiers")]
     pub identifiers: Option<Identifiers>,
     #[serde(rename = "CuttingRestriction", default)]
@@ -217,14 +245,12 @@ pub struct StandBasicData {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Identifiers {
-    
     #[serde(rename = "Identifier")]
     pub identifier: Identifier,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Identifier {
-    
     #[serde(rename = "IdentifierType")]
     pub identifier_type: String,
     #[serde(rename = "IdentifierValue")]
@@ -233,7 +259,6 @@ pub struct Identifier {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct SpecialFeatures {
-    
     #[serde(rename = "SpecialFeature")]
     pub special_feature: Vec<SpecialFeature>,
 }
@@ -242,7 +267,7 @@ pub struct SpecialFeatures {
 pub struct SpecialFeature {
     #[serde(rename = "@id")]
     pub id: u32,
-    
+
     #[serde(rename = "FeatureAdditionalCode")]
     pub feature_additional_code: Option<String>,
     #[serde(rename = "FeatureCode")]
@@ -251,7 +276,6 @@ pub struct SpecialFeature {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Operations {
-    
     #[serde(rename = "Operation")]
     pub operation: Vec<Operation>,
 }
@@ -282,14 +306,12 @@ pub struct Operation {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct CompletionData {
-    
     #[serde(rename = "CompletionDate")]
     pub completion_date: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Specifications {
-    
     #[serde(rename = "Specification")]
     pub specification: Vec<Specification>,
 }
@@ -315,8 +337,7 @@ pub struct ProposalData {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Cutting {
-    
-    #[serde(rename = "CuttingVolume",default = "default_zero_f32")]
+    #[serde(rename = "CuttingVolume", default = "default_zero_f32")]
     pub cutting_volume: f32,
     #[serde(rename = "Assortments")]
     pub assortments: Option<Assortments>,
@@ -324,7 +345,6 @@ pub struct Cutting {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Assortments {
-    
     #[serde(rename = "Assortment", default)]
     pub assortment: Vec<Assortment>,
 }
@@ -343,7 +363,6 @@ pub struct Assortment {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct TreeStandData {
-    
     #[serde(rename = "TreeStandDataDate")]
     pub tree_stand_data_date: Vec<TreeStandDataDate>,
 }
@@ -354,7 +373,7 @@ pub struct TreeStandDataDate {
     pub date: String,
     #[serde(rename = "@type", default)]
     pub tree_stand_data_date_type: u8,
-    
+
     #[serde(rename = "DeadTreeStrata")]
     pub dead_tree_strata: Option<DeadTreeStrata>,
     #[serde(rename = "TreeStrata")]
@@ -365,7 +384,6 @@ pub struct TreeStandDataDate {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct DeadTreeStrata {
-    
     #[serde(rename = "DeadTreeStratum")]
     pub dead_tree_stratum: Vec<DeadTreeStratum>,
 }
@@ -386,11 +404,9 @@ pub struct DeadTreeStratum {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct TreeStrata {
-    
     #[serde(rename = "TreeStratum")]
     pub tree_stratum: Vec<TreeStratum>,
 }
-
 
 fn default_zero_u32() -> u32 {
     0
@@ -421,7 +437,7 @@ pub struct TreeStratum {
     pub mean_height: f32,
     #[serde(rename = "DataSource")]
     pub data_source: u32,
-    #[serde(rename = "BasalArea",  default = "default_zero_f32")]
+    #[serde(rename = "BasalArea", default = "default_zero_f32")]
     pub basal_area: f32,
     #[serde(rename = "SawLogPercent", default = "default_zero_f32")]
     pub saw_log_percent: f32,

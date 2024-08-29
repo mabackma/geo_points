@@ -3,12 +3,16 @@ mod geometry_utils;
 mod jittered_hexagonal_sampling;
 mod projection;
 
-use forest_property::compartment::{find_stands_in_bounding_box, get_compartments_in_bounding_box, Compartment};
-use forest_property::forest_property_data::ForestPropertyData;
+use forest_property::compartment::{
+    find_stands_in_bounding_box, get_compartments_in_bounding_box, Compartment,
+};
+use forest_property::forest_property_data::{ForestPropertyData, RealEstateStandOptions};
 use forest_property::image_processor::ImageProcessor;
-use geo::{coord, Coord, Intersects, LineString, Polygon};
+use forest_property::stand::Stand;
+use geo::{coord, BoundingRect, Coord, Geometry, Intersects, LineString, MultiPolygon, Polygon};
 use geometry_utils::{generate_random_trees, get_min_max_coordinates};
 use image::Rgb;
+use projection::{Projection, CRS};
 
 #[cfg(test)]
 use std::fs;
@@ -59,7 +63,7 @@ fn get_color_by_species(number: u8) -> Rgb<u8> {
 // Get the bounding box of the whole map
 fn get_bounding_box_of_map() -> Polygon<f64> {
     let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
-    let mut all_stands = property.real_estates.real_estate[0].get_stands();
+    let mut all_stands = property.real_estates.real_estate[0].get_stands(None);
 
     let mut min_x = f64::MAX;
     let mut max_x = f64::MIN;
@@ -83,7 +87,7 @@ fn get_bounding_box_of_map() -> Polygon<f64> {
             max_y = p_max_y;
         }
     }
-    
+
     let bbox = geo::Polygon::new(
         LineString(vec![
             Coord { x: min_x, y: min_y },
@@ -97,17 +101,38 @@ fn get_bounding_box_of_map() -> Polygon<f64> {
 
     bbox
 }
- 
+
+pub fn get_bounding_box_of_stands(stands: &Vec<Stand>) -> Polygon<f64> {
+    let stands_iter = stands.iter().map(|f| {
+        let stand_bounds = f
+            .computed_polygon
+            .as_ref()
+            .unwrap()
+            .exterior()
+            .bounding_rect()
+            .unwrap();
+        stand_bounds.to_polygon()
+    });
+
+    let rect = MultiPolygon::from_iter(stands_iter)
+        .bounding_rect()
+        .unwrap();
+
+    rect.to_polygon()
+}
+
 /* DRAWS ENTIRE MAP */
 fn main() {
     let start = Instant::now();
+
     let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
     let real_estate = property.real_estates.real_estate[0].clone();
-    let stands = real_estate.get_stands();
+    let proj = Projection::new(CRS::Epsg3067, CRS::Epsg4326);
+    let stands = real_estate.get_stands(Some(RealEstateStandOptions { proj: Some(proj) }));
     println!("Total stands: {:?}\n", stands.len());
 
     // Get the bounding box of the whole map
-    let bbox = get_bounding_box_of_map();
+    let bbox =  get_bounding_box_of_stands(&stands);
 
     // Find compartments in the bounding box
     let compartments = get_compartments_in_bounding_box(stands, &bbox);
@@ -122,12 +147,14 @@ fn main() {
 
     let aspect_ratio_image = img_width as f64 / img_height as f64;
     let aspect_ratio_bbox = (max_x - min_x) / (max_y - min_y);
-    
+
     println!("Aspect ratio of image: {}", aspect_ratio_image);
     println!("Aspect ratio of bounding box: {}", aspect_ratio_bbox);
     println!("Image dimensions: {} x {}", img_width, img_height);
 
     let scale = ImageProcessor::create_scale(min_x, max_x, min_y, max_y, img_width, img_height);
+
+    println!("bbox: {:?}", bbox);
 
     for compartment in compartments {
         let polygon = match compartment.clip_polygon_to_bounding_box(&bbox) {
@@ -136,6 +163,8 @@ fn main() {
         };
 
         let trees = compartment.trees_in_bounding_box(min_x, max_x, min_y, max_y);
+
+        println!("trees in compartment: {}", trees.len());
 
         // Draw the polygon
         let mapped_coordinates = image.map_coordinates_to_image(&polygon, &scale);
@@ -158,7 +187,7 @@ fn main() {
     println!("Time elapsed in create_all_compartments is: {:?}", duration);
 }
 
-/* 
+/*
 pienempi
 N=7369787.000, E=427754.979
 N=7369564.333, E=427997.035
@@ -214,8 +243,8 @@ fn test_parsers() {
 
     assert!(xml_id == json_id, "JSON and XML file parsing");
 
-    let xml_stands = xml_real_estate.get_stands();
-    let json_stands = json_real_estate.get_stands();
+    let xml_stands = xml_real_estate.get_stands(None);
+    let json_stands = json_real_estate.get_stands(None);
 
     for i in 0..xml_stands.iter().len() {
         assert!(
@@ -231,7 +260,7 @@ fn test_parsers() {
 fn test_find_stands_in_bounding_box() {
     let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
     let real_estate = property.real_estates.real_estate[0].clone();
-    let all_stands = real_estate.get_stands();
+    let all_stands = real_estate.get_stands(None);
 
     let mut stands = Vec::new();
     for stand in all_stands {
@@ -264,7 +293,7 @@ fn test_find_stands_in_bounding_box() {
         }
     } */
 }
-/* 
+/*
 /* ASKS USER FOR STAND AND DRAWS STAND */
 fn main() {
     let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
