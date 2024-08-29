@@ -6,9 +6,11 @@ mod projection;
 use forest_property::compartment::{find_stands_in_bounding_box, get_compartments_in_bounding_box, Compartment};
 use forest_property::forest_property_data::ForestPropertyData;
 use forest_property::image_processor::ImageProcessor;
-use geo::{coord, Coord, Intersects, LineString, Polygon};
+use geo::{coord, Coord, Intersects, LineString, Polygon, Geometry};
 use geometry_utils::{generate_random_trees, get_min_max_coordinates};
+use geojson::{Feature, FeatureCollection, GeoJson, Geometry as GeoJsonGeometry, Value};
 use image::Rgb;
+use serde_json::json;
 
 #[cfg(test)]
 use std::fs;
@@ -97,7 +99,7 @@ fn get_bounding_box_of_map() -> Polygon<f64> {
 
     bbox
 }
- 
+/* 
 /* DRAWS ENTIRE MAP */
 fn main() {
     let start = Instant::now();
@@ -157,7 +159,7 @@ fn main() {
     let duration = start.elapsed();
     println!("Time elapsed in create_all_compartments is: {:?}", duration);
 }
-
+*/
 /* 
 pienempi
 N=7369787.000, E=427754.979
@@ -264,12 +266,19 @@ fn test_find_stands_in_bounding_box() {
         }
     } */
 }
-/* 
+ 
 /* ASKS USER FOR STAND AND DRAWS STAND */
 fn main() {
     let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
     let mut stand = property.get_stand_cli();
     let polygon = stand.create_polygon();
+
+    // Convert the Polygon to GeoJSON
+    let geojson = polygon_to_geojson(&polygon);
+    
+    // Serialize GeoJson to a String
+    let geojson_string = serde_json::to_string_pretty(&geojson).expect("Failed to serialize GeoJson");
+    println!("{}", geojson_string);
 
     // Create an image for the polygon and random points
     let img_width = 800;
@@ -314,4 +323,36 @@ fn main() {
         .expect("Failed to save image");
     println!("Polygon image saved as 'polygon_image.png'");
 }
-*/
+
+fn polygon_to_geojson(polygon: &Polygon<f64>) -> GeoJson {
+    // Convert the Polygon to GeoJSON coordinates
+    let exterior_coords: Vec<Vec<f64>> = polygon.exterior().points()
+        .map(|point| vec![point.x(), point.y()])
+        .collect();
+
+    // Create the GeoJSON Polygon Geometry
+    let geometry = GeoJsonGeometry {
+        bbox: None,
+        value: Value::Polygon(vec![exterior_coords]),
+        foreign_members: None,
+    };
+
+    // Create a GeoJSON Feature
+    let feature = Feature {
+        geometry: Some(geometry),
+        properties: None, // or Some(some_properties) if you have properties
+        id: None,
+        bbox: None,
+        foreign_members: None,
+    };
+
+    // Create a GeoJSON FeatureCollection
+    let feature_collection = FeatureCollection {
+        features: vec![feature],
+        bbox: None,
+        foreign_members: None,
+    };
+
+    // Create a GeoJson object
+    GeoJson::FeatureCollection(feature_collection)
+}
