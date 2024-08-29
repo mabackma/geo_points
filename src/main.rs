@@ -6,6 +6,7 @@ mod projection;
 use forest_property::compartment::{find_stands_in_bounding_box, get_compartments_in_bounding_box, Compartment};
 use forest_property::forest_property_data::ForestPropertyData;
 use forest_property::image_processor::ImageProcessor;
+use forest_property::tree::Tree;
 use geo::{coord, Coord, Intersects, LineString, Polygon, Geometry};
 use geometry_utils::{generate_random_trees, get_min_max_coordinates};
 use geojson::{Feature, FeatureCollection, GeoJson, Geometry as GeoJsonGeometry, Value};
@@ -273,13 +274,6 @@ fn main() {
     let mut stand = property.get_stand_cli();
     let polygon = stand.create_polygon();
 
-    // Convert the Polygon to GeoJSON
-    let geojson = polygon_to_geojson(&polygon);
-    
-    // Serialize GeoJson to a String
-    let geojson_string = serde_json::to_string_pretty(&geojson).expect("Failed to serialize GeoJson");
-    println!("{}", geojson_string);
-
     // Create an image for the polygon and random points
     let img_width = 800;
     let img_height = 600;
@@ -296,6 +290,13 @@ fn main() {
     let summary_stem_count = stand.summary_stem_count();
     let strata = stand.get_strata().expect("No treeStrata/stratums found");
     let random_trees = generate_random_trees(&polygon, &strata);
+
+    // Convert the Polygon and the trees to GeoJSON
+    let geojson = polygon_to_geojson(&polygon, &random_trees);
+
+    // Serialize GeoJson to a String
+    let geojson_string = serde_json::to_string_pretty(&geojson).expect("Failed to serialize GeoJson");
+    println!("{}", geojson_string);
 
     if stand.stem_count_in_stratum() {
         println!("\nStem count is in individual stratum");
@@ -324,31 +325,56 @@ fn main() {
     println!("Polygon image saved as 'polygon_image.png'");
 }
 
-fn polygon_to_geojson(polygon: &Polygon<f64>) -> GeoJson {
+fn polygon_to_geojson(polygon: &Polygon<f64>, trees: &Vec<Tree>) -> GeoJson {
     // Convert the Polygon to GeoJSON coordinates
     let exterior_coords: Vec<Vec<f64>> = polygon.exterior().points()
         .map(|point| vec![point.x(), point.y()])
         .collect();
 
     // Create the GeoJSON Polygon Geometry
-    let geometry = GeoJsonGeometry {
+    let polygon_geometry = GeoJsonGeometry {
         bbox: None,
         value: Value::Polygon(vec![exterior_coords]),
         foreign_members: None,
     };
 
-    // Create a GeoJSON Feature
-    let feature = Feature {
-        geometry: Some(geometry),
+    // Create a GeoJSON Feature for the Polygon
+    let polygon_feature = Feature {
+        geometry: Some(polygon_geometry),
         properties: None, // or Some(some_properties) if you have properties
         id: None,
         bbox: None,
         foreign_members: None,
     };
 
+    // Create GeoJSON Features for each tree
+    let tree_features: Vec<Feature> = trees.iter().map(|tree| {
+        let point = vec![tree.position().0, tree.position().1];
+        let point_geometry = GeoJsonGeometry {
+            bbox: None,
+            value: Value::Point(point),
+            foreign_members: None,
+        };
+
+        let mut properties = serde_json::Map::new();
+        properties.insert("species".to_string(), serde_json::json!(tree.species()));
+
+        Feature {
+            geometry: Some(point_geometry),
+            properties: Some(properties),
+            id: None,
+            bbox: None,
+            foreign_members: None,
+        }
+    }).collect();
+
+    // Combine polygon and tree features
+    let mut features = vec![polygon_feature];
+    features.extend(tree_features);
+
     // Create a GeoJSON FeatureCollection
     let feature_collection = FeatureCollection {
-        features: vec![feature],
+        features,
         bbox: None,
         foreign_members: None,
     };
