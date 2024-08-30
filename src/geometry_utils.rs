@@ -105,10 +105,12 @@ pub fn generate_random_trees(p: &Polygon, strata: &TreeStrata) -> Vec<Tree> {
         .map(|stratum| {
             let amount = stratum.stem_count;
 
-            let radius = generate_radius(
+            let mut radius = generate_radius(
                 total_stem_count,
                 stratum.basal_area
             );
+            
+            radius *= 0.00001;
 
             // Jittered Grid Version 2
             let rng = rand::thread_rng();

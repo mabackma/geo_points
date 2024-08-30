@@ -1,3 +1,5 @@
+use std::fmt;
+
 use proj4rs::proj::Proj;
 
 pub struct Projection {
@@ -58,6 +60,38 @@ impl Projection {
     }
 }
 
+// Implement Debug for Projection
+impl fmt::Debug for Projection {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Projection {{ from: {:?}, to: {:?} }}", self.from, self.to)
+    }
+}
+
+impl PartialEq for Projection {
+    fn eq(&self, other: &Self) -> bool {
+        //self.from == other.from && self.to == other.to
+        true
+    }
+}
+
+// Implement Clone for Projection
+impl Clone for Projection {
+    fn clone(&self) -> Self {
+        Projection {
+            from: self.from.clone(),
+            to: self.to.clone(),
+        }
+    }
+}
+
+impl Default for Projection {
+    fn default() -> Self {
+        Projection {
+            from: Proj::from_proj_string("+proj=latlong").unwrap(),
+            to: Proj::from_proj_string("+proj=latlong").unwrap(),
+        }
+    }
+}
 
 #[test]
 fn test_projection() {
