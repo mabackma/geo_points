@@ -14,10 +14,7 @@ use geometry_utils::{generate_random_trees, get_min_max_coordinates};
 use geojson::{Feature, FeatureCollection, GeoJson, Geometry as GeoJsonGeometry, Value};
 use image::Rgb;
 use serde_json::json;
-
-#[cfg(test)]
-use std::fs;
-use std::io::{self, Write};
+use std::io::Write;
 use std::time::Instant;
 
 // Get color based on species number
@@ -188,7 +185,7 @@ fn save_all_compartments_to_geojson(compartments: Vec<Compartment>, bbox: &Polyg
 
     println!("GeoJSON saved to {}", "stands_in_map.geojson");
 }
-/* 
+/*
 /* SAVES ENTIRE MAP TO GEOJSON FILE */
 fn main() {
     let start = Instant::now();
@@ -265,30 +262,6 @@ fn main() {
     println!("Time elapsed in create_all_compartments is: {:?}", duration);
 }
 */
-/* 
-pienempi
-N=7369787.000, E=427754.979
-N=7369564.333, E=427997.035
-N kasvaa pohjoisen suuntaa, E kasvaa idän suuntaan
-
---->
-
-let min_x: f64 = 427754.979;
-let max_x: f64 = 427997.035;
-let max_y: f64 = 7369787.000;
-let min_y: f64 = 7369564.333;
-
-
-isompi
-N=7369959.526, E=427541.481
-N=7369356.859, E=428282.985
-
-
-let min_x: f64 = 427541.481;
-let max_x: f64 = 428282.985;
-let max_y: f64 = 7369959.526;
-let min_y: f64 = 7369564.333;
-*/
 
 #[test]
 fn test_writing_to_json() {
@@ -361,7 +334,8 @@ fn test_find_stands_in_bounding_box() {
         vec![],
     );
     let stands = find_stands_in_bounding_box(&stands, &bbox);
-    /*     if !stands.is_none() {
+
+    if !stands.is_none() {
         println!(
             "Stands in bounding box: {:?}",
             stands.clone().unwrap().len()
@@ -369,7 +343,7 @@ fn test_find_stands_in_bounding_box() {
         for stand in &stands.unwrap() {
             println!("Stand number {:?}", stand.stand_basic_data.stand_number);
         }
-    } */
+    }
 }
 
 /* ASKS USER FOR STAND AND DRAWS STAND */

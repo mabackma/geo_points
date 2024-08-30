@@ -1,4 +1,4 @@
-use geo::{coord, Coord, LineString, Polygon};
+use geo::{Coord, LineString, Polygon};
 use serde::{Deserialize, Serialize};
 use crate::forest_property::tree_stand_data::TreeStrata;
 use crate::forest_property::forest_property_data::{ TreeStandDataDate, TreeStratum};
@@ -43,27 +43,7 @@ impl Stand {
         self
        
     }
-/* 
-    pub fn parse_geometry(&self, coord_string: &String) -> Vec<Coord<f64>> {
-        let coordinates_str: Vec<&str> = coord_string.split(" ").collect();
 
-        // Parse coordinates into a Vec of `Coord<f64>`
-        let mut coords: Vec<Coord<f64>> = Vec::new();
-
-        for coordinate in coordinates_str {
-            let parts: Vec<&str> = coordinate.split(',').collect();
-            if parts.len() == 2 {
-                let x: f64 = parts[0].parse().expect("Invalid x coordinate");
-                let y: f64 = parts[1].parse().expect("Invalid y coordinate");
-                coords.push(Coord { x, y });
-            } else {
-                println!("Invalid coordinate format: {}", coordinate);
-            }
-        }
-
-        coords
-    }
-*/
     pub fn parse_geometry(&self, coord_string: &String) -> Vec<Coord<f64>> {
         let coordinates_str: Vec<&str> = coord_string.split(" ").collect();
 
@@ -107,61 +87,6 @@ impl Stand {
 
         (exterior_geometry, interior_geometry)
     }
-/*
-    pub fn get_geometries(&self) -> (LineString, Vec<LineString>) {
-        let polygon = &self
-            .stand_basic_data
-            .polygon_geometry
-            .polygon_property
-            .polygon;
-
-        let exterior = &polygon.exterior.linear_ring.coordinates;
-        let exterior_geometry = LineString::new(self.parse_geometry(&exterior).to_owned());
-
-        let interior_geometry: Vec<LineString> = polygon
-            .interior
-            .iter()
-            .map(|f| {
-                let geometry = self.parse_geometry(&f.linear_ring.coordinates);
-                LineString::new(geometry)
-            })
-            .collect();
-
-        (exterior_geometry, interior_geometry)
-    }
-
-    pub fn create_polygon(&mut self) -> Polygon {
-        let (exterior, interior) = self.get_geometries();
-        
-        self.proj = Projection::new(CRS::Epsg3067, CRS::Epsg4326);
-
-        let mut proj_exterior = Vec::new();
-        for coord in exterior.0.iter() {
-            let (lon, lat) = self.proj.transform(coord.x, coord.y);
-            //println!("Coordinate: {:?}", coord);
-            //println!("lon: {}, lat: {}", lon, lat);
-            proj_exterior.push(coord!(x: lon, y: lat));
-        }
-
-        let mut proj_interior = Vec::new();
-        for coords in interior.iter() {
-            let mut transformed_coords = Vec::new();
-
-            for c in coords.0.iter() {
-                let (lon, lat) = self.proj.transform(c.x, c.y);
-                //println!("\tCoordinate: {:?}", c);
-                //println!("\tlon: {}, lat: {}", lon, lat);
-                transformed_coords.push(coord!(x: lon, y: lat));
-            }
-
-            proj_interior.push(LineString(transformed_coords));
-        }
-
-        let polygon = Polygon::new(LineString(proj_exterior), proj_interior);
-
-        polygon
-    }
-*/
 
     pub fn create_polygon(&mut self) -> Polygon {
         // Projection from ETRS-TM35FIN to WGS84

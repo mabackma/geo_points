@@ -1,4 +1,3 @@
-use geo::{Coordinate, LineString};
 use geo::{algorithm::contains::Contains, prelude::*, Polygon, Coord};
 use rand::seq::SliceRandom;
 use rand::Rng;

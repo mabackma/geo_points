@@ -1,5 +1,4 @@
 use std::fmt;
-
 use proj4rs::proj::Proj;
 
 pub struct Projection {
