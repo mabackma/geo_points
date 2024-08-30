@@ -1,5 +1,6 @@
 mod forest_property;
 mod geometry_utils;
+mod geojson_utils;
 mod jittered_hexagonal_sampling;
 mod projection;
 
@@ -7,11 +8,9 @@ use std::fs::{self, File};
 use forest_property::compartment::{find_stands_in_bounding_box, get_compartments_in_bounding_box, Compartment};
 use forest_property::forest_property_data::ForestPropertyData;
 use forest_property::image_processor::ImageProcessor;
-use forest_property::stand::Stand;
-use forest_property::tree::Tree;
 use geo::{coord, Coord, CoordsIter, Geometry, Intersects, LineString, Polygon};
 use geometry_utils::{generate_random_trees, get_min_max_coordinates};
-use geojson::{Feature, FeatureCollection, GeoJson, Geometry as GeoJsonGeometry, Value};
+use geojson_utils::{polygon_to_geojson, save_all_compartments_to_geojson};
 use image::Rgb;
 use serde_json::json;
 use std::io::Write;
@@ -100,91 +99,6 @@ fn get_bounding_box_of_map() -> Polygon<f64> {
     bbox
 }
 
-
-// Function to convert a Polygon into a GeoJSON Feature
-fn convert_polygon_to_feature(polygon: &Polygon<f64>) -> Feature {
-    let exterior_coords: Vec<Vec<f64>> = polygon.exterior().points()
-        .map(|point| vec![point.x(), point.y()])
-        .collect();
-
-    let geometry = GeoJsonGeometry {
-        bbox: None,
-        value: Value::Polygon(vec![exterior_coords]),
-        foreign_members: None,
-    };
-
-    Feature {
-        geometry: Some(geometry),
-        properties: None,
-        id: None,
-        bbox: None,
-        foreign_members: None,
-    }
-}
-
-// Function to convert a Tree into a GeoJSON Feature
-fn convert_tree_to_feature(tree: &Tree) -> Feature {
-    let point = vec![tree.position().0, tree.position().1];
-    let point_geometry = GeoJsonGeometry {
-        bbox: None,
-        value: Value::Point(point),
-        foreign_members: None,
-    };
-
-    let mut properties = serde_json::Map::new();
-    properties.insert("species".to_string(), serde_json::json!(tree.species()));
-
-    Feature {
-        geometry: Some(point_geometry),
-        properties: Some(properties),
-        id: None,
-        bbox: None,
-        foreign_members: None,
-    }
-}
-
-fn save_all_compartments_to_geojson(compartments: Vec<Compartment>, bbox: &Polygon<f64>, filename: &str) {
-    let mut all_features = Vec::new();
-
-    for compartment in compartments {
-        // Clip the compartment's polygon to the bounding box
-        let polygon = match compartment.clip_polygon_to_bounding_box(&bbox) {
-            Some(polygon) => polygon,
-            None => continue,
-        };
-        
-        // Get the trees within the bounding box
-        let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&bbox);
-        let trees = compartment.trees_in_bounding_box(min_x, max_x, min_y, max_y);
-
-        // Convert the compartment (polygon) to a GeoJSON feature
-        let polygon_feature = convert_polygon_to_feature(&compartment.polygon);
-        let tree_features: Vec<Feature> = trees.iter().map(|tree| convert_tree_to_feature(tree)).collect();
-
-        // Add the polygon feature and tree features to the list
-        all_features.push(polygon_feature);
-        all_features.extend(tree_features);
-    }
-
-    // Create the GeoJSON FeatureCollection
-    let feature_collection = FeatureCollection {
-        features: all_features,
-        bbox: None,
-        foreign_members: None,
-    };
-
-    // Create a GeoJson object
-    let geojson = GeoJson::FeatureCollection(feature_collection);
-
-    // Serialize the GeoJson object to a string
-    let geojson_string = serde_json::to_string_pretty(&geojson).expect("Failed to serialize GeoJson");
-
-    // Save the GeoJSON string to a file
-    let mut file = File::create("stands_in_map.geojson").expect("Failed to create file");
-    file.write_all(geojson_string.as_bytes()).expect("Failed to write to file");
-
-    println!("GeoJSON saved to {}", "stands_in_map.geojson");
-}
 /*
 /* SAVES ENTIRE MAP TO GEOJSON FILE */
 fn main() {
@@ -208,7 +122,7 @@ fn main() {
     println!("Time elapsed in create_all_compartments is: {:?}", duration);
 }
 */
-/* 
+/*
 /* DRAWS ENTIRE MAP */
 fn main() {
     let start = Instant::now();
@@ -346,7 +260,8 @@ fn test_find_stands_in_bounding_box() {
     }
 }
 
-/* ASKS USER FOR STAND AND DRAWS STAND */
+
+/* ASKS USER FOR STAND AND DRAWS STAND. SAVES STAND TO GEOJSON */
 fn main() {
     let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
     let mut stand = property.get_stand_cli();
@@ -410,62 +325,4 @@ fn main() {
         .save("polygon_image.png")
         .expect("Failed to save image");
     println!("Polygon image saved as 'polygon_image.png'");
-}
-
-fn polygon_to_geojson(polygon: &Polygon<f64>, trees: &Vec<Tree>) -> GeoJson {
-    // Convert the Polygon to GeoJSON coordinates
-    let exterior_coords: Vec<Vec<f64>> = polygon.exterior().points()
-        .map(|point| vec![point.x(), point.y()])
-        .collect();
-
-    // Create the GeoJSON Polygon Geometry
-    let polygon_geometry = GeoJsonGeometry {
-        bbox: None,
-        value: Value::Polygon(vec![exterior_coords]),
-        foreign_members: None,
-    };
-
-    // Create a GeoJSON Feature for the Polygon
-    let polygon_feature = Feature {
-        geometry: Some(polygon_geometry),
-        properties: None, // or Some(some_properties) if you have properties
-        id: None,
-        bbox: None,
-        foreign_members: None,
-    };
-
-    // Create GeoJSON Features for each tree
-    let tree_features: Vec<Feature> = trees.iter().map(|tree| {
-        let point = vec![tree.position().0, tree.position().1];
-        let point_geometry = GeoJsonGeometry {
-            bbox: None,
-            value: Value::Point(point),
-            foreign_members: None,
-        };
-
-        let mut properties = serde_json::Map::new();
-        properties.insert("species".to_string(), serde_json::json!(tree.species()));
-
-        Feature {
-            geometry: Some(point_geometry),
-            properties: Some(properties),
-            id: None,
-            bbox: None,
-            foreign_members: None,
-        }
-    }).collect();
-
-    // Combine polygon and tree features
-    let mut features = vec![polygon_feature];
-    features.extend(tree_features);
-
-    // Create a GeoJSON FeatureCollection
-    let feature_collection = FeatureCollection {
-        features,
-        bbox: None,
-        foreign_members: None,
-    };
-
-    // Create a GeoJson object
-    GeoJson::FeatureCollection(feature_collection)
 }
