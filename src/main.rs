@@ -188,7 +188,7 @@ fn save_all_compartments_to_geojson(compartments: Vec<Compartment>, bbox: &Polyg
 
     println!("GeoJSON saved to {}", "stands_in_map.geojson");
 }
-
+/* 
 /* SAVES ENTIRE MAP TO GEOJSON FILE */
 fn main() {
     let start = Instant::now();
@@ -210,6 +210,7 @@ fn main() {
     let duration = start.elapsed();
     println!("Time elapsed in create_all_compartments is: {:?}", duration);
 }
+*/
 /* 
 /* DRAWS ENTIRE MAP */
 fn main() {
@@ -370,7 +371,7 @@ fn test_find_stands_in_bounding_box() {
         }
     } */
 }
-/*
+
 /* ASKS USER FOR STAND AND DRAWS STAND */
 fn main() {
     let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
@@ -436,7 +437,7 @@ fn main() {
         .expect("Failed to save image");
     println!("Polygon image saved as 'polygon_image.png'");
 }
-*/
+
 fn polygon_to_geojson(polygon: &Polygon<f64>, trees: &Vec<Tree>) -> GeoJson {
     // Convert the Polygon to GeoJSON coordinates
     let exterior_coords: Vec<Vec<f64>> = polygon.exterior().points()
