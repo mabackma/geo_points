@@ -3,15 +3,17 @@ mod geometry_utils;
 mod geojson_utils;
 mod jittered_hexagonal_sampling;
 mod projection;
+mod requests;
 
 use std::fs::{self, File};
 use forest_property::compartment::{find_stands_in_bounding_box, get_compartments_in_bounding_box, Compartment};
 use forest_property::forest_property_data::ForestPropertyData;
 use forest_property::image_processor::ImageProcessor;
-use geo::{coord, Coord, CoordsIter, Geometry, Intersects, LineString, Polygon};
+use geo::{coord, BoundingRect, Coord, CoordsIter, Geometry, Intersects, LineString, Polygon};
 use geometry_utils::{generate_random_trees, get_min_max_coordinates};
 use geojson_utils::{polygon_to_geojson, save_all_compartments_to_geojson};
 use image::Rgb;
+use requests::fetch_buildings;
 use serde_json::json;
 use std::io::Write;
 use std::time::Instant;
@@ -260,7 +262,7 @@ fn test_find_stands_in_bounding_box() {
     }
 }
 
-
+/*
 /* ASKS USER FOR STAND AND DRAWS STAND. SAVES STAND TO GEOJSON */
 fn main() {
     let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
@@ -325,4 +327,20 @@ fn main() {
         .save("polygon_image.png")
         .expect("Failed to save image");
     println!("Polygon image saved as 'polygon_image.png'");
+}
+*/
+
+/* FETCH GEOJSON FOR BUILDINGS IN MAP */
+#[tokio::main]
+async fn main() {
+    // Get the bounding box of the whole map
+    let bbox = get_bounding_box_of_map();
+
+    let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&bbox);
+    println!("Bounding box: ({}, {}), ({}, {})", min_x, min_y, max_x, max_y);
+
+    match fetch_buildings(&bbox).await {
+        Ok(geojson) => println!("GeoJSON: {:#?}", geojson),
+        Err(err) => eprintln!("Error fetching buildings: {}", err),
+    }
 }
