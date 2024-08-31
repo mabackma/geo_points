@@ -1,3 +1,4 @@
+use crate::forest_property::forest_property_data::TreeStratum;
 use crate::forest_property::tree_stand_data::TreeStrata;
 use crate::forest_property::tree::Tree;
 use crate::jittered_hexagonal_sampling::{GridOptions, JitteredHexagonalGridSampling};
@@ -77,7 +78,7 @@ pub fn generate_random_trees(p: &Polygon, strata: &TreeStrata) -> Vec<Tree> {
     trees.collect()
 }
 */
-fn generate_radius(total_stem_count: u32, area: f32) -> f32 {
+/* fn generate_radius(total_stem_count: u32, area: f32) -> f32 {
     let total_trees = total_stem_count as f32 * area / 10000.0;
 
     let mut ratio_fix = 1.3;
@@ -90,54 +91,69 @@ fn generate_radius(total_stem_count: u32, area: f32) -> f32 {
     let tree_needed_area = area / total_trees / square_to_circle_ratio;
     // Calculate the radius based on the mean height of the tree species
     (tree_needed_area / PI).sqrt()
+} */
+fn generate_radius(total_stem_count: u32, area: f32) -> f32 {
+    let total_trees = total_stem_count as f32 * area / 10000.0;
+
+    let mut ratio_fix = 1.3;
+
+    if total_trees < 250.0 {
+        ratio_fix = ((total_trees / 250.0) * 0.6) + 1.3;
+    }
+
+    // Adjusted for hexagonal packing ratio
+    let hexagonal_ratio = (std::f32::consts::PI / (2.0 * (3.0 as f32).sqrt())) / ratio_fix;
+
+    let tree_needed_area = area / total_trees / hexagonal_ratio;
+
+    // Calculate the radius based on the mean height of the tree species
+    (tree_needed_area / std::f32::consts::PI).sqrt()
 }
 
 // Generates random trees for all strata with jittered grid sampling
-pub fn generate_random_trees(p: &Polygon, strata: &TreeStrata) -> Vec<Tree> {
-    let total_stem_count = strata.tree_stratum.iter().fold(0, |mut acc: u32, f| {
+pub fn generate_random_trees(p: &Polygon, stratums: Vec<TreeStratum>) -> Vec<Tree> {
+ /*    let total_stem_count = stratums.iter().fold(0, |mut acc: u32, f| {
         acc += f.stem_count;
         acc
-    });
+    }); */
 
-    let trees = strata
-        .tree_stratum
+    let trees = stratums
         .par_iter()
         .map(|stratum| {
             let amount = stratum.stem_count;
 
-            let radius = generate_radius(
-                total_stem_count,
-                stratum.basal_area
-            );
+            let radius = (amount as f64 / stratum.basal_area as f64);
 
-            // Jittered Grid Version 2
+           // println!("radius {:?}", radius);
             let rng = rand::thread_rng();
             let options = GridOptions {
                 polygon: p.to_owned(),
-                radius: (radius).into(),
-                jitter: Some(0.6666),
+                radius: generate_radius(amount, stratum.basal_area) as f64,
+                jitter: Some(0.89),
                 point_limit: Some(amount as usize),
+                tree_species: stratum.tree_species,
+                mean_height: stratum.mean_height
             };
 
             let mut grid = JitteredHexagonalGridSampling::new(rng, options);
 
-            let points =  grid.fill();
+            let points =  grid.generate_trees();
 
-            if points.len() == 0 {
+            /* if points.len() == 0 {
                 //println!("\tNo trees generated for stratum with basal area {}, stem count {}, mean height {}", stratum.basal_area, stratum.stem_count, stratum.mean_height);
             }
             else if points.len() < amount as usize {
-                println!("Generated {} / {} trees for stratum with basal area {}, stem count {}, mean height {}.", points.len(), amount, stratum.basal_area, stratum.stem_count, stratum.mean_height);
-            }
+            } */
+           // println!("Generated {} / {} trees for stratum with basal area {}, stem count {}, mean height {}.", points.len(), amount, stratum.basal_area, stratum.stem_count, stratum.mean_height);
 
-            let trees_strata: Vec<Tree> = points.iter().map(|pair: &[f64; 2]| {
+        /*     let trees_strata: Vec<Tree> = points.iter().map(|pair: &[f64; 2]| {
                 Tree::new(
                     stratum.tree_species,
                     stratum.mean_height,
                     (pair[0], pair[1], 0.0),
                 )
-            }).collect();
-            trees_strata
+            }).collect(); */
+            points
         })
         .flatten();
 

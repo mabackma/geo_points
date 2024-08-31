@@ -4,15 +4,16 @@ mod jittered_hexagonal_sampling;
 mod projection;
 
 use forest_property::compartment::{
-    find_stands_in_bounding_box, get_compartments_in_bounding_box, Compartment,
+     get_compartments_in_bounding_box, Compartment,
 };
 use forest_property::forest_property_data::{ForestPropertyData, RealEstateStandOptions};
 use forest_property::image_processor::ImageProcessor;
 use forest_property::stand::Stand;
-use geo::{coord, BoundingRect, Coord, Geometry, Intersects, LineString, MultiPolygon, Polygon};
+use geo::{coord, BoundingRect, ConvexHull, Coord, Extremes, Geometry, Intersects, LineString, LinesIter, MultiPolygon, Polygon, Rect};
 use geometry_utils::{generate_random_trees, get_min_max_coordinates};
 use image::Rgb;
 use projection::{Projection, CRS};
+use rayon::prelude::*;
 
 #[cfg(test)]
 use std::fs;
@@ -71,7 +72,7 @@ fn get_bounding_box_of_map() -> Polygon<f64> {
     let mut max_y = f64::MIN;
 
     for stand in all_stands.iter_mut() {
-        let polygon = stand.create_polygon();
+        let polygon = stand.computed_polygon.to_owned().unwrap();
         let (p_min_x, p_max_x, p_min_y, p_max_y) = get_min_max_coordinates(&polygon);
 
         if p_min_x < min_x {
@@ -103,18 +104,23 @@ fn get_bounding_box_of_map() -> Polygon<f64> {
 }
 
 pub fn get_bounding_box_of_stands(stands: &Vec<Stand>) -> Polygon<f64> {
-    let stands_iter = stands.iter().map(|f| {
-        let stand_bounds = f
+
+
+
+    let bounds: Vec<Rect> = stands.into_par_iter().map(| f: &Stand| {
+        let stand_bounds: Rect = f
             .computed_polygon
             .as_ref()
             .unwrap()
             .exterior()
             .bounding_rect()
-            .unwrap();
-        stand_bounds.to_polygon()
-    });
+            .unwrap().bounding_rect();
+        
+        stand_bounds
+        
+    }).collect();
 
-    let rect = MultiPolygon::from_iter(stands_iter)
+    let rect = MultiPolygon::from(bounds)
         .bounding_rect()
         .unwrap();
 
@@ -126,7 +132,7 @@ fn main() {
     let start = Instant::now();
 
     let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
-    let real_estate = property.real_estates.real_estate[0].clone();
+    let real_estate = property.real_estates.real_estate.first().unwrap();
     let proj = Projection::new(CRS::Epsg3067, CRS::Epsg4326);
     let stands = real_estate.get_stands(Some(RealEstateStandOptions { proj: Some(proj) }));
     println!("Total stands: {:?}\n", stands.len());
@@ -141,8 +147,8 @@ fn main() {
     let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&bbox);
 
     // Create an image processor with the desired image dimensions
-    let img_width = ((max_x - min_x) * 100000.0) as u32;
-    let img_height = ((max_y - min_y) * 100000.0) as u32;
+    let img_width = ((max_x - min_x) ) as u32;
+    let img_height = ((max_y - min_y) ) as u32;
     let mut image = ImageProcessor::new(img_width, img_height);
 
     let aspect_ratio_image = img_width as f64 / img_height as f64;
@@ -161,7 +167,7 @@ fn main() {
             Some(polygon) => polygon,
             None => continue,
         };
-
+        
         let trees = compartment.trees_in_bounding_box(min_x, max_x, min_y, max_y);
 
         println!("trees in compartment: {}", trees.len());
@@ -282,7 +288,7 @@ fn test_find_stands_in_bounding_box() {
         ]),
         vec![],
     );
-    let stands = find_stands_in_bounding_box(&stands, &bbox);
+/*     let stands = find_stands_in_bounding_box(stands, bbox); */
     /*     if !stands.is_none() {
         println!(
             "Stands in bounding box: {:?}",

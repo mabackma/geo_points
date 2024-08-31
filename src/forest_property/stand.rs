@@ -82,7 +82,7 @@ impl Stand {
 
                 if let Some(proj) = &self.proj {
                     let (lon, lat) = proj.transform(x, y);
-                    coords.push(Coord { x: lat, y: lon });
+                    coords.push(Coord { x: lon, y: lat });
                 } else {
                     coords.push(Coord { x, y });
                 }
@@ -212,15 +212,14 @@ impl Stand {
         Some(stratums)
     }
 
-    pub fn get_strata(&self) -> Option<TreeStrata> {
-        let last_data_date = match self.get_last_tree_stand_data_date() {
-            Some(data) => data,
-            None => return None,
-        };
+    pub fn get_strata(&self) -> Vec<TreeStratum> {
 
-        let strata = &last_data_date.tree_strata.tree_stratum;
-        let strata = TreeStrata::new(strata.to_vec());
-        Some(strata)
+        match &self.get_last_tree_stand_data_date() {
+            Some(data) => data.tree_strata.tree_stratum.to_vec(),
+            None => vec![],
+        }
+
+
     }
 
     pub fn get_last_tree_stand_data_date(&self) -> Option<TreeStandDataDate> {

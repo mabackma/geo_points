@@ -170,6 +170,32 @@ impl RealEstate {
                     .stands
                     .stand
                     .iter()
+                    .map(|f| f.clone().compute_polygon())
+                    .collect::<Vec<Stand>>();
+                stands
+            })
+            .flatten()
+            .collect();
+
+        stands_data
+    }
+
+    pub fn get_stands_projected(&self, _options: Option<RealEstateStandOptions>) -> Vec<Stand> {
+        let parcels = &self.parcels.parcel;
+
+        let options = _options.unwrap_or(RealEstateStandOptions {
+            proj: Some(Projection::new(CRS::Epsg3067, CRS::Epsg4326)),
+        });
+
+        let proj = options.proj.unwrap();
+
+        let stands_data: Vec<Stand> = parcels
+            .iter()
+            .map(|parcel| {
+                let stands: Vec<Stand> = parcel
+                    .stands
+                    .stand
+                    .iter()
                     .map(|f| f.clone().set_projection(proj.to_owned()).compute_polygon())
                     .collect::<Vec<Stand>>();
                 stands
