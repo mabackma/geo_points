@@ -73,7 +73,11 @@ pub async fn save_all_compartments_to_geojson(compartments: Vec<Compartment>, bb
     match fetch_buildings(&bbox).await {
         Ok(geojson) => {
             if let GeoJson::FeatureCollection(buildings) = geojson {
-                all_features.extend(buildings.features);
+                let building_polygons = get_building_polygons(&buildings);
+                let building_features: Vec<Feature> = building_polygons.iter()
+                    .map(|polygon| convert_polygon_to_feature(polygon))
+                    .collect();
+                all_features.extend(building_features);
             }
         },
         Err(e) => {
@@ -99,6 +103,26 @@ pub async fn save_all_compartments_to_geojson(compartments: Vec<Compartment>, bb
     file.write_all(geojson_string.as_bytes()).expect("Failed to write to file");
 
     println!("GeoJSON saved to {}", "stands_in_map.geojson");
+}
+
+// Helper function to extract building polygons from a GeoJSON object
+fn get_building_polygons(fc: &FeatureCollection) -> Vec<Polygon<f64>> {
+    let mut polygons = Vec::new();
+
+    for feature in &fc.features {
+        if let Some(geometry) = &feature.geometry {
+            if let Value::Polygon(coords) = &geometry.value {
+                let exterior_coords = &coords[0];
+                let points: Vec<(f64, f64)> = exterior_coords.iter()
+                    .map(|coord| (coord[0], coord[1]))
+                    .collect();
+                let polygon = Polygon::new(points.into(), vec![]);
+                polygons.push(polygon);
+            }
+        }
+    }
+
+    polygons
 }
 
 pub fn polygon_to_geojson(polygon: &Polygon<f64>, trees: &Vec<Tree>) -> GeoJson {
