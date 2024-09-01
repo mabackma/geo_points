@@ -104,8 +104,7 @@ fn get_bounding_box_of_map() -> Polygon<f64> {
 
 
 /* SAVES ENTIRE MAP TO GEOJSON FILE */
-#[tokio::main]
-async fn main() {
+fn main() {
     let start = Instant::now();
     let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
     let real_estate = property.real_estates.real_estate[0].clone();
@@ -120,7 +119,7 @@ async fn main() {
     println!("\nTotal compartments: {:?}", compartments.len());
 
     // Save all compartments and trees to a GeoJSON file
-    save_all_compartments_to_geojson(compartments, &bbox, "forest_compartments.geojson").await;
+    save_all_compartments_to_geojson(compartments, &bbox, "forest_compartments.geojson");
 
     let duration = start.elapsed();
     println!("Time elapsed in create_all_compartments is: {:?}", duration);

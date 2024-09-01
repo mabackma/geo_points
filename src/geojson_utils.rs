@@ -46,7 +46,7 @@ fn convert_tree_to_feature(tree: &Tree) -> Feature {
     }
 }
 
-pub async fn save_all_compartments_to_geojson(compartments: Vec<Compartment>, bbox: &Polygon<f64>, filename: &str) {
+pub fn save_all_compartments_to_geojson(compartments: Vec<Compartment>, bbox: &Polygon<f64>, filename: &str) {
     let mut all_features = Vec::new();
 
     for compartment in compartments {
@@ -69,22 +69,6 @@ pub async fn save_all_compartments_to_geojson(compartments: Vec<Compartment>, bb
         all_features.extend(tree_features);
     }
 
-    // Get the buildings within the bounding box
-    match fetch_buildings(&bbox).await {
-        Ok(geojson) => {
-            if let GeoJson::FeatureCollection(buildings) = geojson {
-                let building_polygons = get_building_polygons(&buildings);
-                let building_features: Vec<Feature> = building_polygons.iter()
-                    .map(|polygon| convert_polygon_to_feature(polygon))
-                    .collect();
-                all_features.extend(building_features);
-            }
-        },
-        Err(e) => {
-            eprintln!("Failed to fetch buildings: {}", e);
-        }
-    }
-
     // Create the GeoJSON FeatureCollection
     let feature_collection = FeatureCollection {
         features: all_features,
@@ -103,26 +87,6 @@ pub async fn save_all_compartments_to_geojson(compartments: Vec<Compartment>, bb
     file.write_all(geojson_string.as_bytes()).expect("Failed to write to file");
 
     println!("GeoJSON saved to {}", "stands_in_map.geojson");
-}
-
-// Helper function to extract building polygons from a GeoJSON object
-fn get_building_polygons(fc: &FeatureCollection) -> Vec<Polygon<f64>> {
-    let mut polygons = Vec::new();
-
-    for feature in &fc.features {
-        if let Some(geometry) = &feature.geometry {
-            if let Value::Polygon(coords) = &geometry.value {
-                let exterior_coords = &coords[0];
-                let points: Vec<(f64, f64)> = exterior_coords.iter()
-                    .map(|coord| (coord[0], coord[1]))
-                    .collect();
-                let polygon = Polygon::new(points.into(), vec![]);
-                polygons.push(polygon);
-            }
-        }
-    }
-
-    polygons
 }
 
 pub fn polygon_to_geojson(polygon: &Polygon<f64>, trees: &Vec<Tree>) -> GeoJson {

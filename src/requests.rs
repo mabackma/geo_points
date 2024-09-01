@@ -73,13 +73,14 @@ export async function fetchBuildings() {
 */
 
 use crate::geometry_utils::get_min_max_coordinates;
-use geo::Polygon;
-use geojson::GeoJson;
+use geo::{LineString, Polygon};
+use geojson::{GeoJson, Value};
 use reqwest;
 
 use reqwest::Error as ReqwestError;
 use geojson::Error as GeoJsonError;
 use std::fmt;
+use std::error::Error;
 
 #[derive(Debug)]
 pub enum FetchError {
@@ -134,6 +135,45 @@ pub async fn fetch_buildings(bbox: &Polygon) -> Result<GeoJson, FetchError> {
     
     Ok(geojson)
 }
+
+pub async fn fetch_buildings_as_polygons(bbox: &Polygon<f64>) -> Result<Vec<Polygon<f64>>, Box<dyn Error>> {
+    // Fetch GeoJson data from API
+    let geojson = fetch_buildings(bbox).await?;
+
+    // Initialize a vector to store polygons
+    let mut polygons = Vec::new();
+
+    // Match on GeoJson to handle FeatureCollection
+    if let GeoJson::FeatureCollection(collection) = geojson {
+        for feature in collection.features {
+            // Ensure we are working with a valid Feature
+            if let Some(geometry) = feature.geometry {
+                match geometry.value {
+                    Value::Polygon(polygon) => {
+                        // Convert GeoJSON Polygon to geo crate Polygon
+                        let exterior = polygon[0]
+                            .iter()
+                            .map(|point| (point[0], point[1]))
+                            .collect::<Vec<_>>();
+                        
+                        // Create a geo crate Polygon
+                        let poly = Polygon::new(LineString::from(exterior), vec![]);
+                        polygons.push(poly);
+                    }
+                    _ => {
+                        // Handle other geometry types if necessary
+                        eprintln!("Skipping non-polygon geometry");
+                    }
+                }
+            }
+        }
+    } else {
+        return Err("GeoJson is not a FeatureCollection.".into());
+    }
+
+    Ok(polygons)
+}
+
 
 /*
 /* SHOWS IMAGES OF MAP TILES */
