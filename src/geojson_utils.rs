@@ -67,17 +67,17 @@ pub async fn save_all_compartments_to_geojson(compartments: Vec<Compartment>, bb
         // Add the polygon feature and tree features to the list
         all_features.push(polygon_feature);
         all_features.extend(tree_features);
-        
-        // Get the buildings within the bounding box
-        match fetch_buildings(&bbox).await {
-            Ok(geojson) => {
-                if let GeoJson::FeatureCollection(buildings) = geojson {
-                    all_features.extend(buildings.features);
-                }
-            },
-            Err(e) => {
-                eprintln!("Failed to fetch buildings: {}", e);
+    }
+
+    // Get the buildings within the bounding box
+    match fetch_buildings(&bbox).await {
+        Ok(geojson) => {
+            if let GeoJson::FeatureCollection(buildings) = geojson {
+                all_features.extend(buildings.features);
             }
+        },
+        Err(e) => {
+            eprintln!("Failed to fetch buildings: {}", e);
         }
     }
 
