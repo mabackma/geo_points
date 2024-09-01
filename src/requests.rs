@@ -134,6 +134,7 @@ pub async fn fetch_buildings(bbox: &Polygon) -> Result<GeoJson, FetchError> {
     
     Ok(geojson)
 }
+
 /*
 /* SHOWS IMAGES OF MAP TILES */
 function getTile(tileParams: { type: any; z: any; x: any; y: any; format: any; offsetMultiplierX: any; offsetMultiplierY: any; }, ctx: CanvasRenderingContext2D) {

@@ -10,6 +10,7 @@ use forest_property::compartment::{find_stands_in_bounding_box, get_compartments
 use forest_property::forest_property_data::ForestPropertyData;
 use forest_property::image_processor::ImageProcessor;
 use geo::{coord, BoundingRect, Coord, CoordsIter, Geometry, Intersects, LineString, Polygon};
+use geojson::GeoJson;
 use geometry_utils::{generate_random_trees, get_min_max_coordinates};
 use geojson_utils::{polygon_to_geojson, save_all_compartments_to_geojson};
 use image::Rgb;
@@ -336,11 +337,14 @@ async fn main() {
     // Get the bounding box of the whole map
     let bbox = get_bounding_box_of_map();
 
-    let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&bbox);
-    println!("Bounding box: ({}, {}), ({}, {})", min_x, min_y, max_x, max_y);
-
     match fetch_buildings(&bbox).await {
-        Ok(geojson) => println!("GeoJSON: {:#?}", geojson),
+        Ok(geojson) => {
+            println!("GeoJson fetures length: {:#?}", geojson);
+
+            let geojson_string = serde_json::to_string_pretty(&geojson).expect("Failed to serialize GeoJson");
+            let mut file = File::create("buildings.geojson").expect("Failed to create file");
+            file.write_all(geojson_string.as_bytes()).expect("Failed to write to file");
+        }
         Err(err) => eprintln!("Error fetching buildings: {}", err),
     }
 }
