@@ -14,7 +14,7 @@ use geojson::GeoJson;
 use geometry_utils::{generate_random_trees, get_min_max_coordinates};
 use geojson_utils::{polygon_to_geojson, save_all_compartments_to_geojson};
 use image::Rgb;
-use requests::fetch_buildings;
+use requests::{fetch_buildings, fetch_buildings_as_polygons};
 use serde_json::json;
 use std::io::Write;
 use std::time::Instant;
@@ -102,7 +102,7 @@ fn get_bounding_box_of_map() -> Polygon<f64> {
     bbox
 }
 
-
+/* 
 /* SAVES ENTIRE MAP TO GEOJSON FILE */
 fn main() {
     let start = Instant::now();
@@ -124,8 +124,8 @@ fn main() {
     let duration = start.elapsed();
     println!("Time elapsed in create_all_compartments is: {:?}", duration);
 }
-
-/*
+*/
+/* 
 /* DRAWS ENTIRE MAP */
 fn main() {
     let start = Instant::now();
@@ -330,24 +330,22 @@ fn main() {
     println!("Polygon image saved as 'polygon_image.png'");
 }
 */
-/* 
-/* FETCH GEOJSON FOR BUILDINGS IN MAP */
+ 
+/* PRINTS BUILDINGS IN MAP */
 #[tokio::main]
 async fn main() {
     // Get the bounding box of the whole map
     let bbox = get_bounding_box_of_map();
 
-    match fetch_buildings(&bbox).await {
-        Ok(geojson) => {
-            if let GeoJson::FeatureCollection(collection) = geojson.clone() {
-                println!("GeoJson features length: {}", collection.features.len());
-            }
+    match fetch_buildings_as_polygons(&bbox).await {
+        Ok(buildings) => {
+            println!("Fetched buildings: {:?}", buildings.len());
 
-            let geojson_string = serde_json::to_string_pretty(&geojson).expect("Failed to serialize GeoJson");
-            let mut file = File::create("buildings.geojson").expect("Failed to create file");
-            file.write_all(geojson_string.as_bytes()).expect("Failed to write to file");
+            for building in buildings {
+                println!("Building: {:?}", building);
+            }
         }
         Err(err) => eprintln!("Error fetching buildings: {}", err),
     }
 }
-    */
+
