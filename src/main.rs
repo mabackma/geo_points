@@ -102,7 +102,7 @@ fn get_bounding_box_of_map() -> Polygon<f64> {
     bbox
 }
 
-/*
+
 /* SAVES ENTIRE MAP TO GEOJSON FILE */
 fn main() {
     let start = Instant::now();
@@ -124,7 +124,7 @@ fn main() {
     let duration = start.elapsed();
     println!("Time elapsed in create_all_compartments is: {:?}", duration);
 }
-*/
+
 /*
 /* DRAWS ENTIRE MAP */
 fn main() {
@@ -330,7 +330,7 @@ fn main() {
     println!("Polygon image saved as 'polygon_image.png'");
 }
 */
-
+/* 
 /* FETCH GEOJSON FOR BUILDINGS IN MAP */
 #[tokio::main]
 async fn main() {
@@ -339,7 +339,9 @@ async fn main() {
 
     match fetch_buildings(&bbox).await {
         Ok(geojson) => {
-            println!("GeoJson fetures length: {:#?}", geojson);
+            if let GeoJson::FeatureCollection(collection) = geojson.clone() {
+                println!("GeoJson features length: {}", collection.features.len());
+            }
 
             let geojson_string = serde_json::to_string_pretty(&geojson).expect("Failed to serialize GeoJson");
             let mut file = File::create("buildings.geojson").expect("Failed to create file");
@@ -348,3 +350,4 @@ async fn main() {
         Err(err) => eprintln!("Error fetching buildings: {}", err),
     }
 }
+    */

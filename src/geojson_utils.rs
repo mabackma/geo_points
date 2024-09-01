@@ -1,4 +1,4 @@
-use crate::{forest_property::{compartment::Compartment, tree::Tree}, geometry_utils::get_min_max_coordinates};
+use crate::{forest_property::{compartment::Compartment, tree::Tree}, geometry_utils::get_min_max_coordinates, requests::fetch_buildings};
 
 use std::{fs::File, io::Write};
 use geo::Polygon;
@@ -46,7 +46,7 @@ fn convert_tree_to_feature(tree: &Tree) -> Feature {
     }
 }
 
-pub fn save_all_compartments_to_geojson(compartments: Vec<Compartment>, bbox: &Polygon<f64>, filename: &str) {
+pub async fn save_all_compartments_to_geojson(compartments: Vec<Compartment>, bbox: &Polygon<f64>, filename: &str) {
     let mut all_features = Vec::new();
 
     for compartment in compartments {
@@ -67,6 +67,18 @@ pub fn save_all_compartments_to_geojson(compartments: Vec<Compartment>, bbox: &P
         // Add the polygon feature and tree features to the list
         all_features.push(polygon_feature);
         all_features.extend(tree_features);
+        
+        // Get the buildings within the bounding box
+        match fetch_buildings(&bbox).await {
+            Ok(geojson) => {
+                if let GeoJson::FeatureCollection(buildings) = geojson {
+                    all_features.extend(buildings.features);
+                }
+            },
+            Err(e) => {
+                eprintln!("Failed to fetch buildings: {}", e);
+            }
+        }
     }
 
     // Create the GeoJSON FeatureCollection
