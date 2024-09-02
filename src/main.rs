@@ -131,8 +131,12 @@ fn main() {
 }
 */
 
-fn remove_buildings_from_polygon(p: &Polygon<f64>, buildings: &Vec<Polygon>) -> Result<Polygon<f64>, Box<dyn Error>> {
+async fn remove_buildings_from_polygon(p: &Polygon<f64>) -> Result<Polygon<f64>, Box<dyn Error>> {
 
+    // Fetch buildings as polygons
+    let buildings = fetch_buildings_as_polygons(&p).await?;
+    println!("Fetched buildings: {:?}", buildings.len());
+        
     let mut projected_buildings = Vec::new();
     for building in buildings {
         let projected_building = polygon_to_wgs84(&building);
@@ -163,10 +167,7 @@ fn main() {
     let rt = Runtime::new().unwrap();
 
     // Block on the async function using the runtime
-    let buildings = rt.block_on(fetch_buildings_as_polygons(&bbox)).expect("Failed to fetch buildings");
-    println!("Fetched buildings: {:?}", buildings.len());
-
-    bbox = remove_buildings_from_polygon(&bbox, &buildings).expect("Failed to remove buildings");
+    bbox = rt.block_on(remove_buildings_from_polygon(&bbox)).expect("Failed to remove buildings");
 
     // Find compartments in the bounding box
     let compartments = get_compartments_in_bounding_box(stands, &bbox);
