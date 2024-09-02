@@ -22,6 +22,7 @@ use std::io::Write;
 use std::time::Instant;
 use tokio::runtime::Runtime;
 use geo_clipper::Clipper;
+use std::error::Error;
 
 // Get color based on species number
 fn get_color_by_species(number: u8) -> Rgb<u8> {
@@ -130,6 +131,23 @@ fn main() {
 }
 */
 
+fn remove_buildings_from_polygon(p: &Polygon<f64>, buildings: &Vec<Polygon>) -> Result<Polygon<f64>, Box<dyn Error>> {
+
+    let mut projected_buildings = Vec::new();
+    for building in buildings {
+        let projected_building = polygon_to_wgs84(&building);
+        projected_buildings.push(projected_building);
+    }
+
+    let exclude_buildings = MultiPolygon::new(projected_buildings);
+
+    // Exclude buildings from the bounding box
+    let excluded = p.difference(&exclude_buildings, 100000.0);
+    let poly = excluded.0.first().unwrap().to_owned();
+
+    Ok(poly)
+}
+
 /* DRAWS ENTIRE MAP */
 fn main() {
     let start = Instant::now();
@@ -146,21 +164,10 @@ fn main() {
 
     // Block on the async function using the runtime
     let buildings = rt.block_on(fetch_buildings_as_polygons(&bbox)).expect("Failed to fetch buildings");
-
     println!("Fetched buildings: {:?}", buildings.len());
 
-    let mut projected_buildings = Vec::new();
-    for building in buildings {
-        let projected_building = polygon_to_wgs84(&building);
-        projected_buildings.push(projected_building);
-    }
+    bbox = remove_buildings_from_polygon(&bbox, &buildings).expect("Failed to remove buildings");
 
-    let exclude_buildings = MultiPolygon::new(projected_buildings);
-
-    // Exclude buildings from the bounding box
-    let excluded = bbox.difference(&exclude_buildings, 100000.0);
-    bbox = excluded.0.first().unwrap().to_owned();
-    
     // Find compartments in the bounding box
     let compartments = get_compartments_in_bounding_box(stands, &bbox);
     println!("\nTotal compartments: {:?}", compartments.len());
