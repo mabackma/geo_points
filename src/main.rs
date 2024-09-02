@@ -9,15 +9,19 @@ use std::fs::{self, File};
 use forest_property::compartment::{find_stands_in_bounding_box, get_compartments_in_bounding_box, Compartment};
 use forest_property::forest_property_data::ForestPropertyData;
 use forest_property::image_processor::ImageProcessor;
-use geo::{coord, BoundingRect, Coord, CoordsIter, Geometry, Intersects, LineString, Polygon};
+use geo::{coord, BoundingRect, Coord, CoordsIter, Geometry, Intersects, LineString, MultiPolygon, Polygon};
 use geojson::GeoJson;
-use geometry_utils::{generate_random_trees, get_min_max_coordinates};
+use geometry_utils::{generate_random_trees, get_min_max_coordinates, polygon_to_wgs84};
 use geojson_utils::{polygon_to_geojson, save_all_compartments_to_geojson};
 use image::Rgb;
+use proj4rs::proj;
+use projection::{Projection, CRS};
 use requests::{fetch_buildings, fetch_buildings_as_polygons};
 use serde_json::json;
 use std::io::Write;
 use std::time::Instant;
+use tokio::runtime::Runtime;
+use geo_clipper::Clipper;
 
 // Get color based on species number
 fn get_color_by_species(number: u8) -> Rgb<u8> {
@@ -125,7 +129,7 @@ fn main() {
     println!("Time elapsed in create_all_compartments is: {:?}", duration);
 }
 */
-/* 
+
 /* DRAWS ENTIRE MAP */
 fn main() {
     let start = Instant::now();
@@ -135,8 +139,28 @@ fn main() {
     println!("Total stands: {:?}\n", stands.len());
 
     // Get the bounding box of the whole map
-    let bbox = get_bounding_box_of_map();
+    let mut bbox = get_bounding_box_of_map();
 
+    // Create a new Tokio runtime
+    let rt = Runtime::new().unwrap();
+
+    // Block on the async function using the runtime
+    let buildings = rt.block_on(fetch_buildings_as_polygons(&bbox)).expect("Failed to fetch buildings");
+
+    println!("Fetched buildings: {:?}", buildings.len());
+
+    let mut projected_buildings = Vec::new();
+    for building in buildings {
+        let projected_building = polygon_to_wgs84(&building);
+        projected_buildings.push(projected_building);
+    }
+
+    let exclude_buildings = MultiPolygon::new(projected_buildings);
+
+    // Exclude buildings from the bounding box
+    let excluded = bbox.difference(&exclude_buildings, 100000.0);
+    bbox = excluded.0.first().unwrap().to_owned();
+    
     // Find compartments in the bounding box
     let compartments = get_compartments_in_bounding_box(stands, &bbox);
     println!("\nTotal compartments: {:?}", compartments.len());
@@ -178,7 +202,7 @@ fn main() {
     let duration = start.elapsed();
     println!("Time elapsed in create_all_compartments is: {:?}", duration);
 }
-*/
+
 
 #[test]
 fn test_writing_to_json() {
@@ -330,7 +354,7 @@ fn main() {
     println!("Polygon image saved as 'polygon_image.png'");
 }
 */
- 
+/*
 /* PRINTS BUILDINGS IN MAP */
 #[tokio::main]
 async fn main() {
@@ -348,4 +372,4 @@ async fn main() {
         Err(err) => eprintln!("Error fetching buildings: {}", err),
     }
 }
-
+*/
