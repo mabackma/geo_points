@@ -106,7 +106,6 @@ fn get_bounding_box_of_map() -> Polygon<f64> {
 
     bbox
 }
-
 /* 
 /* SAVES ENTIRE MAP TO GEOJSON FILE */
 fn main() {
@@ -117,7 +116,18 @@ fn main() {
     println!("Total stands: {:?}\n", stands.len());
 
     // Get the bounding box of the whole map
-    let bbox = get_bounding_box_of_map();
+    let mut bbox = get_bounding_box_of_map();
+
+    // Create a new Tokio runtime
+    let rt = Runtime::new().unwrap();
+
+    // Block on the async function using the runtime
+    let buildings = rt.block_on(remove_buildings_from_polygon(&bbox)).expect("Failed to remove buildings");
+
+    // Exclude buildings from the bounding box
+    let exclude_buildings = MultiPolygon::new(buildings);
+    let excluded = bbox.difference(&exclude_buildings, 100000.0);
+    bbox = excluded.0.first().unwrap().to_owned();
 
     // Find compartments in the bounding box
     let compartments = get_compartments_in_bounding_box(stands, &bbox);
@@ -131,7 +141,7 @@ fn main() {
 }
 */
 
-async fn remove_buildings_from_polygon(p: &Polygon<f64>) -> Result<Polygon<f64>, Box<dyn Error>> {
+async fn remove_buildings_from_polygon(p: &Polygon<f64>) -> Result<Vec<Polygon<f64>>, Box<dyn Error>> {
 
     // Fetch buildings as polygons
     let buildings = fetch_buildings_as_polygons(&p).await?;
@@ -143,13 +153,7 @@ async fn remove_buildings_from_polygon(p: &Polygon<f64>) -> Result<Polygon<f64>,
         projected_buildings.push(projected_building);
     }
 
-    let exclude_buildings = MultiPolygon::new(projected_buildings);
-
-    // Exclude buildings from the bounding box
-    let excluded = p.difference(&exclude_buildings, 100000.0);
-    let poly = excluded.0.first().unwrap().to_owned();
-
-    Ok(poly)
+    Ok(projected_buildings)
 }
 
 /* DRAWS ENTIRE MAP */
@@ -167,7 +171,12 @@ fn main() {
     let rt = Runtime::new().unwrap();
 
     // Block on the async function using the runtime
-    bbox = rt.block_on(remove_buildings_from_polygon(&bbox)).expect("Failed to remove buildings");
+    let buildings = rt.block_on(remove_buildings_from_polygon(&bbox)).expect("Failed to remove buildings");
+
+    // Exclude buildings from the bounding box
+    let exclude_buildings = MultiPolygon::new(buildings.clone());
+    let excluded = bbox.difference(&exclude_buildings, 100000.0);
+    bbox = excluded.0.first().unwrap().to_owned();
 
     // Find compartments in the bounding box
     let compartments = get_compartments_in_bounding_box(stands, &bbox);
@@ -192,7 +201,7 @@ fn main() {
 
         // Draw the polygon
         let mapped_coordinates = image.map_coordinates_to_image(&polygon, &scale);
-        image.draw_polygon_image(&mapped_coordinates);
+        image.draw_polygon_image(&mapped_coordinates, Rgb([0, 0, 255]));
 
         // Draw the trees
         for tree in trees {
@@ -200,6 +209,12 @@ fn main() {
             let color = get_color_by_species(tree.species());
             image.draw_random_point(&scale, img_width, img_height, point, color);
         }
+    }
+
+    // Draw the buildings
+    for building in buildings.iter() {
+        let mapped_building = image.map_coordinates_to_image(&building, &scale);
+        image.draw_polygon_image(&mapped_building, Rgb([255, 255, 255]));
     }
 
     image
@@ -210,7 +225,6 @@ fn main() {
     let duration = start.elapsed();
     println!("Time elapsed in create_all_compartments is: {:?}", duration);
 }
-
 
 #[test]
 fn test_writing_to_json() {
