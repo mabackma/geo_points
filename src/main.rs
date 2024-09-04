@@ -122,7 +122,7 @@ fn main() {
     let rt = Runtime::new().unwrap();
 
     // Block on the async function using the runtime
-    let buildings = rt.block_on(remove_buildings_from_polygon(&bbox)).expect("Failed to remove buildings");
+    let buildings = rt.block_on(get_buildings(&bbox)).expect("Failed to get buildings");
 
     // Exclude buildings from the bounding box
     let exclude_buildings = MultiPolygon::new(buildings);
@@ -141,7 +141,7 @@ fn main() {
 }
 */
 
-async fn remove_buildings_from_polygon(p: &Polygon<f64>) -> Result<Vec<Polygon<f64>>, Box<dyn Error>> {
+async fn get_buildings(p: &Polygon<f64>) -> Result<Vec<Polygon<f64>>, Box<dyn Error>> {
 
     // Fetch buildings as polygons
     let buildings = fetch_buildings_as_polygons(&p).await?;
@@ -171,7 +171,7 @@ fn main() {
     let rt = Runtime::new().unwrap();
 
     // Block on the async function using the runtime
-    let buildings = rt.block_on(remove_buildings_from_polygon(&bbox)).expect("Failed to remove buildings");
+    let buildings = rt.block_on(get_buildings(&bbox)).expect("Failed to get buildings");
 
     // Exclude buildings from the bounding box
     let exclude_buildings = MultiPolygon::new(buildings.clone());
