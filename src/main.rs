@@ -4,6 +4,7 @@ mod geojson_utils;
 mod jittered_hexagonal_sampling;
 mod projection;
 mod requests;
+mod slippy_tile;
 
 use std::fs::{self, File};
 use forest_property::compartment::{find_stands_in_bounding_box, get_compartments_in_bounding_box, Compartment};
@@ -23,6 +24,7 @@ use std::time::Instant;
 use tokio::runtime::Runtime;
 use geo_clipper::Clipper;
 use std::error::Error;
+use slippy_tile::lon_lat_to_tile_indexes_f32;
 
 // Get color based on species number
 fn get_color_by_species(number: u8) -> Rgb<u8> {
@@ -155,7 +157,7 @@ async fn get_buildings(p: &Polygon<f64>) -> Result<Vec<Polygon<f64>>, Box<dyn Er
 
     Ok(projected_buildings)
 }
-
+/* 
 /* DRAWS ENTIRE MAP */
 fn main() {
     let start = Instant::now();
@@ -225,7 +227,7 @@ fn main() {
     let duration = start.elapsed();
     println!("Time elapsed in create_all_compartments is: {:?}", duration);
 }
-
+*/
 #[test]
 fn test_writing_to_json() {
     let test_json_path = "test_json_from_xml.json";
@@ -376,22 +378,42 @@ fn main() {
     println!("Polygon image saved as 'polygon_image.png'");
 }
 */
-/*
-/* PRINTS BUILDINGS IN MAP */
-#[tokio::main]
-async fn main() {
+
+/* GETS ROADS IN MAP BOUNDING BOX */
+fn main() {
+    let start = Instant::now();
+
     // Get the bounding box of the whole map
-    let bbox = get_bounding_box_of_map();
+    let mut bbox = get_bounding_box_of_map();
 
-    match fetch_buildings_as_polygons(&bbox).await {
-        Ok(buildings) => {
-            println!("Fetched buildings: {:?}", buildings.len());
+    // Top left corner of bounding box
+    let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&bbox);
+    println!("lon_min: {:?}, lat_max: {:?}", min_x, max_y);
+    
+    let zoom = 13;
 
-            for building in buildings {
-                println!("Building: {:?}", building);
-            }
-        }
-        Err(err) => eprintln!("Error fetching buildings: {}", err),
-    }
+    // Convert the top left corner of bounding box to slippy tile indices
+    let (x_index_tl, y_index_tl) = lon_lat_to_tile_indexes_f32(
+        min_x as f32,
+        max_y as f32,
+        zoom,
+    );
+    println!("Top left corner: {:?}, {:?}", x_index_tl, y_index_tl);
+
+    // Convert the bottom right corner of bounding box to slippy tile indices
+    let (x_index_br, y_index_br) = lon_lat_to_tile_indexes_f32(
+        max_x as f32,
+        min_y as f32,
+        zoom,
+    );
+    println!("Bottom right corner: {:?}, {:?}", x_index_br, y_index_br);
+
+    // Count the number of tiles in the bounding box
+    let x_tiles = x_index_br - x_index_tl + 1;
+    let y_tiles = y_index_br - y_index_tl + 1;
+    let total_tiles = x_tiles * y_tiles;
+    println!("Total tiles: {:?}", total_tiles);
+
+    let duration = start.elapsed();
+    println!("Time elapsed in create_all_compartments is: {:?}", duration);
 }
-*/

@@ -245,6 +245,6 @@ function getSlippyTile(
 
         // image.src = `http://geo.plab.fi/geoserver/gwc/service/tms/1.0.0/mml:vesi@EPSG%3A900913@png/${z}/${x}/${slippyY}.png`;
 
-    });
+    });    
 }
 */
