@@ -233,3 +233,15 @@ pub async fn get_slippy_tile(tile_params: TileParams, tile_type: &str) -> Result
         Err("Failed to fetch image".into())
     }
 }
+/* EXAMPLE URL FOR MAKING REQUESTS TO GET ROADS IN GEOJSON*/
+/*
+    https://metne-test.onrender.com/geoserver/mml/ows?service=WFS&version=1.0.0&request=GetFeature&srsName=EPSG:3067&typeName=mml:tieviiva&maxFeatures=50&bbox=444000,7375200,445000,7378000,urn:ogc:def:crs:EPSG:3067&outputFormat=application/json
+
+
+
+    USE THIS FORMAT:
+
+    https://metne-test.onrender.com/geoserver/mml/ows?service=WFS&version=1.0.0&request=GetFeature&srsName=EPSG:4326&typeName=mml:tieviiva&maxFeatures=50&bbox=min_x,min_y,max_x,max_y,urn:ogc:def:crs:EPSG:4326&outputFormat=application/json
+
+    where min_x, min_y, max_x, max_y are the bounding box coordinates after transforming the coordinates to EPSG:4326
+*/
