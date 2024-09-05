@@ -390,7 +390,7 @@ fn main() {
     let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&bbox);
     println!("lon_min: {:?}, lat_max: {:?}", min_x, max_y);
     
-    let zoom = 10;
+    let zoom = 12;
 
     // Convert the top left corner of bounding box to slippy tile indices
     let (x_index_tl, y_index_tl) = lon_lat_to_tile_indexes_f32(
@@ -427,7 +427,7 @@ fn main() {
     let rt = Runtime::new().unwrap();
 
     // Block on the async function using the runtime
-    let road_image = rt.block_on(get_slippy_tile(tile_params, MmlTile::Roads.as_str())).expect("Failed to get buildings");
+    let road_image = rt.block_on(get_slippy_tile(tile_params, MmlTile::Roads.as_str())).expect("Failed to get roads");
 
     // Save the image
     save_image_to_file(&road_image, "road_image.png").expect("Failed to save image");
