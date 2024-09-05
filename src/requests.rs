@@ -1,80 +1,7 @@
-/*
-export async function fetchBuildings() {
-
-    const mapState = useMap()
-
-    const config = mapState.getConfig
-
-    const options = mapState.get3DOptions
-
-    const relativePositionData = mapState.relativePositionData!
-
-    const url = `https://metne-test.onrender.com/geoserver/mml/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=mml:rakennus&maxFeatures=2000&outputFormat=application%2Fjson&BBOX=${relativePositionData.bounds.west},${relativePositionData.bounds.south},${relativePositionData.bounds.east},${relativePositionData.bounds.north},EPSG:4326`
-
-    const response = await fetch(url)
-    const buildings = await response.json() as IBuildings
-
-    const group = new Group()
-    group.name = "buildings"
-
-    const builtAreas: Vector2[][] = []
-
-    buildings.features.forEach(f => {
-
-        f.geometry.coordinates.forEach(c => {
-
-            const vecs = c.map(cc => {
-
-                let wgs84 = [...inverse(cc[0], cc[1])]
-
-
-
-                return coordPointToThreeVec(wgs84, config, options, relativePositionData)
-
-            })
-
-            if(Math.abs(vecs[0].x) > (config.MAP_PIXEL_WIDTH / 2 * config.worldScale) || Math.abs(vecs[0].y) > (config.MAP_PIXEL_HEIGHT / 2 *  config.worldScale)){
-                return
-            }
-
-            const height = getHeightByPosition(vecs[0].x, vecs[0].y, config.worldScale, config.MAP_PIXEL_WIDTH)
-
-            const shape = new Shape(vecs)
-
-            const extrudeSettings = {
-                steps: 2,
-                depth: 5 + ((f.properties?.kerrosluku ?? 1) * 5),
-                bevelEnabled: true,
-                bevelThickness: 1,
-                bevelSize: 1,
-                bevelOffset: 0,
-                bevelSegments: 1
-            };
-
-            const geometry = new ExtrudeGeometry( shape, extrudeSettings );
-
-            const color = `#1111${f.properties?.kayttotarkoitus ?? '00'}`
-
-            const material = new MeshStandardMaterial( { color: color.length != 7 ? color + "0" : color} );
-            const mesh = new Mesh( geometry, material ) ;
-            mesh.rotation.x = Math.PI / 2
-            mesh.position.y = height + extrudeSettings.depth
-
-
-
-            builtAreas.push(vecs)
-            group.add(mesh)
-        })
-    })
-
-    return {group, builtAreas}
-
-}
-*/
-
 use crate::geometry_utils::get_min_max_coordinates;
 use geo::{LineString, Polygon};
 use geojson::{GeoJson, Value};
+use image::DynamicImage;
 use reqwest;
 
 use reqwest::Error as ReqwestError;
@@ -248,3 +175,61 @@ function getSlippyTile(
     });    
 }
 */
+#[derive(Debug)]
+pub struct TileParams {
+    format: &'static str,
+    z: u32,
+    x: u32,
+    y: u32,
+    offset_multiplier_x: f32,
+    offset_multiplier_y: f32
+}
+
+impl TileParams {
+    pub fn new(format: &'static str, z: u32, x: u32, y: u32, offset_multiplier_x: f32, offset_multiplier_y: f32) -> Self {
+        TileParams {
+            format,
+            z,
+            x,
+            y, 
+            offset_multiplier_x,
+            offset_multiplier_y
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum MmlTile {
+    Water,
+    Roads,
+}
+
+impl MmlTile {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            MmlTile::Water => "vesi",
+            MmlTile::Roads => "tieviiva",
+        }
+    }
+}
+
+pub async fn get_slippy_tile(tile_params: TileParams, tile_type: &str) -> Result<DynamicImage, Box<dyn Error>> {
+    let slippy_y = 2u32.pow(tile_params.z) - tile_params.y - 1;
+
+    let url = format!(
+        "https://metne-test.onrender.com/geoserver/gwc/service/tms/1.0.0/mml:{}@EPSG%3A900913@png/{}/{}/{}.png",
+        tile_type,
+        tile_params.z,
+        tile_params.x,
+        slippy_y
+    );
+
+    let resp = reqwest::get(&url).await?;
+
+    if resp.status().is_success() {
+        let img = image::load_from_memory(&resp.bytes().await?);
+        Ok(img.unwrap())
+    } else {
+        Err("Failed to fetch image".into())
+    }
+}

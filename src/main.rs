@@ -14,12 +14,12 @@ use geo::{coord, BoundingRect, Coord, CoordsIter, Geometry, Intersects, LineStri
 use geojson::GeoJson;
 use geometry_utils::{generate_random_trees, get_min_max_coordinates, polygon_to_wgs84};
 use geojson_utils::{polygon_to_geojson, save_all_compartments_to_geojson};
-use image::Rgb;
+use image::{DynamicImage, ImageFormat, Rgb};
 use proj4rs::proj;
 use projection::{Projection, CRS};
-use requests::{fetch_buildings, fetch_buildings_as_polygons};
+use requests::{fetch_buildings, fetch_buildings_as_polygons, get_slippy_tile, MmlTile, TileParams};
 use serde_json::json;
-use std::io::Write;
+use std::io::{BufWriter, Write};
 use std::time::Instant;
 use tokio::runtime::Runtime;
 use geo_clipper::Clipper;
@@ -390,7 +390,7 @@ fn main() {
     let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&bbox);
     println!("lon_min: {:?}, lat_max: {:?}", min_x, max_y);
     
-    let zoom = 13;
+    let zoom = 10;
 
     // Convert the top left corner of bounding box to slippy tile indices
     let (x_index_tl, y_index_tl) = lon_lat_to_tile_indexes_f32(
@@ -414,6 +414,31 @@ fn main() {
     let total_tiles = x_tiles * y_tiles;
     println!("Total tiles: {:?}", total_tiles);
 
+    let tile_params = TileParams::new(
+        "png",
+        zoom,
+        x_index_tl,
+        y_index_tl,
+        0.0,
+        0.0,
+    );
+
+    // Create a new Tokio runtime
+    let rt = Runtime::new().unwrap();
+
+    // Block on the async function using the runtime
+    let road_image = rt.block_on(get_slippy_tile(tile_params, MmlTile::Roads.as_str())).expect("Failed to get buildings");
+
+    // Save the image
+    save_image_to_file(&road_image, "road_image.png").expect("Failed to save image");
+
     let duration = start.elapsed();
     println!("Time elapsed in create_all_compartments is: {:?}", duration);
+}
+
+fn save_image_to_file(img: &DynamicImage, file_path: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let file = File::create(file_path)?;
+    let ref mut w = BufWriter::new(file);
+    img.write_to(w, ImageFormat::Png)?;
+    Ok(())
 }
