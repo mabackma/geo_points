@@ -104,7 +104,7 @@ fn get_bounding_box_of_map() -> Polygon<f64> {
     bbox
 }
 
-async fn get_building_polygons(p: &Polygon<f64>) -> Result<Vec<Polygon<f64>>, Box<dyn Error>> {
+async fn get_projected_building_polygons(p: &Polygon<f64>) -> Result<Vec<Polygon<f64>>, Box<dyn Error>> {
 
     // Fetch buildings as polygons
     let buildings = fetch_buildings_as_polygons(&p).await?;
@@ -121,13 +121,11 @@ async fn get_building_polygons(p: &Polygon<f64>) -> Result<Vec<Polygon<f64>>, Bo
 
 async fn get_geojson_for_roads(bbox: &Polygon) -> Result<GeoJson, FetchError> {
     let (min_lon, max_lon, min_lat, max_lat) = get_min_max_coordinates(&bbox);  
-    println!("min_lon: {:?}, min_lat: {:?}, max_lon: {:?}, max_lat: {:?}", min_lon, min_lat, max_lon, max_lat);
 
+    // Create a projection from WGS84 to ETRS-TM35FIN
     let projection = Projection::new(CRS::Epsg4326, CRS::Epsg3067);
-
     let (min_x, min_y) = projection.transform_back(min_lon, min_lat);  // Longitude as X, Latitude as Y
     let (max_x, max_y) = projection.transform_back(max_lon, max_lat);
-    println!("min_x: {:?}, min_y: {:?}, max_x: {:?}, max_y: {:?}", min_x, min_y, max_x, max_y);
 
     let bbox = geo::Polygon::new(
         LineString(vec![
@@ -160,7 +158,7 @@ fn main() {
     let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
     let real_estate = property.real_estates.real_estate[0].clone();
     let stands = real_estate.get_stands();
-    println!("Total stands: {:?}\n", stands.len());
+    println!("Total stands: {:?}", stands.len());
 
     // Get the bounding box of the whole map
     let mut bbox = get_bounding_box_of_map();
@@ -170,7 +168,7 @@ fn main() {
 
     // Block on the async function using the runtime
     // Get buildings as polygons
-    let buildings = rt.block_on(get_building_polygons(&bbox)).expect("Failed to get buildings");
+    let buildings = rt.block_on(get_projected_building_polygons(&bbox)).expect("Failed to get buildings");
 
     // Get GeoJson data
     let buildings_geojson = rt.block_on(fetch_buildings(&bbox)).expect("Failed to get buildings");
@@ -178,7 +176,7 @@ fn main() {
 
     match roads_geojson {
         GeoJson::FeatureCollection(ref collection) => {
-            println!("Fetched roads: {}", collection.features.len());
+            println!("Fetched roads: {}\n", collection.features.len());
         }
         _ => {
             println!("The GeoJson for roads does not contain a FeatureCollection");
@@ -194,12 +192,8 @@ fn main() {
     let compartments = get_compartments_in_bounding_box(stands, &bbox);
     println!("\nTotal compartments: {:?}", compartments.len());
 
-    // Save buildings and roads as GeoJSON files
-    save_geojson(buildings_geojson, "buildings_in_map.geojson");
-    save_geojson(roads_geojson, "roads_in_map.geojson");
-
     // Save all compartments and trees to a GeoJSON file
-    save_all_compartments_to_geojson(compartments, &bbox, "stands_in_map.geojson");
+    save_all_compartments_to_geojson(compartments, &bbox, &buildings_geojson, &roads_geojson, "stands_in_map.geojson");
 
     let duration = start.elapsed();
     println!("Time elapsed in create_all_compartments is: {:?}", duration);

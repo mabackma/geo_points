@@ -50,8 +50,6 @@ pub async fn fetch_buildings(bbox: &Polygon) -> Result<GeoJson, FetchError> {
         "https://metne-test.onrender.com/geoserver/mml/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=mml:rakennus&maxFeatures=2000&outputFormat=application%2Fjson&BBOX={},{},{},{},EPSG:4326",
         west, south, east, north
     );
-    
-    println!("{}", url);
 
     let resp = reqwest::get(&url)
         .await?
@@ -181,7 +179,6 @@ pub async fn fetch_roads(bbox: &Polygon) -> Result<GeoJson, FetchError> {
         min_x, min_y, max_x, max_y
     );
 
-    println!("{}", url);
     let resp = reqwest::get(&url)
         .await?
         .text()
