@@ -150,9 +150,10 @@ async fn get_geojson_for_roads(bbox: &Polygon) -> Result<GeoJson, FetchError> {
 }
 
 /* SAVES ENTIRE MAP TO GEOJSON FILES */
-// Creates compartments and trees in the bounding box. Compartments exclude buildings while generating trees.
-// Saves all compartments and trees to a GeoJSON file
-// Saves buildings and roads to separate GeoJSON files
+// Fetches buildings and roads as GeoJSON data
+// Creates compartments in the bounding box. Compartments exclude buildings while generating trees.
+// Saves all compartments, buildings, and roads to a GeoJSON file
+// TODO: Exclude roads while generating trees!
 fn main() {
     let start = Instant::now();
     let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
