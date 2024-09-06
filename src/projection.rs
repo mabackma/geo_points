@@ -55,7 +55,15 @@ impl Projection {
     
         // Note that angular unit is radians, not degrees
         (point_3d.0.to_degrees(), point_3d.1.to_degrees())
+    }
 
+    pub fn transform_back(&self, x:f64, y:f64) -> (f64, f64) {
+        // Convert degrees to radians
+        let mut point_3d = (x.to_radians(), y.to_radians(), 0.0);
+
+        proj4rs::transform::transform(&self.from, &self.to, &mut point_3d).unwrap();
+
+        (point_3d.0, point_3d.1)
     }
 }
 

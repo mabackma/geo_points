@@ -102,79 +102,6 @@ pub async fn fetch_buildings_as_polygons(bbox: &Polygon<f64>) -> Result<Vec<Poly
 }
 
 
-/*
-/* SHOWS IMAGES OF MAP TILES */
-function getTile(tileParams: { type: any; z: any; x: any; y: any; format: any; offsetMultiplierX: any; offsetMultiplierY: any; }, ctx: CanvasRenderingContext2D) {
-    return new Promise((resolve, reject) => {
-        const { type, z, x, y, format, offsetMultiplierX, offsetMultiplierY } =
-            tileParams;
-
-        const image = new Image(TILE_WIDTH, TILE_WIDTH);
-        image.crossOrigin = "anonymous";
-
-        image.onload = function () {
-            ctx.drawImage(image, TILE_WIDTH * offsetMultiplierX, TILE_WIDTH * offsetMultiplierY);
-            image.style.display = "none";
-            resolve(null);
-        };
-
-        image.onerror = function () {
-            reject();
-        };
-
-        image.src = `https://s3.amazonaws.com/elevation-tiles-prod/${type}/${z}/${x}/${y}.${format}`;
-    });
-}
-
-
-function getSlippyTile(
-    tileParams: { format: string, type: string, z: number; x: number; y: number; offsetMultiplierX: number; offsetMultiplierY: number; },
-    ctx: CanvasRenderingContext2D,
-    tileType: mml_tile, tryCount: number = 0) {
-    return new Promise((resolve, reject) => {
-
-
-
-        const { z, x, y, offsetMultiplierX, offsetMultiplierY } =
-            tileParams;
-
-        const image = new Image(TILE_WIDTH, TILE_WIDTH);
-        image.crossOrigin = "anonymous";
-        image.onload = function () {
-
-            ctx.drawImage(image, TILE_WIDTH * offsetMultiplierX, TILE_WIDTH * offsetMultiplierY);
-            resolve(null);
-
-
-        };
-
-        image.onerror = async (error) => {
-
-            try {
-
-                if (tryCount > 2) throw new Error("Try amount exceeded, default to error")
-
-                const res = await getSlippyTile(tileParams, ctx, tileType, tryCount + 1)
-
-                resolve(res)
-
-            } catch (error) {
-                reject();
-            }
-        };
-
-        const slippyY = Math.pow(2, z) - y - 1;
-
-        image.src = `https://metne-test.onrender.com/geoserver/gwc/service/tms/1.0.0/mml:${tileType}@EPSG%3A900913@png/${z}/${x}/${slippyY}.png`;
-
-        // Tiet
-        // image.src = `https://metne-test.onrender.com/geoserver/gwc/service/tms/1.0.0/mml:tieviiva@EPSG%3A900913@png/${z}/${x}/${slippyY}.png`;
-
-        // image.src = `http://geo.plab.fi/geoserver/gwc/service/tms/1.0.0/mml:vesi@EPSG%3A900913@png/${z}/${x}/${slippyY}.png`;
-
-    });    
-}
-*/
 #[derive(Debug)]
 pub struct TileParams {
     format: &'static str,
@@ -245,3 +172,22 @@ pub async fn get_slippy_tile(tile_params: TileParams, tile_type: &str) -> Result
 
     where min_x, min_y, max_x, max_y are the bounding box coordinates after transforming the coordinates to EPSG:4326
 */
+
+pub async fn fetch_roads(bbox: &Polygon) -> Result<GeoJson, FetchError> {
+    let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&bbox);
+
+    let url = format!(
+        "https://metne-test.onrender.com/geoserver/mml/ows?service=WFS&version=1.0.0&request=GetFeature&srsName=EPSG:3067&typeName=mml:tieviiva&bbox={},{},{},{},urn:ogc:def:crs:EPSG:3067&outputFormat=application/json",
+        min_x, min_y, max_x, max_y
+    );
+
+    println!("{}", url);
+    let resp = reqwest::get(&url)
+        .await?
+        .text()
+        .await?;
+    
+    let geojson = resp.parse::<GeoJson>()?;
+    
+    Ok(geojson)
+}

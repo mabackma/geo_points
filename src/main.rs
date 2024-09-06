@@ -17,7 +17,7 @@ use geojson_utils::{polygon_to_geojson, save_all_compartments_to_geojson};
 use image::{DynamicImage, ImageFormat, Rgb};
 use proj4rs::proj;
 use projection::{Projection, CRS};
-use requests::{fetch_buildings, fetch_buildings_as_polygons, get_slippy_tile, MmlTile, TileParams};
+use requests::{fetch_buildings, fetch_buildings_as_polygons, fetch_roads, get_slippy_tile, MmlTile, TileParams};
 use serde_json::json;
 use std::io::{BufWriter, Write};
 use std::time::Instant;
@@ -378,8 +378,8 @@ fn main() {
     println!("Polygon image saved as 'polygon_image.png'");
 }
 */
-
-/* GETS ROADS IN MAP BOUNDING BOX */
+/* 
+/* GETS ROADS IN MAP BOUNDING BOX AND DRAWS PNG */
 fn main() {
     let start = Instant::now();
 
@@ -441,4 +441,49 @@ fn save_image_to_file(img: &DynamicImage, file_path: &str) -> Result<(), Box<dyn
     let ref mut w = BufWriter::new(file);
     img.write_to(w, ImageFormat::Png)?;
     Ok(())
+}
+*/
+
+/* FETCHES ROADS IN MAP BOUNDING BOX IN GEOJSON */
+fn main() {
+    let start = Instant::now();
+
+    // Get the bounding box of the whole map
+    let mut bbox = get_bounding_box_of_map();
+    let (min_lon, max_lon, min_lat, max_lat) = get_min_max_coordinates(&bbox);  // Use descriptive names
+    println!("min_lon: {:?}, min_lat: {:?}, max_lon: {:?}, max_lat: {:?}", min_lon, min_lat, max_lon, max_lat);
+
+    let projection = Projection::new(CRS::Epsg4326, CRS::Epsg3067);
+
+    // Swap min_lat/min_lon and max_lat/max_lon correctly
+    let (min_x, min_y) = projection.transform_back(min_lon, min_lat);  // Longitude as X, Latitude as Y
+    let (max_x, max_y) = projection.transform_back(max_lon, max_lat);
+    println!("min_x: {:?}, min_y: {:?}, max_x: {:?}, max_y: {:?}", min_x, min_y, max_x, max_y);
+
+    bbox = geo::Polygon::new(
+        LineString(vec![
+            Coord { x: min_x, y: min_y },
+            Coord { x: max_x, y: min_y },
+            Coord { x: max_x, y: max_y },
+            Coord { x: min_x, y: max_y },
+            Coord { x: min_x, y: min_y },
+        ]),
+        vec![],
+    );
+
+    // Create a new Tokio runtime
+    let rt = Runtime::new().unwrap();
+
+    // Block on the async function using the runtime
+    let roads: GeoJson = rt.block_on(fetch_roads(&bbox)).expect("Failed to get roads");
+    match roads {
+        GeoJson::FeatureCollection(collection) => {
+            println!("Number of features: {}", collection.features.len());
+            println!("First feature: {:#?}", collection.features[0]);
+        }
+        _ => {
+            println!("The GeoJson does not contain a FeatureCollection");
+        }
+    }
+    
 }
