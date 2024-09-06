@@ -1,4 +1,4 @@
-use crate::{forest_property::{compartment::Compartment, tree::Tree}, geometry_utils::get_min_max_coordinates};
+use crate::{forest_property::{compartment::Compartment, tree::Tree}, geometry_utils::get_min_max_coordinates, requests::fetch_buildings};
 
 use std::{fs::File, io::Write};
 use geo::Polygon;

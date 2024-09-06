@@ -1,9 +1,10 @@
 use crate::forest_property::tree_stand_data::TreeStrata;
 use crate::forest_property::tree::Tree;
 use crate::jittered_hexagonal_sampling::{GridOptions, JitteredHexagonalGridSampling};
+use crate::projection::{Projection, CRS};
 
 use geo_types::Polygon;
-use geo::BoundingRect;
+use geo::{BoundingRect, Coord, LineString};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use core::f32::consts::PI;
 
@@ -87,3 +88,17 @@ pub fn generate_random_trees(p: &Polygon, strata: &TreeStrata) -> Vec<Tree> {
     trees.collect()
 }
 
+pub fn polygon_to_wgs84(p: &Polygon) -> Polygon {
+    let proj = Projection::new(CRS::Epsg3067, CRS::Epsg4326);
+    let mut coords: Vec<Coord<f64>> = Vec::new();
+
+    for coordinate in p.exterior().points() {
+        let e: f64 = coordinate.x();
+        let n: f64 = coordinate.y();
+        
+        let (lon, lat) = proj.transform(e, n);
+        coords.push(Coord { x: lon, y: lat });
+    }
+
+    Polygon::new(LineString::from(coords), vec![])
+}

@@ -1,85 +1,13 @@
-/*
-export async function fetchBuildings() {
-
-    const mapState = useMap()
-
-    const config = mapState.getConfig
-
-    const options = mapState.get3DOptions
-
-    const relativePositionData = mapState.relativePositionData!
-
-    const url = `https://metne-test.onrender.com/geoserver/mml/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=mml:rakennus&maxFeatures=2000&outputFormat=application%2Fjson&BBOX=${relativePositionData.bounds.west},${relativePositionData.bounds.south},${relativePositionData.bounds.east},${relativePositionData.bounds.north},EPSG:4326`
-
-    const response = await fetch(url)
-    const buildings = await response.json() as IBuildings
-
-    const group = new Group()
-    group.name = "buildings"
-
-    const builtAreas: Vector2[][] = []
-
-    buildings.features.forEach(f => {
-
-        f.geometry.coordinates.forEach(c => {
-
-            const vecs = c.map(cc => {
-
-                let wgs84 = [...inverse(cc[0], cc[1])]
-
-
-
-                return coordPointToThreeVec(wgs84, config, options, relativePositionData)
-
-            })
-
-            if(Math.abs(vecs[0].x) > (config.MAP_PIXEL_WIDTH / 2 * config.worldScale) || Math.abs(vecs[0].y) > (config.MAP_PIXEL_HEIGHT / 2 *  config.worldScale)){
-                return
-            }
-
-            const height = getHeightByPosition(vecs[0].x, vecs[0].y, config.worldScale, config.MAP_PIXEL_WIDTH)
-
-            const shape = new Shape(vecs)
-
-            const extrudeSettings = {
-                steps: 2,
-                depth: 5 + ((f.properties?.kerrosluku ?? 1) * 5),
-                bevelEnabled: true,
-                bevelThickness: 1,
-                bevelSize: 1,
-                bevelOffset: 0,
-                bevelSegments: 1
-            };
-
-            const geometry = new ExtrudeGeometry( shape, extrudeSettings );
-
-            const color = `#1111${f.properties?.kayttotarkoitus ?? '00'}`
-
-            const material = new MeshStandardMaterial( { color: color.length != 7 ? color + "0" : color} );
-            const mesh = new Mesh( geometry, material ) ;
-            mesh.rotation.x = Math.PI / 2
-            mesh.position.y = height + extrudeSettings.depth
-
-
-
-            builtAreas.push(vecs)
-            group.add(mesh)
-        })
-    })
-
-    return {group, builtAreas}
-
-}
-*/
-
 use crate::geometry_utils::get_min_max_coordinates;
-use geo::Polygon;
-use geojson::GeoJson;
+use geo::{LineString, Polygon};
+use geojson::{GeoJson, Value};
+use image::DynamicImage;
 use reqwest;
 
 use reqwest::Error as ReqwestError;
 use geojson::Error as GeoJsonError;
 use std::fmt;
+use std::error::Error;
 
 #[derive(Debug)]
 pub enum FetchError {
@@ -134,76 +62,132 @@ pub async fn fetch_buildings(bbox: &Polygon) -> Result<GeoJson, FetchError> {
     
     Ok(geojson)
 }
-/*
-/* SHOWS IMAGES OF MAP TILES */
-function getTile(tileParams: { type: any; z: any; x: any; y: any; format: any; offsetMultiplierX: any; offsetMultiplierY: any; }, ctx: CanvasRenderingContext2D) {
-    return new Promise((resolve, reject) => {
-        const { type, z, x, y, format, offsetMultiplierX, offsetMultiplierY } =
-            tileParams;
 
-        const image = new Image(TILE_WIDTH, TILE_WIDTH);
-        image.crossOrigin = "anonymous";
+pub async fn fetch_buildings_as_polygons(bbox: &Polygon<f64>) -> Result<Vec<Polygon<f64>>, Box<dyn Error>> {
+    // Fetch GeoJson data from API
+    let geojson = fetch_buildings(bbox).await?;
 
-        image.onload = function () {
-            ctx.drawImage(image, TILE_WIDTH * offsetMultiplierX, TILE_WIDTH * offsetMultiplierY);
-            image.style.display = "none";
-            resolve(null);
-        };
+    // Initialize a vector to store polygons
+    let mut polygons = Vec::new();
 
-        image.onerror = function () {
-            reject();
-        };
-
-        image.src = `https://s3.amazonaws.com/elevation-tiles-prod/${type}/${z}/${x}/${y}.${format}`;
-    });
-}
-
-
-function getSlippyTile(
-    tileParams: { format: string, type: string, z: number; x: number; y: number; offsetMultiplierX: number; offsetMultiplierY: number; },
-    ctx: CanvasRenderingContext2D,
-    tileType: mml_tile, tryCount: number = 0) {
-    return new Promise((resolve, reject) => {
-
-
-
-        const { z, x, y, offsetMultiplierX, offsetMultiplierY } =
-            tileParams;
-
-        const image = new Image(TILE_WIDTH, TILE_WIDTH);
-        image.crossOrigin = "anonymous";
-        image.onload = function () {
-
-            ctx.drawImage(image, TILE_WIDTH * offsetMultiplierX, TILE_WIDTH * offsetMultiplierY);
-            resolve(null);
-
-
-        };
-
-        image.onerror = async (error) => {
-
-            try {
-
-                if (tryCount > 2) throw new Error("Try amount exceeded, default to error")
-
-                const res = await getSlippyTile(tileParams, ctx, tileType, tryCount + 1)
-
-                resolve(res)
-
-            } catch (error) {
-                reject();
+    // Match on GeoJson to handle FeatureCollection
+    if let GeoJson::FeatureCollection(collection) = geojson {
+        for feature in collection.features {
+            // Ensure we are working with a valid Feature
+            if let Some(geometry) = feature.geometry {
+                match geometry.value {
+                    Value::Polygon(polygon) => {
+                        // Convert GeoJSON Polygon to geo crate Polygon
+                        let exterior = polygon[0]
+                            .iter()
+                            .map(|point| (point[0], point[1]))
+                            .collect::<Vec<_>>();
+                        
+                        // Create a geo crate Polygon
+                        let poly = Polygon::new(LineString::from(exterior), vec![]);
+                        polygons.push(poly);
+                    }
+                    _ => {
+                        // Handle other geometry types if necessary
+                        eprintln!("Skipping non-polygon geometry");
+                    }
+                }
             }
-        };
+        }
+    } else {
+        return Err("GeoJson is not a FeatureCollection.".into());
+    }
 
-        const slippyY = Math.pow(2, z) - y - 1;
-
-        image.src = `https://metne-test.onrender.com/geoserver/gwc/service/tms/1.0.0/mml:${tileType}@EPSG%3A900913@png/${z}/${x}/${slippyY}.png`;
-
-        // Tiet
-        // image.src = `https://metne-test.onrender.com/geoserver/gwc/service/tms/1.0.0/mml:tieviiva@EPSG%3A900913@png/${z}/${x}/${slippyY}.png`;
-
-        // image.src = `http://geo.plab.fi/geoserver/gwc/service/tms/1.0.0/mml:vesi@EPSG%3A900913@png/${z}/${x}/${slippyY}.png`;
-
-    });
+    Ok(polygons)
 }
+
+
+#[derive(Debug)]
+pub struct TileParams {
+    format: &'static str,
+    z: u32,
+    x: u32,
+    y: u32,
+    offset_multiplier_x: f32,
+    offset_multiplier_y: f32
+}
+
+impl TileParams {
+    pub fn new(format: &'static str, z: u32, x: u32, y: u32, offset_multiplier_x: f32, offset_multiplier_y: f32) -> Self {
+        TileParams {
+            format,
+            z,
+            x,
+            y, 
+            offset_multiplier_x,
+            offset_multiplier_y
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum MmlTile {
+    Water,
+    Roads,
+}
+
+impl MmlTile {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            MmlTile::Water => "vesi",
+            MmlTile::Roads => "tieviiva",
+        }
+    }
+}
+
+pub async fn get_slippy_tile(tile_params: TileParams, tile_type: &str) -> Result<DynamicImage, Box<dyn Error>> {
+    let slippy_y = 2u32.pow(tile_params.z) - tile_params.y - 1;
+
+    let url = format!(
+        "https://metne-test.onrender.com/geoserver/gwc/service/tms/1.0.0/mml:{}@EPSG%3A900913@png/{}/{}/{}.png",
+        tile_type,
+        tile_params.z,
+        tile_params.x,
+        slippy_y
+    );
+
+    let resp = reqwest::get(&url).await?;
+
+    if resp.status().is_success() {
+        let img = image::load_from_memory(&resp.bytes().await?);
+        Ok(img.unwrap())
+    } else {
+        Err("Failed to fetch image".into())
+    }
+}
+/* EXAMPLE URL FOR MAKING REQUESTS TO GET ROADS IN GEOJSON*/
+/*
+    https://metne-test.onrender.com/geoserver/mml/ows?service=WFS&version=1.0.0&request=GetFeature&srsName=EPSG:3067&typeName=mml:tieviiva&maxFeatures=50&bbox=444000,7375200,445000,7378000,urn:ogc:def:crs:EPSG:3067&outputFormat=application/json
+
+
+
+    USE THIS FORMAT:
+
+    https://metne-test.onrender.com/geoserver/mml/ows?service=WFS&version=1.0.0&request=GetFeature&srsName=EPSG:4326&typeName=mml:tieviiva&maxFeatures=50&bbox=min_x,min_y,max_x,max_y,urn:ogc:def:crs:EPSG:4326&outputFormat=application/json
+
+    where min_x, min_y, max_x, max_y are the bounding box coordinates after transforming the coordinates to EPSG:4326
 */
+
+pub async fn fetch_roads(bbox: &Polygon) -> Result<GeoJson, FetchError> {
+    let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&bbox);
+
+    let url = format!(
+        "https://metne-test.onrender.com/geoserver/mml/ows?service=WFS&version=1.0.0&request=GetFeature&srsName=EPSG:3067&typeName=mml:tieviiva&bbox={},{},{},{},urn:ogc:def:crs:EPSG:3067&outputFormat=application/json",
+        min_x, min_y, max_x, max_y
+    );
+
+    println!("{}", url);
+    let resp = reqwest::get(&url)
+        .await?
+        .text()
+        .await?;
+    
+    let geojson = resp.parse::<GeoJson>()?;
+    
+    Ok(geojson)
+}

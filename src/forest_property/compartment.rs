@@ -48,7 +48,30 @@ impl Compartment {
             Some(p.to_owned())
         }
     }
+/* 
+    // Polygon clipping to bounding box
+    pub fn clip_polygon_to_bounding_box(&self, bbox: &Polygon, exclude: &MultiPolygon) -> Option<Polygon> {
+        let clipped = self.polygon.intersection(bbox, 100000.0);
 
+        if clipped.0.is_empty() {
+            println!("Polygon is empty");
+            None
+        } else {
+            let p = clipped.0.first().unwrap().to_owned();
+
+            // Exclude the clipped polygon from the exclusion zone
+            let excluded = p.difference(exclude, 100000.0);
+
+            if excluded.0.is_empty() {
+                println!("Excluded polygon is empty");
+                None
+            } else {
+                let p = excluded.0.first().unwrap().to_owned();
+                Some(p)
+            }
+        }
+    }
+*/
     // Get trees in a bounding box
     pub fn trees_in_bounding_box(&self, min_x: f64, max_x: f64, min_y: f64, max_y: f64) -> Vec<&Tree> {
         self.trees.iter().filter(|tree| {
@@ -90,23 +113,25 @@ pub fn get_compartments_in_bounding_box(
                 let polygon = stand.computed_polygon.to_owned().unwrap();
                 let strata = stand.get_strata();
 
-                if strata.is_none() {
-                    return Compartment {
-                        stand_number: stand.stand_basic_data.stand_number.to_string(),
-                        trees: vec![] as Vec<Tree>,
-                        polygon: polygon.to_owned(),
-                    };
-                }
-
-                let trees = generate_random_trees(&polygon, &strata.unwrap());
-
-                let compartment = Compartment {
-                    stand_number: stand.stand_basic_data.stand_number.to_string(),
-                    trees,
-                    polygon: polygon.to_owned(),
+                // Clip the stand's polygon to the bounding box
+                let intersected_polygons = polygon.intersection(bbox, 100000.0).0;
+                let polygon = intersected_polygons.first()
+                    .expect("Intersection result should contain at least one polygon")
+                    .to_owned();
+                
+                // Generate trees if strata exist
+                let trees = if let Some(strata) = strata {
+                    generate_random_trees(&polygon, &strata)
+                } else {
+                    vec![]
                 };
 
-                compartment
+                // Create and return the compartment
+                Compartment {
+                    stand_number: stand.stand_basic_data.stand_number.to_string(),
+                    trees,
+                    polygon,
+                }
             })
             .collect();
 
