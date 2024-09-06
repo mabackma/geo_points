@@ -79,14 +79,19 @@ pub fn save_all_compartments_to_geojson(compartments: Vec<Compartment>, bbox: &P
     // Create a GeoJson object
     let geojson = GeoJson::FeatureCollection(feature_collection);
 
+    save_geojson(geojson, filename);
+}
+
+// Function to save a GeoJson object to a file
+pub fn save_geojson(geojson: GeoJson, filename: &str) {
     // Serialize the GeoJson object to a string
     let geojson_string = serde_json::to_string_pretty(&geojson).expect("Failed to serialize GeoJson");
 
     // Save the GeoJSON string to a file
-    let mut file = File::create("stands_in_map.geojson").expect("Failed to create file");
+    let mut file = File::create(filename).expect("Failed to create file");
     file.write_all(geojson_string.as_bytes()).expect("Failed to write to file");
 
-    println!("GeoJSON saved to {}", "stands_in_map.geojson");
+    println!("GeoJSON saved to {}", filename);
 }
 
 pub fn polygon_to_geojson(polygon: &Polygon<f64>, trees: &Vec<Tree>) -> GeoJson {

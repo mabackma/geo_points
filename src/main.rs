@@ -11,10 +11,10 @@ use forest_property::forest_property_data::ForestPropertyData;
 use geo::{Coord, LineString, MultiPolygon, Polygon};
 use geojson::{Error as GeoJsonError, GeoJson};
 use geometry_utils::{get_min_max_coordinates, polygon_to_wgs84};
-use geojson_utils::save_all_compartments_to_geojson;
+use geojson_utils::{save_all_compartments_to_geojson, save_geojson};
 use image::Rgb;
 use projection::{Projection, CRS};
-use requests::{fetch_buildings_as_polygons, fetch_roads, FetchError};
+use requests::{fetch_buildings, fetch_buildings_as_polygons, fetch_roads, FetchError};
 use std::time::Instant;
 use tokio::runtime::Runtime;
 use geo_clipper::Clipper;
@@ -151,7 +151,10 @@ async fn get_geojson_for_roads(bbox: &Polygon) -> Result<GeoJson, FetchError> {
     }
 }
 
-/* SAVES ENTIRE MAP TO GEOJSON FILE */
+/* SAVES ENTIRE MAP TO GEOJSON FILES */
+// Creates compartments and trees in the bounding box. Compartments exclude buildings while generating trees.
+// Saves all compartments and trees to a GeoJSON file
+// Saves buildings and roads to separate GeoJSON files
 fn main() {
     let start = Instant::now();
     let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
@@ -166,11 +169,15 @@ fn main() {
     let rt = Runtime::new().unwrap();
 
     // Block on the async function using the runtime
+    // Get buildings as polygons
     let buildings = rt.block_on(get_building_polygons(&bbox)).expect("Failed to get buildings");
+
+    // Get GeoJson data
+    let buildings_geojson = rt.block_on(fetch_buildings(&bbox)).expect("Failed to get buildings");
     let roads_geojson = rt.block_on(get_geojson_for_roads(&bbox)).expect("Failed to get roads");
 
     match roads_geojson {
-        GeoJson::FeatureCollection(collection) => {
+        GeoJson::FeatureCollection(ref collection) => {
             println!("Fetched roads: {}", collection.features.len());
         }
         _ => {
@@ -183,12 +190,16 @@ fn main() {
     let excluded = bbox.difference(&exclude_buildings, 100000.0);
     bbox = excluded.0.first().unwrap().to_owned();
 
-    // Find compartments in the bounding box
+    // Create compartments in the bounding box
     let compartments = get_compartments_in_bounding_box(stands, &bbox);
     println!("\nTotal compartments: {:?}", compartments.len());
 
+    // Save buildings and roads as GeoJSON files
+    save_geojson(buildings_geojson, "buildings_in_map.geojson");
+    save_geojson(roads_geojson, "roads_in_map.geojson");
+
     // Save all compartments and trees to a GeoJSON file
-    save_all_compartments_to_geojson(compartments, &bbox, "forest_compartments.geojson");
+    save_all_compartments_to_geojson(compartments, &bbox, "stands_in_map.geojson");
 
     let duration = start.elapsed();
     println!("Time elapsed in create_all_compartments is: {:?}", duration);
