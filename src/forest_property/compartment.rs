@@ -50,30 +50,7 @@ impl Compartment {
             Some(p.to_owned())
         }
     }
-/* 
-    // Polygon clipping to bounding box
-    pub fn clip_polygon_to_bounding_box(&self, bbox: &Polygon, exclude: &MultiPolygon) -> Option<Polygon> {
-        let clipped = self.polygon.intersection(bbox, 100000.0);
 
-        if clipped.0.is_empty() {
-            println!("Polygon is empty");
-            None
-        } else {
-            let p = clipped.0.first().unwrap().to_owned();
-
-            // Exclude the clipped polygon from the exclusion zone
-            let excluded = p.difference(exclude, 100000.0);
-
-            if excluded.0.is_empty() {
-                println!("Excluded polygon is empty");
-                None
-            } else {
-                let p = excluded.0.first().unwrap().to_owned();
-                Some(p)
-            }
-        }
-    }
-*/
     // Get trees in a bounding box
     pub fn trees_in_bounding_box(&self, min_x: f64, max_x: f64, min_y: f64, max_y: f64) -> Vec<&Tree> {
         self.trees.iter().filter(|tree| {
