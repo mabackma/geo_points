@@ -148,10 +148,6 @@ fn main() {
     let compartments = get_compartments_in_bounding_box(stands, &bbox);
     println!("\nTotal compartments: {:?}", compartments.len());
 
-    // Save buildings and roads to GeoJSON files
-    save_geojson(&buildings_geojson, "buildings_in_map.geojson");
-    save_geojson(&roads_geojson, "roads_in_map.geojson");
-
     // Save all compartments and trees to a GeoJSON file
     save_all_compartments_to_geojson(compartments, &bbox, &buildings_geojson, &roads_geojson, "stands_in_map.geojson");
 
