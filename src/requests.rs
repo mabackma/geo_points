@@ -47,7 +47,7 @@ pub async fn fetch_buildings(bbox: &Polygon) -> Result<GeoJson, FetchError> {
     let north = max_y;
 
     let url = format!(
-        "https://metne-test.onrender.com/geoserver/mml/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=mml:rakennus&maxFeatures=2000&outputFormat=application%2Fjson&BBOX={},{},{},{},EPSG:4326",
+        "https://metne-test.onrender.com/geoserver/mml/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=mml:rakennus&maxFeatures=2000&outputFormat=application%2Fjson&BBOX={},{},{},{},EPSG:4326&srsName=EPSG:4326",
         west, south, east, north
     );
 
@@ -57,7 +57,7 @@ pub async fn fetch_buildings(bbox: &Polygon) -> Result<GeoJson, FetchError> {
         .await?;
     
     let geojson = resp.parse::<GeoJson>()?;
-    
+
     Ok(geojson)
 }
 
@@ -174,10 +174,16 @@ pub async fn get_slippy_tile(tile_params: TileParams, tile_type: &str) -> Result
 pub async fn fetch_roads(bbox: &Polygon) -> Result<GeoJson, FetchError> {
     let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&bbox);
 
+    let west = min_x;
+    let south = min_y;
+    let east = max_x;
+    let north = max_y;
+
     let url = format!(
-        "https://metne-test.onrender.com/geoserver/mml/ows?service=WFS&version=1.0.0&request=GetFeature&srsName=EPSG:3067&typeName=mml:tieviiva&bbox={},{},{},{},urn:ogc:def:crs:EPSG:3067&outputFormat=application/json",
-        min_x, min_y, max_x, max_y
+        "https://metne-test.onrender.com/geoserver/mml/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=mml:tieviiva&bbox={},{},{},{},EPSG:4326&srsName=EPSG:4326&outputFormat=application/json",
+        west, south, east, north
     );
+    
 
     let resp = reqwest::get(&url)
         .await?

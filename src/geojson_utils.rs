@@ -105,11 +105,11 @@ pub fn save_all_compartments_to_geojson(
     // Create a GeoJson object
     let geojson = GeoJson::FeatureCollection(feature_collection);
 
-    save_geojson(geojson, filename);
+    save_geojson(&geojson, filename);
 }
 
 // Function to save a GeoJson object to a file
-pub fn save_geojson(geojson: GeoJson, filename: &str) {
+pub fn save_geojson(geojson: &GeoJson, filename: &str) {
     // Serialize the GeoJson object to a string
     let geojson_string = serde_json::to_string_pretty(&geojson).expect("Failed to serialize GeoJson");
 
