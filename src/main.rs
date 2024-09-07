@@ -9,16 +9,14 @@ mod slippy_tile;
 use forest_property::compartment::get_compartments_in_bounding_box;
 use forest_property::forest_property_data::ForestPropertyData;
 use geo::{Coord, LineString, MultiPolygon, Polygon};
-use geojson::{Error as GeoJsonError, GeoJson};
-use geometry_utils::{get_min_max_coordinates, polygon_to_wgs84};
-use geojson_utils::{save_all_compartments_to_geojson, save_geojson};
+use geojson::GeoJson;
+use geometry_utils::get_min_max_coordinates;
+use geojson_utils::save_all_compartments_to_geojson;
 use image::Rgb;
-use projection::{Projection, CRS};
-use requests::{fetch_buildings, fetch_buildings_as_polygons, fetch_roads, FetchError};
+use requests::{fetch_buildings, fetch_buildings_as_polygons, fetch_roads};
 use std::time::Instant;
 use tokio::runtime::Runtime;
 use geo_clipper::Clipper;
-use std::error::Error;
 
 
 // Get color based on species number
