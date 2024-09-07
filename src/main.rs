@@ -102,7 +102,7 @@ fn main() {
     bbox = excluded.0.first().unwrap().to_owned();
 
     // Create compartments in the bounding box
-    let compartments = get_compartments_in_bounding_box(stands, &bbox);
+    let compartments = get_compartments_in_bounding_box(stands, &bbox, &roads_geojson);
     println!("\nTotal compartments: {:?}", compartments.len());
 
     // Save all compartments and trees to a GeoJSON file

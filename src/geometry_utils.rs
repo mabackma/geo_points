@@ -35,7 +35,7 @@ fn generate_radius(total_stem_count: u32, area: f32) -> f32 {
 }
 
 // Generates random trees for all strata with jittered grid sampling
-pub fn generate_random_trees(p: &Polygon, strata: &TreeStrata) -> Vec<Tree> {
+pub fn generate_random_trees(p: &Polygon, strata: &TreeStrata, exclude_roads: &Vec<(f64, f64)>) -> Vec<Tree> {
     let total_stem_count = strata.tree_stratum.iter().fold(0, |mut acc: u32, f| {
         acc += f.stem_count;
         acc
@@ -65,7 +65,7 @@ pub fn generate_random_trees(p: &Polygon, strata: &TreeStrata) -> Vec<Tree> {
 
             let mut grid = JitteredHexagonalGridSampling::new(rng, options);
 
-            let points =  grid.fill();
+            let points =  grid.fill(&exclude_roads); 
 
             if points.len() == 0 {
                 //println!("\tNo trees generated for stratum with basal area {}, stem count {}, mean height {}", stratum.basal_area, stratum.stem_count, stratum.mean_height);

@@ -5,6 +5,8 @@ use super::stand::Stand;
 use geo::Polygon;
 use geo::Intersects;
 use geo_clipper::Clipper;
+use geojson::GeoJson;
+use geojson::Value;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 // Struct that represents a stand of trees
@@ -100,10 +102,14 @@ pub fn find_stands_in_bounding_box<'a>(stands: &'a Vec<Stand>, bbox: &'a Polygon
 // Get compartments in a bounding box.
 pub fn get_compartments_in_bounding_box(
     all_stands: Vec<Stand>,
-    bbox: &Polygon
+    bbox: &Polygon,
+    exclude_roads: &GeoJson
 ) -> Vec<Compartment> {
     // Find stands in the bounding box
     let stands = find_stands_in_bounding_box(&all_stands, bbox);
+
+    // Get coordinates of roads
+    let roads = extract_filtered_coordinates_from_geojson(&exclude_roads);
 
     // If there are stands in the bounding box, generate random trees for each stand
     if !&stands.is_none() {
@@ -121,7 +127,7 @@ pub fn get_compartments_in_bounding_box(
                 
                 // Generate trees if strata exist
                 let trees = if let Some(strata) = strata {
-                    generate_random_trees(&polygon, &strata)
+                    generate_random_trees(&polygon, &strata, &roads) 
                 } else {
                     vec![]
                 };
@@ -139,4 +145,29 @@ pub fn get_compartments_in_bounding_box(
     } else {
         vec![]
     }
+}
+
+fn extract_filtered_coordinates_from_geojson(geojson: &GeoJson) -> Vec<(f64, f64)> {
+    let mut coordinates: Vec<(f64, f64)> = Vec::new();
+
+    // Match the GeoJson for a FeatureCollection
+    if let GeoJson::FeatureCollection(ref collection) = geojson {
+        // Iterate through each feature in the collection
+        for feature in &collection.features {
+            if let Some(geometry) = &feature.geometry {
+                // Match the geometry type (we are specifically looking for LineString here)
+                if let Value::LineString(line_string) = &geometry.value {
+                    // Filter the coordinates based on the Z value (-999.999)
+                    for coord in line_string {
+                        if coord.len() == 3 && coord[2] == -999.999 {
+                            // Only include the (x, y) part of the coordinate
+                            coordinates.push((coord[0], coord[1]));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    coordinates
 }

@@ -66,7 +66,7 @@ impl<R: Rng> JitteredHexagonalGridSampling<R> {
         &self.sample_points
     }
  
-    pub fn generate_all_points(&mut self) {
+    pub fn generate_all_points(&mut self, exclude: &Vec<(f64, f64)>) {
         while self.current_y < self.max_y {
             let y_odd = self.current_y % 2 == 1;
             let max_x = if y_odd { self.max_x_odd } else { self.max_x_even };
@@ -89,7 +89,7 @@ impl<R: Rng> JitteredHexagonalGridSampling<R> {
                     cy + (v0[1] * p + v1[1] * q) * self.jitter_radius,
                 ];
 
-                if self.polygon.contains(&Coord { x: point[0], y: point[1] }) {
+                if self.polygon.contains(&Coord { x: point[0], y: point[1] }) && !exclude.contains(&(point[0], point[1])) {
                     self.sample_points.push(point);
                 }
 
@@ -101,9 +101,9 @@ impl<R: Rng> JitteredHexagonalGridSampling<R> {
         }
     }
 
-    pub fn fill(&mut self) -> Vec<[f64; 2]> {
+    pub fn fill(&mut self, exclude_roads: &Vec<(f64, f64)>) -> Vec<[f64; 2]> {
  
-        self.generate_all_points();
+        self.generate_all_points(&exclude_roads); // exclude: Vec<Coord>
 
 
         if let Some(limit) = self.point_limit {
