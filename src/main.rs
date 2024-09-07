@@ -125,6 +125,7 @@ fn main() {
     // Block on the async function using the runtime
     // Get buildings as polygons
     let buildings = rt.block_on(fetch_buildings_as_polygons(&bbox)).expect("Failed to get buildings");
+    println!("Fetched buildings: {}", buildings.len());
 
     // Get GeoJson data
     let buildings_geojson = rt.block_on(fetch_buildings(&bbox)).expect("Failed to get buildings");
