@@ -11,7 +11,7 @@ use forest_property::forest_property_data::ForestPropertyData;
 use geo::{Coord, LineString, MultiPolygon, Polygon};
 use geojson::GeoJson;
 use geometry_utils::get_min_max_coordinates;
-use geojson_utils::save_all_compartments_to_geojson;
+use geojson_utils::{roads_to_multipolygon, save_all_compartments_to_geojson};
 use requests::{fetch_buildings, fetch_buildings_as_polygons, fetch_roads};
 use std::time::Instant;
 use tokio::runtime::Runtime;
@@ -58,7 +58,7 @@ fn get_bounding_box_of_map() -> Polygon<f64> {
     );
 
     bbox
-}
+}   
 
 /* SAVES ENTIRE MAP TO GEOJSON FILES */
 // Fetches buildings and roads as GeoJSON data
@@ -99,6 +99,11 @@ fn main() {
     // Exclude buildings from the bounding box
     let exclude_buildings = MultiPolygon::new(buildings);
     let excluded = bbox.difference(&exclude_buildings, 100000.0);
+    bbox = excluded.0.first().unwrap().to_owned();
+
+    // Exclude roads from the bounding box
+    let roads_multipolygon = roads_to_multipolygon(&roads_geojson);
+    let excluded = bbox.difference(&roads_multipolygon, 100000.0);
     bbox = excluded.0.first().unwrap().to_owned();
 
     // Create compartments in the bounding box

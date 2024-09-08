@@ -1,7 +1,8 @@
 use crate::{forest_property::{compartment::Compartment, tree::Tree}, geometry_utils::get_min_max_coordinates, requests::fetch_buildings};
 
 use std::{fs::File, io::Write};
-use geo::Polygon;
+use geo::{Coord, LineString, MultiPolygon, Polygon};
+use geo_types::{LineString as GeoLineString, Polygon as GeoPolygon};
 use geojson::{Feature, FeatureCollection, GeoJson, Geometry as GeoJsonGeometry, Value};
 
 // Function to convert a Polygon into a GeoJSON Feature
@@ -140,4 +141,101 @@ pub fn polygon_to_geojson(polygon: &Polygon<f64>, trees: &Vec<Tree>) -> GeoJson 
 
     // Return a GeoJson object
     GeoJson::FeatureCollection(feature_collection)
+}
+
+// Convert meters to degrees for latitude
+fn meters_to_degrees_latitude(meters: f64) -> f64 {
+    meters / 111_000.0
+}
+
+// Convert meters to degrees for longitude based on latitude
+fn meters_to_degrees_longitude(meters: f64, latitude: f64) -> f64 {
+    meters / (111_000.0 * latitude.to_radians().cos())
+}
+
+// Calculate the perpendicular offset vector
+fn perpendicular_offset(vector: (f64, f64), offset: f64) -> (f64, f64) {
+    let (x, y) = vector;
+    let length = (x * x + y * y).sqrt();
+    let (x, y) = (x / length, y / length);
+    (-y * offset, x * offset)
+}
+
+// Create a polygon from LineString with a given width
+fn line_to_polygon_with_width(line: &LineString<f64>, width: f64) -> GeoPolygon<f64> {
+    let mut left_points = Vec::new();
+    let mut right_points = Vec::new();
+    
+    for i in 0..line.0.len() - 1 {
+        let p1 = line.0[i];
+        let p2 = line.0[i + 1];
+        
+        // Calculate width in degrees based on latitude
+        let width_lat = meters_to_degrees_latitude(width);
+        let width_lon = meters_to_degrees_longitude(width, p1.y);
+        
+        let dx = p2.x - p1.x;
+        let dy = p2.y - p1.y;
+        
+        let offset = perpendicular_offset((dx, dy), width_lat / 2.0);
+        let left1 = (p1.x + offset.0, p1.y + offset.1);
+        let left2 = (p2.x + offset.0, p2.y + offset.1);
+        let right1 = (p1.x - offset.0, p1.y - offset.1);
+        let right2 = (p2.x - offset.0, p2.y - offset.1);
+        
+        left_points.push(left1);
+        right_points.push(right1);
+        left_points.push(left2);
+        right_points.push(right2);
+    }
+    
+    left_points.reverse();
+    let coordinates = left_points.into_iter().chain(right_points).collect::<Vec<_>>();
+    
+    // Create a closed Polygon by adding the first point at the end
+    let closed_coordinates: Vec<Coord<f64>> = coordinates.into_iter()
+        .map(|(x, y)| Coord { x, y })
+        .collect();
+    GeoPolygon::new(GeoLineString(closed_coordinates), vec![])
+}
+
+// Function to extract roads from GeoJSON and combine them into a MultiPolygon
+pub fn roads_to_multipolygon(geojson_data: &GeoJson) -> MultiPolygon<f64> {
+    let mut all_road_polygons = Vec::new(); // Store all LineString geometries
+
+    if let GeoJson::FeatureCollection(collection) = geojson_data {
+        for feature in &collection.features {
+            if let Some(geometry) = &feature.geometry {
+                match &geometry.value {
+                    Value::LineString(coords) => {
+                        // Convert the LineString coordinates from GeoJSON to geo::Polygon
+                        let linestring: LineString<f64> = coords
+                            .iter()
+                            .map(|coord| (coord[0], coord[1])) // (x, y) without z
+                            .collect();
+                        let p = line_to_polygon_with_width(&linestring, 0.0001);
+                        all_road_polygons.push(p);
+                    },
+                    Value::MultiLineString(coords_set) => {
+                        // Convert MultiLineString coordinates from GeoJSON to geo::MultiPolygon
+                        for coords in coords_set {
+                            let linestring: LineString<f64> = coords
+                                .iter()
+                                .map(|coord| (coord[0], coord[1]))
+                                .collect();
+                            let p = line_to_polygon_with_width(&linestring, 0.0001);
+                            all_road_polygons.push(p);
+                        }
+                    }
+                    _ => {
+                        // Ignore non-LineString types
+                        continue;
+                    }
+                }
+            }
+        }
+    }
+
+    // Combine all the extracted Polygons into a MultiPolygon
+    MultiPolygon(all_road_polygons)
 }
