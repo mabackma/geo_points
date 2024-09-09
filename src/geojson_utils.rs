@@ -1,8 +1,7 @@
-use crate::{forest_property::{compartment::Compartment, tree::Tree}, geometry_utils::get_min_max_coordinates, requests::fetch_buildings};
+use crate::{forest_property::{compartment::Compartment, tree::Tree}, geometry_utils::get_min_max_coordinates};
 
 use std::{fs::File, io::Write};
 use geo::{Coord, LineString, MultiPolygon, Polygon};
-use geo_types::{LineString as GeoLineString, Polygon as GeoPolygon};
 use geojson::{Feature, FeatureCollection, GeoJson, Geometry as GeoJsonGeometry, Value};
 
 // Function to convert a Polygon into a GeoJSON Feature
@@ -144,11 +143,13 @@ pub fn polygon_to_geojson(polygon: &Polygon<f64>, trees: &Vec<Tree>) -> GeoJson 
 }
 
 // Convert meters to degrees for latitude
+// 1 degree of latitude is approximately 111,000 meters
 fn meters_to_degrees_latitude(meters: f64) -> f64 {
     meters / 111_000.0
 }
 
 // Convert meters to degrees for longitude based on latitude
+// Longitude is neglected for short distances
 fn meters_to_degrees_longitude(meters: f64, latitude: f64) -> f64 {
     meters / (111_000.0 * latitude.to_radians().cos())
 }
@@ -157,7 +158,7 @@ fn meters_to_degrees_longitude(meters: f64, latitude: f64) -> f64 {
 fn perpendicular_offset(vector: (f64, f64), offset: f64) -> (f64, f64) {
     let (x, y) = vector;
     let length = (x * x + y * y).sqrt();
-    let (x, y) = (x / length, y / length);
+    let (x, y) = (x / length, y / length); // Normalize the vector
     (-y * offset, x * offset)
 }
 
@@ -218,17 +219,6 @@ pub fn roads_to_multipolygon(geojson_data: &GeoJson) -> MultiPolygon<f64> {
                         let polygons = line_to_polygon_with_width(&linestring, 0.0001);
                         all_road_polygons.extend(polygons);
                     },
-                    Value::MultiLineString(coords_set) => {
-                        // Convert MultiLineString coordinates from GeoJSON to Vec<Polygon>
-                        for coords in coords_set {
-                            let linestring: LineString<f64> = coords
-                                .iter()
-                                .map(|coord| (coord[0], coord[1]))
-                                .collect();
-                            let polygons = line_to_polygon_with_width(&linestring, 0.0001);
-                            all_road_polygons.extend(polygons);
-                        }
-                    }
                     _ => {
                         // Ignore non-LineString types
                         continue;

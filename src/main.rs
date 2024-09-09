@@ -98,13 +98,16 @@ fn main() {
 
     // Exclude buildings from the bounding box
     let exclude_buildings = MultiPolygon::new(buildings);
-    let excluded = bbox.difference(&exclude_buildings, 100000.0);
+    let excluded = bbox.difference(&exclude_buildings, 10000000.0);
     bbox = excluded.0.first().unwrap().to_owned();
+    println!("Bounding box interiors after excluding buildings: {}", bbox.interiors().len());
 
     // Exclude roads from the bounding box
     let roads_multipolygon = roads_to_multipolygon(&roads_geojson);
-    let excluded = bbox.difference(&roads_multipolygon, 100000.0);
+    println!("Road segments: {}", roads_multipolygon.0.len());
+    let excluded = bbox.difference(&roads_multipolygon, 10000000.0);
     bbox = excluded.0.first().unwrap().to_owned();
+    println!("Bounding box interiors after excluding roads: {}\n", bbox.interiors().len());
 
     // Create compartments in the bounding box
     let compartments = get_compartments_in_bounding_box(stands, &bbox);
