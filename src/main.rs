@@ -12,6 +12,7 @@ use geo::{Coord, LineString,  Polygon};
 use geometry_utils::get_min_max_coordinates;
 use geojson_utils::save_geojson;
 use main_functions::{create_geo_json_for_bbox, draw_and_save_selected_stand, draw_stands_in_bbox};
+use rand::Rng;
 
 // Get the bounding box of the whole map
 fn get_bounding_box_of_map() -> Polygon<f64> {
@@ -55,9 +56,34 @@ fn get_bounding_box_of_map() -> Polygon<f64> {
     bbox
 }
 
+fn random_bbox(map_bbox: &Polygon<f64>) -> Polygon<f64> {
+    let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&map_bbox);
+
+    let mut rng = rand::thread_rng();
+
+    let x1 = rng.gen_range(min_x..max_x);
+    let y1 = rng.gen_range(min_y..max_y);
+    let x2 = rng.gen_range(min_x..max_x);
+    let y2 = rng.gen_range(min_y..max_y);
+
+    let random_bbox = geo::Polygon::new(
+        LineString(vec![
+            Coord { x: x1, y: y1 },
+            Coord { x: x2, y: y1 },
+            Coord { x: x2, y: y2 },
+            Coord { x: x1, y: y2 },
+            Coord { x: x1, y: y1 },
+        ]),
+        vec![],
+    );
+
+    random_bbox
+}
+
 fn main() {
     let mut bbox = get_bounding_box_of_map();
- 
+    bbox = random_bbox(&bbox);
+
     let map_geojson = create_geo_json_for_bbox(&mut bbox);
     let filename = "stands_in_bbox.geojson";
     save_geojson(&map_geojson, filename);
@@ -66,5 +92,5 @@ fn main() {
     draw_stands_in_bbox(&mut bbox);
 
     println!("------------------------------------------------------------");
-    draw_and_save_selected_stand();
+    //draw_and_save_selected_stand();
 }

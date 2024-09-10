@@ -91,7 +91,7 @@ pub fn create_geo_json_for_bbox(bbox: &mut Polygon<f64>) -> GeoJson {
 
     // Create compartments in the bounding box
     let compartments = get_compartments_in_bounding_box(stands, &bbox);
-    println!("\nTotal compartments: {:?}", compartments.len());
+    println!("\nCompartments in bounding box: {:?}", compartments.len());
 
     let geojson = all_compartments_to_geojson(compartments, &bbox, &buildings_geojson, &roads_geojson, "stands_in_bbox.geojson");
 
@@ -124,7 +124,7 @@ pub fn draw_stands_in_bbox(bbox: &mut Polygon<f64>) {
 
     // Find compartments in the bounding box
     let compartments = get_compartments_in_bounding_box(stands, &bbox);
-    println!("\nTotal compartments: {:?}", compartments.len());
+    println!("\nCompartments in bounding box: {:?}", compartments.len());
 
     let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&bbox);
 
