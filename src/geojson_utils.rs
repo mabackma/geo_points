@@ -62,8 +62,8 @@ pub fn all_compartments_to_geojson(
             None => continue,
         };
         
-        // Get the trees within the bounding box
-        let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&bbox);
+        // Get the trees within the clipped polygon
+        let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&polygon);
         let trees = compartment.trees_in_bounding_box(min_x, max_x, min_y, max_y);
 
         // Convert the compartment (polygon) to a GeoJSON feature

@@ -141,9 +141,11 @@ pub fn draw_stands_in_bbox(bbox: &mut Polygon<f64>) {
             None => continue,
         };
         
+        // Get the trees within the clipped polygon
+        let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&polygon);
         let trees = compartment.trees_in_bounding_box(min_x, max_x, min_y, max_y);
 
-        // Draw the polygon
+        // Draw the clipped polygon
         let mapped_coordinates = image.map_coordinates_to_image(&polygon, &scale);
         image.draw_polygon_image(&mapped_coordinates, Rgb([0, 0, 255]));
 
