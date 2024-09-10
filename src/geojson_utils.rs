@@ -46,12 +46,12 @@ fn convert_tree_to_feature(tree: &Tree) -> Feature {
     }
 }
 
-pub fn save_all_compartments_to_geojson(
+pub fn all_compartments_to_geojson(
         compartments: Vec<Compartment>, 
         bbox: &Polygon<f64>, 
         buildings: &GeoJson, 
         roads: &GeoJson,
-        filename: &str) {
+        filename: &str) -> GeoJson {
         
     let mut all_features = Vec::new();
 
@@ -67,7 +67,7 @@ pub fn save_all_compartments_to_geojson(
         let trees = compartment.trees_in_bounding_box(min_x, max_x, min_y, max_y);
 
         // Convert the compartment (polygon) to a GeoJSON feature
-        let polygon_feature = convert_polygon_to_feature(&compartment.polygon);
+        let polygon_feature = convert_polygon_to_feature(&polygon);
         let tree_features: Vec<Feature> = trees.iter().map(|tree| convert_tree_to_feature(tree)).collect();
 
         // Add the polygon feature and tree features to the list
@@ -105,7 +105,7 @@ pub fn save_all_compartments_to_geojson(
     // Create a GeoJson object
     let geojson = GeoJson::FeatureCollection(feature_collection);
 
-    save_geojson(&geojson, filename);
+    geojson
 }
 
 // Function to save a GeoJson object to a file
@@ -117,7 +117,7 @@ pub fn save_geojson(geojson: &GeoJson, filename: &str) {
     let mut file = File::create(filename).expect("Failed to create file");
     file.write_all(geojson_string.as_bytes()).expect("Failed to write to file");
 
-    println!("\nGeoJSON saved to {}", filename);
+    println!("GeoJSON saved to {}", filename);
 }
 
 pub fn polygon_to_geojson(polygon: &Polygon<f64>, trees: &Vec<Tree>) -> GeoJson {
