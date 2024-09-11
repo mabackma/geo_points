@@ -2,7 +2,7 @@ use crate::forest_property::tree::Tree;
 use crate::geometry_utils::generate_random_trees;
 use super::stand::Stand;
 
-use geo::Polygon;
+use geo::{Polygon, Area};
 use geo::Intersects;
 use geo_clipper::Clipper;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
@@ -92,13 +92,18 @@ pub fn get_compartments_in_bounding_box(
 
                 // Clip the stand's polygon to the bounding box
                 let intersected_polygons = polygon.intersection(bbox, 100000.0).0;
-                let polygon = intersected_polygons.first()
+                let clipped_polygon = intersected_polygons.first()
                     .expect("Intersection result should contain at least one polygon")
                     .to_owned();
                 
+                // Calculate the area ratio of the clipped polygon to the original polygon
+                let original_area = polygon.unsigned_area();
+                let clipped_area = clipped_polygon.unsigned_area();
+                let area_ratio = clipped_area / original_area;
+
                 // Generate trees if strata exist
                 let trees = if let Some(strata) = strata {
-                    generate_random_trees(&polygon, &strata)
+                    generate_random_trees(&clipped_polygon, &strata, area_ratio)
                 } else {
                     vec![]
                 };
@@ -107,7 +112,7 @@ pub fn get_compartments_in_bounding_box(
                 Compartment {
                     stand_number: stand.stand_basic_data.stand_number.to_string(),
                     trees,
-                    polygon,
+                    polygon: clipped_polygon,
                 }
             })
             .collect();

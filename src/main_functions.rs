@@ -194,7 +194,7 @@ pub fn draw_and_save_selected_stand() {
 
     let summary_stem_count = stand.summary_stem_count();
     let strata = stand.get_strata().expect("No treeStrata/stratums found");
-    let random_trees = generate_random_trees(&polygon, &strata);
+    let random_trees = generate_random_trees(&polygon, &strata, 1.0);
 
     // Convert the Polygon and the trees to GeoJSON
     let geojson = polygon_to_geojson(&polygon, &random_trees);
