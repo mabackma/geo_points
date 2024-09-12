@@ -122,8 +122,19 @@ fn get_color_by_species(number: u8) -> Rgb<u8> {
 }
 
 /* RETURNS GEOJSON FOR BBOX */
-pub fn create_geo_json_for_bbox(bbox: &mut Polygon<f64>) -> GeoJson {
+pub fn create_geo_json_from_coords(min_x: f64, max_x: f64, min_y: f64, max_y: f64) -> GeoJson {
     let start = Instant::now();
+
+    let mut bbox = geo::Polygon::new(
+        LineString(vec![
+            coord!(x: min_x, y: min_y),
+            coord!(x: max_x, y: min_y),
+            coord!(x: max_x, y: max_y),
+            coord!(x: min_x, y: max_y),
+            coord!(x: min_x, y: min_y),
+        ]),
+        vec![],
+    );
 
     let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
     let real_estate = property.real_estates.real_estate[0].clone();
@@ -154,7 +165,7 @@ pub fn create_geo_json_for_bbox(bbox: &mut Polygon<f64>) -> GeoJson {
     // Exclude buildings from the bounding box
     let exclude_buildings = MultiPolygon::new(buildings);
     let excluded = bbox.difference(&exclude_buildings, 100000.0);
-    let bbox = excluded.0.first().unwrap().to_owned();
+    bbox = excluded.0.first().unwrap().to_owned();
 
     // Create compartments in the bounding box
     let compartments = get_compartments_in_bounding_box(stands, &bbox);
