@@ -5,13 +5,80 @@ use crate::requests::{fetch_buildings, fetch_buildings_as_polygons, fetch_roads}
 use crate::forest_property::compartment::get_compartments_in_bounding_box;
 use crate::forest_property::forest_property_data::ForestPropertyData;
 use crate::forest_property::image_processor::ImageProcessor;
-use geo::{coord, MultiPolygon, Polygon};
+use geo::{coord, Coord, LineString, MultiPolygon, Polygon};
 use geojson::GeoJson;
 use image::Rgb;
+use rand::Rng;
 use std::io::Write;
 use tokio::runtime::Runtime;
 use geo_clipper::Clipper;
 use std::time::Instant;
+
+// Get the bounding box of the whole map
+pub fn get_bounding_box_of_map() -> Polygon<f64> {
+    let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
+    let mut all_stands = property.real_estates.real_estate[0].get_stands();
+
+    let mut min_x = f64::MAX;
+    let mut max_x = f64::MIN;
+    let mut min_y = f64::MAX;
+    let mut max_y = f64::MIN;
+
+    for stand in all_stands.iter_mut() {
+        let polygon = stand.computed_polygon.to_owned().unwrap();
+        let (p_min_x, p_max_x, p_min_y, p_max_y) = get_min_max_coordinates(&polygon);
+
+        if p_min_x < min_x {
+            min_x = p_min_x;
+        }
+        if p_max_x > max_x {
+            max_x = p_max_x;
+        }
+        if p_min_y < min_y {
+            min_y = p_min_y;
+        }
+        if p_max_y > max_y {
+            max_y = p_max_y;
+        }
+    }
+    
+    let bbox = geo::Polygon::new(
+        LineString(vec![
+            Coord { x: min_x, y: min_y },
+            Coord { x: max_x, y: min_y },
+            Coord { x: max_x, y: max_y },
+            Coord { x: min_x, y: max_y },
+            Coord { x: min_x, y: min_y },
+        ]),
+        vec![],
+    );
+
+    bbox
+}
+
+pub fn random_bbox(map_bbox: &Polygon<f64>) -> Polygon<f64> {
+    let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&map_bbox);
+
+    let mut rng = rand::thread_rng();
+
+    let x1 = rng.gen_range(min_x..max_x);
+    let y1 = rng.gen_range(min_y..max_y);
+    let x2 = rng.gen_range(min_x..max_x);
+    let y2 = rng.gen_range(min_y..max_y);
+
+    let random_bbox = geo::Polygon::new(
+        LineString(vec![
+            Coord { x: x1, y: y1 },
+            Coord { x: x2, y: y1 },
+            Coord { x: x2, y: y2 },
+            Coord { x: x1, y: y2 },
+            Coord { x: x1, y: y1 },
+        ]),
+        vec![],
+    );
+
+    random_bbox
+}
 
 // Get color based on species number
 fn get_color_by_species(number: u8) -> Rgb<u8> {
@@ -231,4 +298,16 @@ pub fn draw_and_save_selected_stand() {
         .save("selected_stand_image.png")
         .expect("Failed to save image");
     println!("Image saved as 'selected_stand_image.png'");
+}
+
+// Function to save a GeoJson object to a file
+pub fn save_geojson(geojson: &GeoJson, filename: &str) {
+    // Serialize the GeoJson object to a string
+    let geojson_string = serde_json::to_string_pretty(&geojson).expect("Failed to serialize GeoJson");
+
+    // Save the GeoJSON string to a file
+    let mut file = File::create(filename).expect("Failed to create file");
+    file.write_all(geojson_string.as_bytes()).expect("Failed to write to file");
+
+    println!("GeoJSON saved to {}", filename);
 }
