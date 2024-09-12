@@ -5,13 +5,12 @@ use crate::requests::{fetch_buildings, fetch_buildings_as_polygons, fetch_roads}
 use crate::forest_property::compartment::get_compartments_in_bounding_box;
 use crate::forest_property::forest_property_data::ForestPropertyData;
 use crate::forest_property::image_processor::ImageProcessor;
-use geo::{coord, Coord, LineString, MultiPolygon, Polygon};
+use geo::{coord, Coord, LineString, MultiPolygon, Polygon, BooleanOps};
 use geojson::GeoJson;
 use image::Rgb;
 use rand::Rng;
 use std::io::Write;
 use tokio::runtime::Runtime;
-use geo_clipper::Clipper;
 use std::time::Instant;
 
 // Get the bounding box of the whole map
@@ -163,9 +162,9 @@ pub fn create_geo_json_from_coords(min_x: f64, max_x: f64, min_y: f64, max_y: f6
     }
 
     // Exclude buildings from the bounding box
-    let exclude_buildings = MultiPolygon::new(buildings);
-    let excluded = bbox.difference(&exclude_buildings, 100000.0);
-    bbox = excluded.0.first().unwrap().to_owned();
+    for building in buildings.iter() {
+        bbox = bbox.difference(building).0.first().unwrap().to_owned();
+    }
 
     // Create compartments in the bounding box
     let compartments = get_compartments_in_bounding_box(stands, &bbox);
@@ -196,9 +195,9 @@ pub fn draw_stands_in_bbox(bbox: &mut Polygon<f64>) {
     let buildings = rt.block_on(fetch_buildings_as_polygons(&bbox)).expect("Failed to get buildings");
 
     // Exclude buildings from the bounding box
-    let exclude_buildings = MultiPolygon::new(buildings.clone());
-    let excluded = bbox.difference(&exclude_buildings, 100000.0);
-    let bbox = excluded.0.first().unwrap().to_owned();
+    for building in buildings.iter() {
+        *bbox = bbox.difference(building).0.first().unwrap().to_owned();
+    }
 
     // Find compartments in the bounding box
     let compartments = get_compartments_in_bounding_box(stands, &bbox);

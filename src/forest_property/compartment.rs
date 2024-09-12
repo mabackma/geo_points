@@ -2,9 +2,8 @@ use crate::forest_property::tree::Tree;
 use crate::geometry_utils::generate_random_trees;
 use super::stand::Stand;
 
-use geo::{Polygon, Area};
+use geo::{Polygon, Area, BooleanOps};
 use geo::Intersects;
-use geo_clipper::Clipper;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 // Struct that represents a stand of trees
@@ -38,7 +37,7 @@ impl Compartment {
 
     // Polygon clipping to bounding box
     pub fn clip_polygon_to_bounding_box(&self, bbox: &Polygon) -> Option<Polygon> {
-        let clipped = self.polygon.intersection(bbox, 100000.0);
+        let clipped = self.polygon.intersection(bbox);
 
         if clipped.0.is_empty() {
             println!("Polygon is empty");
@@ -91,7 +90,7 @@ pub fn get_compartments_in_bounding_box(
                 let strata = stand.get_strata();
 
                 // Clip the stand's polygon to the bounding box
-                let intersected_polygons = polygon.intersection(bbox, 100000.0).0;
+                let intersected_polygons = polygon.intersection(bbox).0;
                 let clipped_polygon = intersected_polygons.first()
                     .expect("Intersection result should contain at least one polygon")
                     .to_owned();
