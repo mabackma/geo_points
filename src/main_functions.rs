@@ -122,7 +122,7 @@ fn get_color_by_species(number: u8) -> Rgb<u8> {
 }
 
 /* CREATES GEOJSON FROM COORDINATES OF BOUNDING BOX */
-pub fn create_geo_json_from_coords(min_x: f64, max_x: f64, min_y: f64, max_y: f64) -> Result<GeoJson, Box<dyn Error>>  {
+pub fn create_geo_json_from_coords(min_x: f64, max_x: f64, min_y: f64, max_y: f64, property: &ForestPropertyData) -> Result<GeoJson, Box<dyn Error>>  {
     let start = Instant::now();
 
     let mut bbox = geo::Polygon::new(
@@ -136,7 +136,6 @@ pub fn create_geo_json_from_coords(min_x: f64, max_x: f64, min_y: f64, max_y: f6
         vec![],
     );
 
-    let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
     let real_estate = property.real_estates.real_estate[0].clone();
     let stands = real_estate.get_stands();
     println!("Total stands: {:?}", stands.len());
@@ -176,10 +175,9 @@ pub fn create_geo_json_from_coords(min_x: f64, max_x: f64, min_y: f64, max_y: f6
     Ok(geojson)
 }
 
-pub fn draw_stands_in_bbox(bbox: &mut Polygon<f64>) -> Result<ImageProcessor, Box<dyn Error>> {
+pub fn draw_stands_in_bbox(bbox: &mut Polygon<f64>, property: &ForestPropertyData) -> Result<ImageProcessor, Box<dyn Error>> {
     let start = Instant::now();
 
-    let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
     let real_estate = property.real_estates.real_estate[0].clone();
     let stands = real_estate.get_stands();
     println!("Total stands: {:?}\n", stands.len());
@@ -240,8 +238,7 @@ pub fn draw_stands_in_bbox(bbox: &mut Polygon<f64>) -> Result<ImageProcessor, Bo
     Ok(image)
 }
 /* ASKS USER FOR STAND AND DRAWS STAND. SAVES STAND TO GEOJSON */
-pub fn draw_and_save_selected_stand() {
-    let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
+pub fn draw_and_save_selected_stand(property: &ForestPropertyData, filename: &str) {
     let mut stand = property.get_stand_cli();
     let polygon = stand.create_polygon();
 
@@ -294,9 +291,9 @@ pub fn draw_and_save_selected_stand() {
 
     image
         .img()
-        .save("selected_stand_image.png")
+        .save(filename)
         .expect("Failed to save image");
-    println!("Image saved as 'selected_stand_image.png'");
+    println!("Image saved as {}", filename);
 }
 
 // Function to save a GeoJson object to a file

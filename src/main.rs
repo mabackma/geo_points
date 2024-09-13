@@ -1,3 +1,4 @@
+use geo_points::forest_property::forest_property_data::ForestPropertyData;
 use geo_points::main_functions::{
     create_geo_json_from_coords, 
     draw_and_save_selected_stand, 
@@ -14,9 +15,9 @@ fn main() -> Result<(), Box<dyn Error>>{
     bbox = random_bbox(&bbox);
 
     let(min_x, max_x, min_y, max_y) = get_min_max_coordinates(&bbox);
+    let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
 
-    // Call create_geo_json_from_coords and handle the result
-    match create_geo_json_from_coords(min_x, max_x, min_y, max_y) {
+    match create_geo_json_from_coords(min_x, max_x, min_y, max_y, &property) {
         Ok(geojson) => {
             let filename = "stands_in_bbox.geojson";
             save_geojson(&geojson, filename);
@@ -24,12 +25,12 @@ fn main() -> Result<(), Box<dyn Error>>{
         }
         Err(e) => {
             eprintln!("Failed to create GeoJson data: {}", e);
-            return Err(e); // Propagate the error up the call stack
+            return Err(e); 
         }
     }
 
     println!("------------------------------------------------------------");
-    match draw_stands_in_bbox(&mut bbox) {
+    match draw_stands_in_bbox(&mut bbox, &property) {
         Ok(image) => {
             image
                 .img()
@@ -44,7 +45,7 @@ fn main() -> Result<(), Box<dyn Error>>{
     }
 
     println!("------------------------------------------------------------");
-    draw_and_save_selected_stand();
+    draw_and_save_selected_stand(&property, "selected_stand_image.png");
 
     Ok(())
 }
