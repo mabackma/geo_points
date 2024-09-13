@@ -5,13 +5,14 @@ use crate::requests::{fetch_buildings, fetch_buildings_as_polygons, fetch_roads}
 use crate::forest_property::compartment::get_compartments_in_bounding_box;
 use crate::forest_property::forest_property_data::ForestPropertyData;
 use crate::forest_property::image_processor::ImageProcessor;
-use geo::{coord, Coord, LineString, MultiPolygon, Polygon, BooleanOps};
+use geo::{coord, Coord, LineString, Polygon, BooleanOps};
 use geojson::GeoJson;
 use image::Rgb;
 use rand::Rng;
 use std::io::Write;
-use tokio::runtime::Runtime;
 use std::time::Instant;
+use std::error::Error;
+
 
 // Get the bounding box of the whole map
 pub fn get_bounding_box_of_map() -> Polygon<f64> {
@@ -120,8 +121,8 @@ fn get_color_by_species(number: u8) -> Rgb<u8> {
     }
 }
 
-/* RETURNS GEOJSON FOR BBOX */
-pub fn create_geo_json_from_coords(min_x: f64, max_x: f64, min_y: f64, max_y: f64) -> GeoJson {
+/* CREATES GEOJSON FROM COORDINATES OF BOUNDING BOX */
+pub fn create_geo_json_from_coords(min_x: f64, max_x: f64, min_y: f64, max_y: f64) -> Result<GeoJson, Box<dyn Error>>  {
     let start = Instant::now();
 
     let mut bbox = geo::Polygon::new(
@@ -140,17 +141,13 @@ pub fn create_geo_json_from_coords(min_x: f64, max_x: f64, min_y: f64, max_y: f6
     let stands = real_estate.get_stands();
     println!("Total stands: {:?}", stands.len());
 
-    // Create a new Tokio runtime
-    let rt = Runtime::new().unwrap();
-
-    // Block on the async function using the runtime
     // Get buildings as polygons
-    let buildings = rt.block_on(fetch_buildings_as_polygons(&bbox)).expect("Failed to get buildings");
+    let buildings = fetch_buildings_as_polygons(&bbox)?;
     println!("Fetched buildings: {}", buildings.len());
 
     // Get GeoJson data
-    let buildings_geojson = rt.block_on(fetch_buildings(&bbox)).expect("Failed to get buildings");
-    let roads_geojson = rt.block_on(fetch_roads(&bbox)).expect("Failed to get roads");
+    let buildings_geojson = fetch_buildings(&bbox)?;
+    let roads_geojson = fetch_roads(&bbox)?;
 
     match roads_geojson {
         GeoJson::FeatureCollection(ref collection) => {
@@ -176,11 +173,10 @@ pub fn create_geo_json_from_coords(min_x: f64, max_x: f64, min_y: f64, max_y: f6
     println!("\nTime elapsed in create_geo_json_for_bbox is: {:?}\n", duration);
 
     // Return all compartments and trees as GeoJson
-    geojson
+    Ok(geojson)
 }
 
-/* GETS STANDS IN BBOX AND DRAWS PNG */
-pub fn draw_stands_in_bbox(bbox: &mut Polygon<f64>) {
+pub fn draw_stands_in_bbox(bbox: &mut Polygon<f64>) -> Result<ImageProcessor, Box<dyn Error>> {
     let start = Instant::now();
 
     let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
@@ -188,11 +184,9 @@ pub fn draw_stands_in_bbox(bbox: &mut Polygon<f64>) {
     let stands = real_estate.get_stands();
     println!("Total stands: {:?}\n", stands.len());
 
-    // Create a new Tokio runtime
-    let rt = Runtime::new().unwrap();
-
-    // Block on the async function using the runtime
-    let buildings = rt.block_on(fetch_buildings_as_polygons(&bbox)).expect("Failed to get buildings");
+    // Get buildings as polygons
+    let buildings = fetch_buildings_as_polygons(&bbox)?;
+    println!("Fetched buildings: {}", buildings.len());
 
     // Exclude buildings from the bounding box
     for building in buildings.iter() {
@@ -240,16 +234,11 @@ pub fn draw_stands_in_bbox(bbox: &mut Polygon<f64>) {
         image.draw_polygon_image(&mapped_building, Rgb([255, 255, 255]));
     }
 
-    image
-        .img()
-        .save("stands_in_bbox_image.png")
-        .expect("Failed to save image");
-    println!("Image saved as 'stands_in_bbox_image.png'");
-
     let duration = start.elapsed();
     println!("\nTime elapsed in draw_stands_in_bbox is: {:?}", duration);
-}
 
+    Ok(image)
+}
 /* ASKS USER FOR STAND AND DRAWS STAND. SAVES STAND TO GEOJSON */
 pub fn draw_and_save_selected_stand() {
     let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
