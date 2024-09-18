@@ -1,11 +1,10 @@
 use std::fs::File;
 use crate::geometry_utils::{generate_random_trees, get_min_max_coordinates};
 use crate::geojson_utils::{polygon_to_geojson, all_compartments_to_geojson};
-use crate::requests::{fetch_buildings, fetch_buildings_as_polygons, fetch_roads};
 use crate::forest_property::compartment::get_compartments_in_bounding_box;
 use crate::forest_property::forest_property_data::ForestPropertyData;
 use crate::forest_property::image_processor::ImageProcessor;
-use geo::{coord, Coord, LineString, Polygon, BooleanOps};
+use geo::{coord, Coord, LineString, Polygon};
 use geojson::GeoJson;
 use image::Rgb;
 use rand::Rng;
@@ -122,10 +121,10 @@ fn get_color_by_species(number: u8) -> Rgb<u8> {
 }
 
 /* CREATES GEOJSON FROM COORDINATES OF BOUNDING BOX */
-pub fn create_geo_json_from_coords(min_x: f64, max_x: f64, min_y: f64, max_y: f64, property: &ForestPropertyData) -> Result<GeoJson, Box<dyn Error>>  {
+pub fn create_geo_json_from_coords(min_x: f64, max_x: f64, min_y: f64, max_y: f64, property: &ForestPropertyData, buildings_geojson: &GeoJson, roads_geojson: &GeoJson) -> Result<GeoJson, Box<dyn Error>>  {
     let start = Instant::now();
 
-    let mut bbox = geo::Polygon::new(
+    let bbox = geo::Polygon::new(
         LineString(vec![
             coord!(x: min_x, y: min_y),
             coord!(x: max_x, y: min_y),
@@ -140,28 +139,6 @@ pub fn create_geo_json_from_coords(min_x: f64, max_x: f64, min_y: f64, max_y: f6
     let stands = real_estate.get_stands();
     println!("Total stands: {:?}", stands.len());
 
-    // Get buildings as polygons
-    let buildings = fetch_buildings_as_polygons(&bbox)?;
-    println!("Fetched buildings: {}", buildings.len());
-
-    // Get GeoJson data
-    let buildings_geojson = fetch_buildings(&bbox)?;
-    let roads_geojson = fetch_roads(&bbox)?;
-
-    match roads_geojson {
-        GeoJson::FeatureCollection(ref collection) => {
-            println!("Fetched roads: {}\n", collection.features.len());
-        }
-        _ => {
-            println!("The GeoJson for roads does not contain a FeatureCollection");
-        }
-    }
-
-    // Exclude buildings from the bounding box
-    for building in buildings.iter() {
-        bbox = bbox.difference(building).0.first().unwrap().to_owned();
-    }
-
     // Create compartments in the bounding box
     let compartments = get_compartments_in_bounding_box(stands, &bbox);
     println!("\nCompartments in bounding box: {:?}", compartments.len());
@@ -175,21 +152,12 @@ pub fn create_geo_json_from_coords(min_x: f64, max_x: f64, min_y: f64, max_y: f6
     Ok(geojson)
 }
 
-pub fn draw_stands_in_bbox(bbox: &mut Polygon<f64>, property: &ForestPropertyData) -> Result<ImageProcessor, Box<dyn Error>> {
+pub fn draw_stands_in_bbox(bbox: &Polygon<f64>, property: &ForestPropertyData, buildings: &Vec<Polygon>) -> ImageProcessor {
     let start = Instant::now();
 
     let real_estate = property.real_estates.real_estate[0].clone();
     let stands = real_estate.get_stands();
     println!("Total stands: {:?}\n", stands.len());
-
-    // Get buildings as polygons
-    let buildings = fetch_buildings_as_polygons(&bbox)?;
-    println!("Fetched buildings: {}", buildings.len());
-
-    // Exclude buildings from the bounding box
-    for building in buildings.iter() {
-        *bbox = bbox.difference(building).0.first().unwrap().to_owned();
-    }
 
     // Find compartments in the bounding box
     let compartments = get_compartments_in_bounding_box(stands, &bbox);
@@ -235,8 +203,9 @@ pub fn draw_stands_in_bbox(bbox: &mut Polygon<f64>, property: &ForestPropertyDat
     let duration = start.elapsed();
     println!("\nTime elapsed in draw_stands_in_bbox is: {:?}", duration);
 
-    Ok(image)
+    image
 }
+
 /* ASKS USER FOR STAND AND DRAWS STAND. SAVES STAND TO GEOJSON */
 pub fn draw_and_save_selected_stand(property: &ForestPropertyData, filename: &str) {
     let mut stand = property.get_stand_cli();

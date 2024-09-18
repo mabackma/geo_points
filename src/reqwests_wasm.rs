@@ -57,7 +57,7 @@ pub fn fetch_buildings(bbox: &Polygon<f64>) -> Result<GeoJson, FetchError> {
 
     Ok(geojson)
 }
-/*
+
 pub fn fetch_buildings_as_polygons(bbox: &Polygon<f64>) -> Result<Vec<Polygon<f64>>, Box<dyn Error>> {
     // Fetch GeoJson data from API
     let geojson = fetch_buildings(bbox)?;
@@ -95,41 +95,7 @@ pub fn fetch_buildings_as_polygons(bbox: &Polygon<f64>) -> Result<Vec<Polygon<f6
 
     Ok(polygons)
 }
-*/
-pub fn fetch_buildings_as_polygons(geojson: &GeoJson) -> Result<Vec<Polygon<f64>>, Box<dyn Error>> {
-    // Initialize a vector to store polygons
-    let mut polygons = Vec::new();
 
-    // Match on GeoJson to handle FeatureCollection
-    if let GeoJson::FeatureCollection(collection) = geojson {
-        for feature in &collection.features {
-            // Ensure we are working with a valid Feature
-            if let Some(geometry) = &feature.geometry {
-                match &geometry.value {
-                    Value::Polygon(polygon) => {
-                        // Convert GeoJSON Polygon to geo crate Polygon
-                        let exterior = polygon[0]
-                            .iter()
-                            .map(|point| (point[0], point[1]))
-                            .collect::<Vec<_>>();
-                        
-                        // Create a geo crate Polygon
-                        let poly = Polygon::new(LineString::from(exterior), vec![]);
-                        polygons.push(poly);
-                    }
-                    _ => {
-                        // Handle other geometry types if necessary
-                        eprintln!("Skipping non-polygon geometry");
-                    }
-                }
-            }
-        }
-    } else {
-        return Err("GeoJson is not a FeatureCollection.".into());
-    }
-
-    Ok(polygons)
-}
 #[derive(Debug)]
 pub struct TileParams {
     format: &'static str,
