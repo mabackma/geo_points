@@ -207,7 +207,7 @@ pub fn draw_stands_in_bbox(bbox: &Polygon<f64>, property: &ForestPropertyData, b
 }
 
 /* ASKS USER FOR STAND AND DRAWS STAND. SAVES STAND TO GEOJSON */
-pub fn draw_and_save_selected_stand(property: &ForestPropertyData, filename: &str) {
+pub fn draw_selected_stand(property: &ForestPropertyData) -> ImageProcessor {
     let mut stand = property.get_stand_cli();
     let polygon = stand.create_polygon();
 
@@ -259,10 +259,6 @@ pub fn draw_and_save_selected_stand(property: &ForestPropertyData, filename: &st
     println!("\nTotal stem count: {:?}", summary_stem_count);
 
     image
-        .img()
-        .save(filename)
-        .expect("Failed to save image");
-    println!("Image saved as {}", filename);
 }
 
 // Function to save a GeoJson object to a file

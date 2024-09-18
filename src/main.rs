@@ -2,7 +2,7 @@ use geo::BooleanOps;
 use geo_points::forest_property::forest_property_data::ForestPropertyData;
 use geo_points::main_functions::{
     create_geo_json_from_coords, 
-    draw_and_save_selected_stand, 
+    draw_selected_stand, 
     draw_stands_in_bbox, 
     get_bounding_box_of_map, 
     random_bbox, 
@@ -78,7 +78,12 @@ fn main() -> Result<(), Box<dyn Error>>{
     println!("Image saved as 'stands_in_bbox_image.png'");
 
     println!("------------------------------------------------------------");
-    draw_and_save_selected_stand(&property, "selected_stand_image.png");
+    let selected_image = draw_selected_stand(&property);
+    selected_image
+        .img()
+        .save("selected_stand_image.png")
+        .expect("Failed to save image");
+    println!("Image saved as {}", "selected_stand_image.png");
 
     Ok(())
 }
