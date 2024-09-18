@@ -34,41 +34,6 @@ impl TreeStrata {
     }
 }
 
-/* #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TreeStratum {
-    #[serde(rename = "ChangeState")]
-    pub change_state: i64,
-    #[serde(rename = "StratumNumber")]
-    pub stratum_number: i64,
-    #[serde(rename = "TreeSpecies")]
-    pub tree_species: i64,
-    #[serde(rename = "Storey")]
-    pub storey: i64,
-    #[serde(rename = "Age")]
-    pub age: i64,
-    #[serde(rename = "StemCount")]
-    pub stem_count: Option<i64>,
-    #[serde(rename = "MeanDiameter")]
-    pub mean_diameter: Option<f64>,
-    #[serde(rename = "MeanHeight")]
-    pub mean_height: f64,
-    #[serde(rename = "DataSource")]
-    pub data_source: i64,
-    #[serde(rename = "BasalArea")]
-    pub basal_area: Option<f64>,
-    #[serde(rename = "SawLogPercent")]
-    pub saw_log_percent: Option<f64>,
-    #[serde(rename = "SawLogVolume")]
-    pub saw_log_volume: Option<f64>,
-    #[serde(rename = "VolumeGrowth")]
-    pub volume_growth: Option<f64>,
-    #[serde(rename = "Volume")]
-    pub volume: Option<f64>,
-    #[serde(rename = "PulpWoodVolume")]
-    pub pulp_wood_volume: Option<f64>,
-} */
-/*  */
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TreeStandSummary {
