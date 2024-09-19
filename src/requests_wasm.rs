@@ -191,9 +191,7 @@ pub async fn geo_json_from_coords(
     max_y: f64,
     xml_content: String,
 ) -> Result<JsValue, JsValue> {
-    // Timer
-    let start = Instant::now();
-
+    // Get the ForestPropertyData from the XML content
     let property = ForestPropertyData::from_xml_str(&xml_content);
     web_sys::console::log_1(&"Got property".into());
 
@@ -253,11 +251,6 @@ pub async fn geo_json_from_coords(
     // Convert the resulting GeoJSON to JsValue for returning to JavaScript
     let result = serde_wasm_bindgen::to_value(&geojson)
         .map_err(|e| JsValue::from_str(&format!("Failed to serialize result: {}", e)))?;
-
-    // Stop the timer and log the duration
-    let duration = start.elapsed();
-    let duration_str = format!("Time elapsed in geo_json_from_coords is: {:?}", duration);
-    web_sys::console::log_1(&JsValue::from_str(&duration_str));
 
     Ok(result)
 }
