@@ -9,7 +9,7 @@ use geo_points::main_functions::{
     save_geojson
 };
 use geo_points::geometry_utils::get_min_max_coordinates;
-use geo_points::requests::{fetch_buildings, fetch_buildings_as_polygons, fetch_roads};
+use geo_points::requests::{fetch_buildings, buildings_as_polygons, fetch_roads};
 use geojson::{FeatureCollection, GeoJson};
 use std::error::Error;
 
@@ -27,7 +27,7 @@ fn main() -> Result<(), Box<dyn Error>>{
     let mut buildings = Vec::new();
     match fetch_buildings(&bbox) {
         Ok(geojson) => {
-            buildings = fetch_buildings_as_polygons(&geojson)?;
+            buildings = buildings_as_polygons(&geojson)?;
             println!("Fetched {} buildings", buildings.len());
 
             // Exclude buildings from the bounding box

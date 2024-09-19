@@ -3,11 +3,16 @@ use geo::{LineString, Polygon};
 use geojson::{GeoJson, Value};
 use reqwest;
 
-use reqwest::blocking::get;
+use reqwest::get;
 use reqwest::Error as ReqwestError;
 use geojson::Error as GeoJsonError;
 use std::fmt;
 use std::error::Error;
+use wasm_bindgen::prelude::wasm_bindgen;
+use wasm_bindgen::JsValue;
+use wasm_bindgen_futures::JsFuture;
+use serde_json::Value as SerdeJsonValue;
+use serde_wasm_bindgen;
 
 #[derive(Debug)]
 pub enum FetchError {
@@ -38,9 +43,8 @@ impl From<GeoJsonError> for FetchError {
     }
 }
 
-pub fn fetch_buildings(bbox: &Polygon<f64>) -> Result<GeoJson, FetchError> {
-    let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&bbox);
-
+#[wasm_bindgen]
+pub async fn fetch_buildings(min_x: f64, max_x: f64, min_y: f64, max_y: f64) -> Result<JsValue, JsValue> {
     let west = min_x;
     let south = min_y;
     let east = max_x;
@@ -51,12 +55,18 @@ pub fn fetch_buildings(bbox: &Polygon<f64>) -> Result<GeoJson, FetchError> {
         west, south, east, north
     );
 
-    let resp = get(&url)?.text()?;
-    let geojson = resp.parse::<GeoJson>()?;
+    // Perform the HTTP request
+    let response = reqwest::get(&url).await.map_err(|e| JsValue::from_str(&format!("Failed to fetch buildings: {}", e)))?;
 
-    Ok(geojson)
+    // Convert response text to GeoJson
+    let resp_text = response.text().await.map_err(|e| JsValue::from_str(&format!("Failed to read response text: {}", e)))?;
+    let geojson: SerdeJsonValue = serde_json::from_str(&resp_text).map_err(|e| JsValue::from_str(&format!("Failed to parse GeoJson: {}", e)))?;
+    
+    Ok(serde_wasm_bindgen::to_value(&geojson).map_err(|e| JsValue::from_str(&format!("Failed to serialize GeoJson: {}", e)))?)
 }
 
+/* 
+#[wasm_bindgen]
 pub fn buildings_as_polygons(geojson: &GeoJson) -> Result<Vec<Polygon<f64>>, Box<dyn Error>> {
     // Initialize a vector to store polygons
     let mut polygons = Vec::new();
@@ -91,10 +101,10 @@ pub fn buildings_as_polygons(geojson: &GeoJson) -> Result<Vec<Polygon<f64>>, Box
 
     Ok(polygons)
 }
+*/
 
-pub fn fetch_roads(bbox: &Polygon<f64>) -> Result<GeoJson, FetchError> {
-    let (min_x, max_x, min_y, max_y) = get_min_max_coordinates(&bbox);
-
+#[wasm_bindgen]
+pub async fn fetch_roads(min_x: f64, max_x: f64, min_y: f64, max_y: f64) -> Result<JsValue, JsValue> {
     let west = min_x;
     let south = min_y;
     let east = max_x;
@@ -105,8 +115,12 @@ pub fn fetch_roads(bbox: &Polygon<f64>) -> Result<GeoJson, FetchError> {
         west, south, east, north
     );
 
-    let resp = get(&url)?.text()?;
-    let geojson = resp.parse::<GeoJson>()?;
+    // Perform the HTTP request
+    let response = reqwest::get(&url).await.map_err(|e| JsValue::from_str(&format!("Failed to fetch buildings: {}", e)))?;
 
-    Ok(geojson)
+    // Convert response text to GeoJson
+    let resp_text = response.text().await.map_err(|e| JsValue::from_str(&format!("Failed to read response text: {}", e)))?;
+    let geojson: SerdeJsonValue = serde_json::from_str(&resp_text).map_err(|e| JsValue::from_str(&format!("Failed to parse GeoJson: {}", e)))?;
+    
+    Ok(serde_wasm_bindgen::to_value(&geojson).map_err(|e| JsValue::from_str(&format!("Failed to serialize GeoJson: {}", e)))?)
 }
