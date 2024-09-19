@@ -257,7 +257,7 @@ pub async fn geo_json_from_coords(
     // Stop the timer and log the duration
     let duration = start.elapsed();
     let duration_str = format!("Time elapsed in geo_json_from_coords is: {:?}", duration);
-    console::log_1(&JsValue::from_str(&duration_str));
+    web_sys::console::log_1(&JsValue::from_str(&duration_str));
 
     Ok(result)
 }
