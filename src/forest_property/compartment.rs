@@ -121,3 +121,8 @@ pub fn get_compartments_in_bounding_box(
         vec![]
     }
 }
+
+pub struct CompartmentArea {
+    pub stand_number: String,
+    pub polygon: Polygon,
+}
