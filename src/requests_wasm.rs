@@ -2,7 +2,7 @@ use crate::geometry_utils::get_min_max_coordinates;
 use crate::forest_property::forest_property_data::ForestPropertyData;
 use crate::forest_property::compartment::get_compartments_in_bounding_box;
 use crate::geojson_utils::all_compartments_to_geojson;
-use geo::{coord, LineString, Polygon};
+use geo::{coord, LineString, Polygon, BooleanOps};
 use geojson::{GeoJson, Value};
 use reqwest_wasm::Client;
 use reqwest::Error as ReqwestError;
@@ -14,6 +14,7 @@ use wasm_bindgen::JsValue;
 use wasm_bindgen_futures::JsFuture;
 use serde_json::Value as SerdeJsonValue;
 use serde_wasm_bindgen;
+use web_sys::console::log_1;
 
 #[derive(Debug)]
 pub enum FetchError {
@@ -43,32 +44,8 @@ impl From<GeoJsonError> for FetchError {
         FetchError::GeoJson(err)
     }
 }
-/* 
-#[wasm_bindgen]
-pub async fn fetch_buildings(min_x: f64, max_x: f64, min_y: f64, max_y: f64) -> Result<JsValue, JsValue> {
-    let west = min_x;
-    let south = min_y;
-    let east = max_x;
-    let north = max_y;
 
-    let url = format!(
-        "https://metne-test.onrender.com/geoserver/mml/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=mml:rakennus&maxFeatures=2000&outputFormat=application%2Fjson&BBOX={},{},{},{},EPSG:4326&srsName=EPSG:4326",
-        west, south, east, north
-    );
-
-    // Perform the HTTP request
-    let response = reqwest::get(&url).await.map_err(|e| JsValue::from_str(&format!("Failed to fetch buildings: {}", e)))?;
-
-    // Convert response text to GeoJson
-    let resp_text = response.text().await.map_err(|e| JsValue::from_str(&format!("Failed to read response text: {}", e)))?;
-    let geojson: SerdeJsonValue = serde_json::from_str(&resp_text).map_err(|e| JsValue::from_str(&format!("Failed to parse GeoJson: {}", e)))?;
-    
-    Ok(serde_wasm_bindgen::to_value(&geojson).map_err(|e| JsValue::from_str(&format!("Failed to serialize GeoJson: {}", e)))?)
-}
-
-/* 
-#[wasm_bindgen]
-pub fn buildings_as_polygons(geojson: &GeoJson) -> Result<Vec<Polygon<f64>>, Box<dyn Error>> {
+pub fn geojson_to_polygons(geojson: &GeoJson) -> Vec<Polygon<f64>> {
     // Initialize a vector to store polygons
     let mut polygons = Vec::new();
 
@@ -96,93 +73,11 @@ pub fn buildings_as_polygons(geojson: &GeoJson) -> Result<Vec<Polygon<f64>>, Box
                 }
             }
         }
-    } else {
-        return Err("GeoJson is not a FeatureCollection.".into());
-    }
+    } 
 
-    Ok(polygons)
+    polygons
 }
-*/
 
-#[wasm_bindgen]
-pub async fn fetch_roads(min_x: f64, max_x: f64, min_y: f64, max_y: f64) -> Result<JsValue, JsValue> {
-    let west = min_x;
-    let south = min_y;
-    let east = max_x;
-    let north = max_y;
-
-    let url = format!(
-        "https://metne-test.onrender.com/geoserver/mml/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=mml:tieviiva&bbox={},{},{},{},EPSG:4326&srsName=EPSG:4326&outputFormat=application/json",
-        west, south, east, north
-    );
-
-    // Perform the HTTP request
-    let response = reqwest::get(&url).await.map_err(|e| JsValue::from_str(&format!("Failed to fetch buildings: {}", e)))?;
-
-    // Convert response text to GeoJson
-    let resp_text = response.text().await.map_err(|e| JsValue::from_str(&format!("Failed to read response text: {}", e)))?;
-    let geojson: SerdeJsonValue = serde_json::from_str(&resp_text).map_err(|e| JsValue::from_str(&format!("Failed to parse GeoJson: {}", e)))?;
-    
-    Ok(serde_wasm_bindgen::to_value(&geojson).map_err(|e| JsValue::from_str(&format!("Failed to serialize GeoJson: {}", e)))?)
-}
-*/
-/* 
-#[wasm_bindgen]
-pub async fn create_geo_json_from_coords(
-    min_x: f64,
-    max_x: f64,
-    min_y: f64,
-    max_y: f64,
-) -> Result<JsValue, JsValue> {
-    let west = min_x;
-    let south = min_y;
-    let east = max_x;
-    let north = max_y;
-
-    let url_buildings = format!(
-        "https://metne-test.onrender.com/geoserver/mml/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=mml:rakennus&maxFeatures=2000&outputFormat=application%2Fjson&BBOX={},{},{},{},EPSG:4326&srsName=EPSG:4326",
-        west, south, east, north
-    );
-
-    let url_roads = format!(
-        "https://metne-test.onrender.com/geoserver/mml/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=mml:tieviiva&bbox={},{},{},{},EPSG:4326&srsName=EPSG:4326&outputFormat=application/json",
-        west, south, east, north
-    );
-
-    // Fetch buildings GeoJSON
-    let buildings_response = reqwest::get(&url_buildings).await.map_err(|e| JsValue::from_str(&format!("Failed to fetch buildings: {}", e)))?;
-    let buildings_text = buildings_response.text().await.map_err(|e| JsValue::from_str(&format!("Failed to read buildings response text: {}", e)))?;
-    let buildings_geojson: GeoJson = serde_json::from_str(&buildings_text).map_err(|e| JsValue::from_str(&format!("Failed to parse buildings GeoJson: {}", e)))?;
-
-    // Fetch roads GeoJSON
-    let roads_response = reqwest::get(&url_roads).await.map_err(|e| JsValue::from_str(&format!("Failed to fetch buildings: {}", e)))?;
-    let roads_text = roads_response.text().await.map_err(|e| JsValue::from_str(&format!("Failed to read roads response text: {}", e)))?;
-    let roads_geojson: GeoJson = serde_json::from_str(&roads_text).map_err(|e| JsValue::from_str(&format!("Failed to parse roads GeoJson: {}", e)))?;
-
-    let property = ForestPropertyData::from_xml_file("forestpropertydata.xml");
-    let real_estate = property.real_estates.real_estate[0].clone();
-    let stands = real_estate.get_stands();
-
-    let bbox = geo::Polygon::new(
-        LineString(vec![
-            coord!(x: min_x, y: min_y),
-            coord!(x: max_x, y: min_y),
-            coord!(x: max_x, y: max_y),
-            coord!(x: min_x, y: max_y),
-            coord!(x: min_x, y: min_y),
-        ]),
-        vec![],
-    );
-
-    let compartments = get_compartments_in_bounding_box(stands, &bbox);
-    let geojson = all_compartments_to_geojson(compartments, &bbox, &buildings_geojson, &roads_geojson);
-
-    // Convert processed data to JsValue for returning
-    let result = serde_wasm_bindgen::to_value(&geojson).map_err(|e| JsValue::from_str(&format!("Failed to serialize result: {}", e)))?;
-
-    Ok(result)
-}
-*/
 #[wasm_bindgen]
 pub async fn geo_json_from_coords(
     min_x: f64,
@@ -193,7 +88,18 @@ pub async fn geo_json_from_coords(
 ) -> Result<JsValue, JsValue> {
     // Get the ForestPropertyData from the XML content
     let property = ForestPropertyData::from_xml_str(&xml_content);
-    web_sys::console::log_1(&"Got property".into());
+    log_1(&"Got property".into());
+
+    let mut bbox = Polygon::new(
+        LineString(vec![
+            coord!(x: min_x, y: min_y),
+            coord!(x: max_x, y: min_y),
+            coord!(x: max_x, y: max_y),
+            coord!(x: min_x, y: max_y),
+            coord!(x: min_x, y: min_y),
+        ]),
+        vec![],
+    );
 
     let west = min_x;
     let south = min_y;
@@ -220,6 +126,15 @@ pub async fn geo_json_from_coords(
     let buildings_geojson: GeoJson = serde_json::from_str(&buildings_text)
         .map_err(|e| JsValue::from_str(&format!("Failed to parse buildings GeoJson: {}", e)))?;
 
+    let buildings = geojson_to_polygons(&buildings_geojson);
+    let buildings_count = buildings.len();
+    log_1(&format!("Fetched {} buildings", buildings_count).into());
+
+    // Exclude buildings from the bounding box
+    for building in buildings.iter() {
+        bbox = bbox.difference(building).0.first().unwrap().to_owned();
+    }
+
     // Fetch roads GeoJSON
     let roads_response = client.get(&url_roads).send().await
         .map_err(|e| JsValue::from_str(&format!("Failed to fetch roads: {}", e)))?;
@@ -232,22 +147,11 @@ pub async fn geo_json_from_coords(
     let real_estate = property.real_estates.real_estate[0].clone();
     let stands = real_estate.get_stands();
 
-    let bbox = Polygon::new(
-        LineString(vec![
-            coord!(x: min_x, y: min_y),
-            coord!(x: max_x, y: min_y),
-            coord!(x: max_x, y: max_y),
-            coord!(x: min_x, y: max_y),
-            coord!(x: min_x, y: min_y),
-        ]),
-        vec![],
-    );
-
     // Get compartments in the bounding box and convert them to GeoJSON
     let compartments = get_compartments_in_bounding_box(stands, &bbox);
     let geojson = all_compartments_to_geojson(compartments, &bbox, &buildings_geojson, &roads_geojson);
-    web_sys::console::log_1(&"Got geojson".into());
-    
+    log_1(&"Got geojson".into());
+
     // Convert the resulting GeoJSON to JsValue for returning to JavaScript
     let result = serde_wasm_bindgen::to_value(&geojson)
         .map_err(|e| JsValue::from_str(&format!("Failed to serialize result: {}", e)))?;
