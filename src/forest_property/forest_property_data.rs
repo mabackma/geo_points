@@ -31,6 +31,10 @@ impl ForestPropertyData {
         ForestPropertyData::parse_from_str(xml.as_str())
     }
 
+    pub fn from_xml_str(xml_str: &str) -> ForestPropertyData {
+        ForestPropertyData::parse_from_str(xml_str)
+    }
+
     #[cfg(test)]
     pub fn from_json_file(path: &str) -> ForestPropertyData {
         let json = fs::read_to_string(path).expect("Could not read the JSON file");

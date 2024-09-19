@@ -143,7 +143,7 @@ pub fn create_geo_json_from_coords(min_x: f64, max_x: f64, min_y: f64, max_y: f6
     let compartments = get_compartments_in_bounding_box(stands, &bbox);
     println!("\nCompartments in bounding box: {:?}", compartments.len());
 
-    let geojson = all_compartments_to_geojson(compartments, &bbox, &buildings_geojson, &roads_geojson, "stands_in_bbox.geojson");
+    let geojson = all_compartments_to_geojson(compartments, &bbox, &buildings_geojson, &roads_geojson);
 
     let duration = start.elapsed();
     println!("\nTime elapsed in create_geo_json_for_bbox is: {:?}\n", duration);

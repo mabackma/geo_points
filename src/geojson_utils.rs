@@ -49,8 +49,7 @@ pub fn all_compartments_to_geojson(
         compartments: Vec<Compartment>, 
         bbox: &Polygon<f64>, 
         buildings: &GeoJson, 
-        roads: &GeoJson,
-        filename: &str) -> GeoJson {
+        roads: &GeoJson) -> GeoJson {
         
     let mut all_features = Vec::new();
 
