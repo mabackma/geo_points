@@ -2,6 +2,7 @@ use crate::forest_property::tree_stand_data::TreeStrata;
 use crate::forest_property::tree::Tree;
 use crate::jittered_hexagonal_sampling::{GridOptions, JitteredHexagonalGridSampling};
 use crate::projection::{Projection, CRS};
+use crate::shared_buffer::SharedBuffer;
 
 use geo_types::Polygon;
 use geo::{BoundingRect, Coord, LineString};
@@ -87,6 +88,77 @@ pub fn generate_random_trees(p: &Polygon, strata: &TreeStrata, area_ratio: f64) 
         .flatten();
 
     trees.collect()
+}
+
+// Generates random trees for all strata with jittered grid sampling
+pub fn generate_random_trees_into_buffer(
+    p: &Polygon,
+    strata: &TreeStrata,
+    area_ratio: f64,
+    buffer: &SharedBuffer // Pass in the SharedBuffer to fill
+) -> usize {
+    let total_stem_count = strata.tree_stratum.iter().fold(0, |mut acc: u32, f| {
+        acc += f.stem_count;
+        acc
+    });
+
+    let mut tree_count = 0;
+
+    let trees = strata
+        .tree_stratum
+        .par_iter()
+        .map(|stratum| {
+            let tree_amount = (stratum.stem_count as f64) * area_ratio;
+            let amount = tree_amount.round() as u32;
+
+            let mut radius = generate_radius(total_stem_count, stratum.basal_area);
+            radius *= 0.00001;
+
+            // Jittered Grid Version 2
+            let rng = rand::thread_rng();
+            let options = GridOptions {
+                polygon: p.to_owned(),
+                radius: (radius).into(),
+                jitter: Some(0.6666),
+                point_limit: Some(amount as usize),
+            };
+
+            let mut grid = JitteredHexagonalGridSampling::new(rng, options);
+            let points = grid.fill();
+
+            if points.is_empty() {
+                //println!("\tNo trees generated for stratum with basal area {}, stem count {}, mean height {}", stratum.basal_area, stratum.stem_count, stratum.mean_height);
+            } else if points.len() < amount as usize {
+                println!(
+                    "Generated {} / {} trees for stratum with basal area {}, stem count {}, mean height {}.",
+                    points.len(), amount, stratum.basal_area, stratum.stem_count, stratum.mean_height
+                );
+            }
+
+            let trees_strata: Vec<Tree> = points
+                .iter()
+                .map(|pair: &[f64; 2]| {
+                    Tree::new(stratum.tree_species, stratum.mean_height, (pair[0], pair[1], 0.0))
+                })
+                .collect();
+
+            trees_strata
+        })
+        .flatten()
+        .collect::<Vec<Tree>>();
+
+    // Insert the trees into the buffer
+    for (i, tree) in trees.iter().enumerate() {
+        if i < buffer.len() / 3 {
+            // Fill the buffer with x, y, and species
+            buffer.fill_tree(i, tree.position().0, tree.position().1, tree.species());
+            tree_count += 1;
+        } else {
+            break; // Avoid overflowing the buffer
+        }
+    }
+
+    tree_count // Return the number of trees added to the buffer
 }
 
 pub fn polygon_to_wgs84(p: &Polygon) -> Polygon {
