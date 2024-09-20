@@ -1,4 +1,4 @@
-use crate::geometry_utils::get_min_max_coordinates;
+use crate::geometry_utils::{get_min_max_coordinates, generate_random_trees_into_buffer};
 use crate::forest_property::forest_property_data::ForestPropertyData;
 use crate::forest_property::compartment::{get_compartment_areas_in_bounding_box, CompartmentArea};
 use crate::geojson_utils::all_compartment_areas_to_geojson;

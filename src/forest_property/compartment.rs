@@ -1,5 +1,6 @@
 use crate::forest_property::tree::Tree;
-use crate::geometry_utils::generate_random_trees;
+use crate::geometry_utils::{generate_random_trees, generate_random_trees_into_buffer};
+use crate::shared_buffer::SharedBuffer;
 use super::stand::Stand;
 
 use geo::{Polygon, Area, BooleanOps};
@@ -126,49 +127,65 @@ pub struct CompartmentArea {
     pub stand_number: String,
     pub polygon: Polygon,
 }
-
+ 
 // Get compartment areas in a bounding box.
 pub fn get_compartment_areas_in_bounding_box(
     all_stands: Vec<Stand>,
-    bbox: &Polygon
+    bbox: &Polygon,
 ) -> Vec<CompartmentArea> {
     // Find stands in the bounding box
     let stands = find_stands_in_bounding_box(&all_stands, bbox);
 
+    // Count the total number of trees in the bounding box
+    let mut total_tree_count = 0;
+    if let Some(stands) = &stands {
+        for stand in stands {
+            let strata = stand.get_strata();
+
+            // Calculate the number of trees in this stand's strata
+            if let Some(strata) = strata {
+                let strata_stem_count = strata.tree_stratum.iter().fold(0, |mut acc: u32, f| {
+                    acc += f.stem_count;
+                    acc
+                });
+                total_tree_count += strata_stem_count; // Accumulate total tree count
+            }
+        }
+    }
+
+    // Create a shared buffer to store the generated trees
+    let buffer = SharedBuffer::new(total_tree_count as usize);
+
     // If there are stands in the bounding box, generate random trees for each stand
-    if !&stands.is_none() {
-        let compartment_areas: Vec<CompartmentArea> = stands.unwrap()
-            .into_par_iter()
-            .map(|stand| {
-                let polygon = stand.computed_polygon.to_owned().unwrap();
-                //let strata = stand.get_strata();
+    if let Some(stands) = stands {
+        let mut compartment_areas = Vec::new();
+        for stand in stands {
+            let polygon = stand.computed_polygon.to_owned().unwrap();
+            let strata = stand.get_strata();
 
-                // Clip the stand's polygon to the bounding box
-                let intersected_polygons = polygon.intersection(bbox).0;
-                let clipped_polygon = intersected_polygons.first()
-                    .expect("Intersection result should contain at least one polygon")
-                    .to_owned();
-                /* 
-                // Calculate the area ratio of the clipped polygon to the original polygon
-                let original_area = polygon.unsigned_area();
-                let clipped_area = clipped_polygon.unsigned_area();
-                let area_ratio = clipped_area / original_area;
+            // Clip the stand's polygon to the bounding box
+            let intersected_polygons = polygon.intersection(bbox).0;
+            let clipped_polygon = intersected_polygons.first()
+                .expect("Intersection result should contain at least one polygon")
+                .to_owned();
 
-                // Generate trees if strata exist
-                let trees = if let Some(strata) = strata {
-                    generate_random_trees(&clipped_polygon, &strata, area_ratio)
-                } else {
-                    vec![]
-                };
-                */
-                // Create and return the compartment
-                CompartmentArea {
-                    stand_number: stand.stand_basic_data.stand_number.to_string(),
-                    polygon: clipped_polygon,
-                }
-            })
-            .collect();
+            // Calculate the area ratio of the clipped polygon to the original polygon
+            let original_area = polygon.unsigned_area();
+            let clipped_area = clipped_polygon.unsigned_area();
+            let area_ratio = clipped_area / original_area;
 
+            // Generate trees and save them to the buffer if strata exist
+            if let Some(strata) = strata {
+                let tree_count = generate_random_trees_into_buffer(&clipped_polygon, &strata, area_ratio, &buffer);
+                //log_1(&format!("Generated and saved {} trees into buffer", tree_count).into());
+            }
+
+            // Add to the compartment areas list
+            compartment_areas.push(CompartmentArea {
+                stand_number: stand.stand_basic_data.stand_number.to_string(),
+                polygon: clipped_polygon,
+            });
+        }
         compartment_areas
     } else {
         vec![]
