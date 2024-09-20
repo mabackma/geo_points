@@ -15,6 +15,7 @@ use wasm_bindgen_futures::JsFuture;
 use serde_json::Value as SerdeJsonValue;
 use serde_wasm_bindgen;
 use web_sys::console::log_1;
+use serde::Serialize;
 
 #[derive(Debug)]
 pub enum FetchError {
@@ -76,6 +77,12 @@ pub fn geojson_to_polygons(geojson: &GeoJson) -> Vec<Polygon<f64>> {
     } 
 
     polygons
+}
+
+#[derive(Serialize)]
+struct GeoJsonWithTreeCount {
+    geojson: serde_json::Value,
+    tree_count: usize,
 }
 
 #[wasm_bindgen]
@@ -149,13 +156,19 @@ pub async fn geo_json_from_coords(
 
     // Get compartment areas in the bounding box and convert them to GeoJSON
     let compartment_areas = get_compartment_areas_in_bounding_box(stands, &bbox);
-    log_1(&format!("Amount of trees in buffer: {}", compartment_areas.1).into());
+    let tree_count = compartment_areas.1;
     let geojson = all_compartment_areas_to_geojson(compartment_areas.0, &buildings_geojson, &roads_geojson);
     log_1(&"Got geojson".into());
 
-    // Convert the resulting GeoJSON to JsValue for returning to JavaScript
-    let result = serde_wasm_bindgen::to_value(&geojson)
+    // Create a combined struct with both the GeoJSON and tree_count
+    let result = GeoJsonWithTreeCount {
+        geojson: geojson.into(),
+        tree_count,
+    };
+
+    // Serialize the result to a JsValue to return to JavaScript
+    let result_js_value = serde_wasm_bindgen::to_value(&result)
         .map_err(|e| JsValue::from_str(&format!("Failed to serialize result: {}", e)))?;
 
-    Ok(result)
+    Ok(result_js_value)
 }
