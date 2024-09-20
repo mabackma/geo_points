@@ -1,15 +1,4 @@
 use wasm_bindgen::prelude::*;
-use wasm_bindgen::JsValue;
-use serde_wasm_bindgen::to_value;
-use serde::Serialize;
-
-#[wasm_bindgen]
-#[derive(Serialize)]
-pub struct TreeInfo {
-    pub x: f64,
-    pub y: f64,
-    pub species: u8,
-}
 
 #[wasm_bindgen]
 pub struct SharedBuffer {
@@ -49,26 +38,6 @@ impl SharedBuffer {
                 *self.ptr.add(base + 2) = species as f64; // species as u8 stored in f64
             }
         }
-    }
-
-    pub fn read_trees(&self) -> JsValue {
-        let mut trees = Vec::new();
-        let count = self.len / 3; // Number of trees
-    
-        for i in 0..count {
-            let base = i * 3;
-            let x = unsafe { *self.ptr.add(base) };
-            let y = unsafe { *self.ptr.add(base + 1) };
-            let species = unsafe { *self.ptr.add(base + 2) } as u8;
-
-            // Create a Tree struct instance
-            let tree = TreeInfo { x, y, species };
-    
-            trees.push(tree);
-        }
-    
-        // Convert the vector of trees into a JsValue
-        to_value(&trees).unwrap() // Now this should work
     }
 }
 
