@@ -1,7 +1,7 @@
 use crate::geometry_utils::get_min_max_coordinates;
 use crate::forest_property::forest_property_data::ForestPropertyData;
-use crate::forest_property::compartment::get_compartments_in_bounding_box;
-use crate::geojson_utils::all_compartments_to_geojson;
+use crate::forest_property::compartment::{get_compartment_areas_in_bounding_box, CompartmentArea};
+use crate::geojson_utils::all_compartment_areas_to_geojson;
 use geo::{coord, LineString, Polygon, BooleanOps};
 use geojson::{GeoJson, Value};
 use reqwest_wasm::Client;
@@ -147,9 +147,9 @@ pub async fn geo_json_from_coords(
     let real_estate = property.real_estates.real_estate[0].clone();
     let stands = real_estate.get_stands();
 
-    // Get compartments in the bounding box and convert them to GeoJSON
-    let compartments = get_compartments_in_bounding_box(stands, &bbox);
-    let geojson = all_compartments_to_geojson(compartments, &bbox, &buildings_geojson, &roads_geojson);
+    // Get compartment areas in the bounding box and convert them to GeoJSON
+    let compartment_areas = get_compartment_areas_in_bounding_box(stands, &bbox);
+    let geojson = all_compartment_areas_to_geojson(compartment_areas, &buildings_geojson, &roads_geojson);
     log_1(&"Got geojson".into());
 
     // Convert the resulting GeoJSON to JsValue for returning to JavaScript
