@@ -132,7 +132,7 @@ pub struct CompartmentArea {
 pub fn get_compartment_areas_in_bounding_box(
     all_stands: Vec<Stand>,
     bbox: &Polygon,
-) -> (Vec<CompartmentArea>, u32) {
+) -> (Vec<CompartmentArea>, usize) {
     // Find stands in the bounding box
     let stands = find_stands_in_bounding_box(&all_stands, bbox);
 
@@ -159,7 +159,7 @@ pub fn get_compartment_areas_in_bounding_box(
     // If there are stands in the bounding box, generate random trees for each stand
     if let Some(stands) = stands {
         let mut compartment_areas = Vec::new();
-        let mut tree_count = 0;
+        let mut total_tree_count = 0;
 
         for stand in stands {
             let polygon = stand.computed_polygon.to_owned().unwrap();
@@ -176,10 +176,12 @@ pub fn get_compartment_areas_in_bounding_box(
             let clipped_area = clipped_polygon.unsigned_area();
             let area_ratio = clipped_area / original_area;
 
+            let mut tree_count = 0;
             // Generate trees and save them to the buffer if strata exist
             if let Some(strata) = strata {
                 tree_count = generate_random_trees_into_buffer(&clipped_polygon, &strata, area_ratio, &buffer);
             }
+            total_tree_count += tree_count;
 
             // Add to the compartment areas list
             compartment_areas.push(CompartmentArea {
@@ -188,7 +190,7 @@ pub fn get_compartment_areas_in_bounding_box(
             });
         }
 
-        (compartment_areas, max_tree_count)
+        (compartment_areas, total_tree_count)
     } else {
         (vec![], 0)
     }
