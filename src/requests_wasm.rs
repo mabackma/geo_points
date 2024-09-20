@@ -149,7 +149,8 @@ pub async fn geo_json_from_coords(
 
     // Get compartment areas in the bounding box and convert them to GeoJSON
     let compartment_areas = get_compartment_areas_in_bounding_box(stands, &bbox);
-    let geojson = all_compartment_areas_to_geojson(compartment_areas, &buildings_geojson, &roads_geojson);
+    log_1(&format!("Maximum amount of trees in buffer: {}", compartment_areas.1).into());
+    let geojson = all_compartment_areas_to_geojson(compartment_areas.0, &buildings_geojson, &roads_geojson);
     log_1(&"Got geojson".into());
 
     // Convert the resulting GeoJSON to JsValue for returning to JavaScript

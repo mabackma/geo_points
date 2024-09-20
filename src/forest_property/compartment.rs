@@ -132,12 +132,12 @@ pub struct CompartmentArea {
 pub fn get_compartment_areas_in_bounding_box(
     all_stands: Vec<Stand>,
     bbox: &Polygon,
-) -> Vec<CompartmentArea> {
+) -> (Vec<CompartmentArea>, u32) {
     // Find stands in the bounding box
     let stands = find_stands_in_bounding_box(&all_stands, bbox);
 
     // Count the total number of trees in the bounding box
-    let mut total_tree_count = 0;
+    let mut max_tree_count = 0;
     if let Some(stands) = &stands {
         for stand in stands {
             let strata = stand.get_strata();
@@ -148,17 +148,19 @@ pub fn get_compartment_areas_in_bounding_box(
                     acc += f.stem_count;
                     acc
                 });
-                total_tree_count += strata_stem_count; // Accumulate total tree count
+                max_tree_count += strata_stem_count; // Accumulate maximum tree count
             }
         }
     }
 
     // Create a shared buffer to store the generated trees
-    let buffer = SharedBuffer::new(total_tree_count as usize);
+    let buffer = SharedBuffer::new(max_tree_count as usize);
 
     // If there are stands in the bounding box, generate random trees for each stand
     if let Some(stands) = stands {
         let mut compartment_areas = Vec::new();
+        let mut tree_count = 0;
+
         for stand in stands {
             let polygon = stand.computed_polygon.to_owned().unwrap();
             let strata = stand.get_strata();
@@ -176,8 +178,7 @@ pub fn get_compartment_areas_in_bounding_box(
 
             // Generate trees and save them to the buffer if strata exist
             if let Some(strata) = strata {
-                let tree_count = generate_random_trees_into_buffer(&clipped_polygon, &strata, area_ratio, &buffer);
-                //log_1(&format!("Generated and saved {} trees into buffer", tree_count).into());
+                tree_count = generate_random_trees_into_buffer(&clipped_polygon, &strata, area_ratio, &buffer);
             }
 
             // Add to the compartment areas list
@@ -186,8 +187,9 @@ pub fn get_compartment_areas_in_bounding_box(
                 polygon: clipped_polygon,
             });
         }
-        compartment_areas
+
+        (compartment_areas, max_tree_count)
     } else {
-        vec![]
+        (vec![], 0)
     }
 }
