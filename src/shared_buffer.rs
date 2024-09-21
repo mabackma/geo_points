@@ -1,4 +1,5 @@
 use wasm_bindgen::prelude::*;
+use web_sys::console::log_1;
 
 #[wasm_bindgen]
 pub struct SharedBuffer {

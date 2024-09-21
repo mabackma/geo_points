@@ -1,6 +1,5 @@
 use crate::forest_property::tree::Tree;
-use crate::geometry_utils::{generate_random_trees, generate_random_trees_into_buffer};
-use crate::shared_buffer::SharedBuffer;
+use crate::geometry_utils::generate_random_trees;
 use super::stand::Stand;
 
 use geo::{Polygon, Area, BooleanOps};
@@ -127,71 +126,4 @@ pub struct CompartmentArea {
     pub stand_number: String,
     pub polygon: Polygon,
 }
- 
-// Get compartment areas in a bounding box.
-pub fn get_compartment_areas_in_bounding_box(
-    all_stands: Vec<Stand>,
-    bbox: &Polygon,
-) -> (Vec<CompartmentArea>, usize) {
-    // Find stands in the bounding box
-    let stands = find_stands_in_bounding_box(&all_stands, bbox);
 
-    // Count the total number of trees in the bounding box
-    let mut max_tree_count = 0;
-    if let Some(stands) = &stands {
-        for stand in stands {
-            let strata = stand.get_strata();
-
-            // Calculate the number of trees in this stand's strata
-            if let Some(strata) = strata {
-                let strata_stem_count = strata.tree_stratum.iter().fold(0, |mut acc: u32, f| {
-                    acc += f.stem_count;
-                    acc
-                });
-                max_tree_count += strata_stem_count; // Accumulate maximum tree count
-            }
-        }
-    }
-
-    // Create a shared buffer to store the generated trees
-    let buffer = SharedBuffer::new(max_tree_count as usize);
-
-    // If there are stands in the bounding box, generate random trees for each stand
-    if let Some(stands) = stands {
-        let mut compartment_areas = Vec::new();
-        let mut total_tree_count = 0;
-
-        for stand in stands {
-            let polygon = stand.computed_polygon.to_owned().unwrap();
-            let strata = stand.get_strata();
-
-            // Clip the stand's polygon to the bounding box
-            let intersected_polygons = polygon.intersection(bbox).0;
-            let clipped_polygon = intersected_polygons.first()
-                .expect("Intersection result should contain at least one polygon")
-                .to_owned();
-
-            // Calculate the area ratio of the clipped polygon to the original polygon
-            let original_area = polygon.unsigned_area();
-            let clipped_area = clipped_polygon.unsigned_area();
-            let area_ratio = clipped_area / original_area;
-
-            let mut tree_count = 0;
-            // Generate trees and save them to the buffer if strata exist
-            if let Some(strata) = strata {
-                tree_count = generate_random_trees_into_buffer(&clipped_polygon, &strata, area_ratio, &buffer);
-            }
-            total_tree_count += tree_count;
-
-            // Add to the compartment areas list
-            compartment_areas.push(CompartmentArea {
-                stand_number: stand.stand_basic_data.stand_number.to_string(),
-                polygon: clipped_polygon,
-            });
-        }
-
-        (compartment_areas, total_tree_count)
-    } else {
-        (vec![], 0)
-    }
-}
