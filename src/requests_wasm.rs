@@ -188,7 +188,8 @@ pub fn generate_random_trees_into_buffer(
     p: &Polygon,
     strata: &TreeStrata,
     area_ratio: f64,
-    buffer: &SharedBuffer // Pass in the SharedBuffer to fill
+    buffer: &SharedBuffer, // Pass in the SharedBuffer to fill
+    start_index: usize
 ) -> usize {
     let total_stem_count = strata.tree_stratum.iter().fold(0, |mut acc: u32, f| {
         acc += f.stem_count;
@@ -242,9 +243,10 @@ pub fn generate_random_trees_into_buffer(
  
     // Insert the trees into the buffer
     for (i, tree) in trees.iter().enumerate() {
+        let buffer_index = start_index + i;
         if i < buffer.len() / 3 {
             // Fill the buffer with x, y, and species
-            buffer.fill_tree(i, tree.position().0, tree.position().1, tree.species());
+            buffer.fill_tree(buffer_index, tree.position().0, tree.position().1, tree.species());
             tree_count += 1;
         } else {
             break; // Avoid overflowing the buffer
@@ -299,6 +301,7 @@ pub fn get_compartment_areas_in_bounding_box(
         let mut compartment_areas = Vec::new();
         let mut total_tree_count = 0;
 
+        let mut buffer_index = 0;
         for stand in stands {
             let polygon = stand.computed_polygon.to_owned().unwrap();
             let strata = stand.get_strata();
@@ -317,7 +320,8 @@ pub fn get_compartment_areas_in_bounding_box(
             // Generate trees and save them to the buffer if strata exist
             let mut tree_count = 0;
             if let Some(strata) = strata {
-                tree_count = generate_random_trees_into_buffer(&clipped_polygon, &strata, area_ratio, &buffer);
+                tree_count = generate_random_trees_into_buffer(&clipped_polygon, &strata, area_ratio, &buffer, buffer_index);
+                buffer_index += tree_count;
                 log_1(&format!("Generated {} trees for stand {}", tree_count, stand.stand_basic_data.stand_number).into());
             }
             total_tree_count += tree_count;
