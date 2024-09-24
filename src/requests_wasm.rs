@@ -251,7 +251,7 @@ pub fn generate_random_trees_into_buffer(
         }
     }
 
-    //let buffer_slice = from_raw_parts(buffer.ptr(), buffer.len()); // Get a slice of the buffer
+    // Get a slice of the buffer
     let buffer_slice: &[f64] = unsafe {
         std::slice::from_raw_parts(buffer.ptr(), buffer.len() / std::mem::size_of::<f64>())
     };  
