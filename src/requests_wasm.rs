@@ -255,12 +255,12 @@ pub fn generate_random_trees_into_buffer(
 
     // Get a slice of the buffer
     let buffer_slice: &[f64] = unsafe {
-        std::slice::from_raw_parts(buffer.ptr(), buffer.len() / std::mem::size_of::<f64>())
+        std::slice::from_raw_parts(buffer.ptr(), buffer.len())
     };  
 
     log_1(&"Buffer contains:".into());
     for (i, value) in buffer_slice.iter().enumerate() {
-        if i % 3 == 0 {
+        if i % 3 == 0 && buffer_slice[i + 2] != 0.0 {
             let buffer_info = format!("Tree {}: x = {}, y = {}, species = {}", i / 3, buffer_slice[i], buffer_slice[i + 1], buffer_slice[i + 2]);
             log_1(&buffer_info.into());
         }
