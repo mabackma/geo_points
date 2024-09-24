@@ -22,6 +22,7 @@ use serde_json::Value as SerdeJsonValue;
 use serde_wasm_bindgen;
 use web_sys::console::log_1;
 use serde::Serialize;
+use std::slice::from_raw_parts;
 
 #[derive(Debug)]
 pub enum FetchError {
@@ -238,7 +239,7 @@ pub fn generate_random_trees_into_buffer(
         })
         .flatten()
         .collect::<Vec<Tree>>();
-
+ 
     // Insert the trees into the buffer
     for (i, tree) in trees.iter().enumerate() {
         if i < buffer.len() / 3 {
@@ -247,6 +248,19 @@ pub fn generate_random_trees_into_buffer(
             tree_count += 1;
         } else {
             break; // Avoid overflowing the buffer
+        }
+    }
+
+    //let buffer_slice = from_raw_parts(buffer.ptr(), buffer.len()); // Get a slice of the buffer
+    let buffer_slice: &[f64] = unsafe {
+        std::slice::from_raw_parts(buffer.ptr(), buffer.len() / std::mem::size_of::<f64>())
+    };  
+
+    log_1(&"Buffer contains:".into());
+    for (i, value) in buffer_slice.iter().enumerate() {
+        if i % 3 == 0 {
+            let buffer_info = format!("Tree {}: x = {}, y = {}, species = {}", i / 3, buffer_slice[i], buffer_slice[i + 1], buffer_slice[i + 2]);
+            log_1(&buffer_info.into());
         }
     }
 
@@ -304,6 +318,7 @@ pub fn get_compartment_areas_in_bounding_box(
             let mut tree_count = 0;
             if let Some(strata) = strata {
                 tree_count = generate_random_trees_into_buffer(&clipped_polygon, &strata, area_ratio, &buffer);
+                log_1(&format!("Generated {} trees for stand {}", tree_count, stand.stand_basic_data.stand_number).into());
             }
             total_tree_count += tree_count;
 
