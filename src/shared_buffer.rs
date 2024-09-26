@@ -32,7 +32,6 @@ impl SharedBuffer {
     /// `index` is the index of the tree in the buffer (0-based)
     pub fn fill_tree(&self, index: usize, x: f64, y: f64, species: u8) {
         let base = index * 3; // 3 values per tree: x, y, species
-        log_1(&format!("Adding coordinate {} {}, species: {}", x, y, species).into());
         if base + 2 < self.len / 3 && species != 0 {
             unsafe {
                 *self.ptr.add(base) = x;           // x coordinate
