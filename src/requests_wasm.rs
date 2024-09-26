@@ -1,8 +1,14 @@
-use crate::geometry_utils::get_min_max_coordinates;
+use crate::geometry_utils::{get_min_max_coordinates, generate_radius};
 use crate::forest_property::forest_property_data::ForestPropertyData;
-use crate::forest_property::compartment::{get_compartment_areas_in_bounding_box, CompartmentArea};
+use crate::forest_property::tree_stand_data::TreeStrata;
+use crate::forest_property::tree::Tree;
+use crate::forest_property::stand::Stand;
+use crate::forest_property::compartment::{find_stands_in_bounding_box, CompartmentArea};
 use crate::geojson_utils::all_compartment_areas_to_geojson;
-use geo::{coord, LineString, Polygon, BooleanOps};
+use crate::shared_buffer::SharedBuffer;
+use crate::jittered_hexagonal_sampling::{GridOptions, JitteredHexagonalGridSampling};
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
+use geo::{coord, Area, LineString, Polygon, BooleanOps};
 use geojson::{GeoJson, Value};
 use reqwest_wasm::Client;
 use reqwest::Error as ReqwestError;
@@ -15,6 +21,8 @@ use wasm_bindgen_futures::JsFuture;
 use serde_json::Value as SerdeJsonValue;
 use serde_wasm_bindgen;
 use web_sys::console::log_1;
+use serde::Serialize;
+use std::slice::from_raw_parts;
 
 #[derive(Debug)]
 pub enum FetchError {
@@ -76,6 +84,14 @@ pub fn geojson_to_polygons(geojson: &GeoJson) -> Vec<Polygon<f64>> {
     } 
 
     polygons
+}
+
+#[derive(Serialize)]
+struct GeoJsonWithTreeCount {
+    geojson: serde_json::Value,
+    max_tree_count: usize,
+    tree_count: usize,
+    buffer_pointer: u64,
 }
 
 #[wasm_bindgen]
@@ -149,12 +165,202 @@ pub async fn geo_json_from_coords(
 
     // Get compartment areas in the bounding box and convert them to GeoJSON
     let compartment_areas = get_compartment_areas_in_bounding_box(stands, &bbox);
-    let geojson = all_compartment_areas_to_geojson(compartment_areas, &buildings_geojson, &roads_geojson);
+    let max_tree_count = compartment_areas.1;
+    let tree_count = compartment_areas.2;
+    let buffer_pointer = compartment_areas.3;
+    let geojson = all_compartment_areas_to_geojson(compartment_areas.0, &buildings_geojson, &roads_geojson);
     log_1(&"Got geojson".into());
 
-    // Convert the resulting GeoJSON to JsValue for returning to JavaScript
-    let result = serde_wasm_bindgen::to_value(&geojson)
+    // Create a combined struct with both the GeoJSON and tree_count
+    let result = GeoJsonWithTreeCount {
+        geojson: geojson.into(),
+        max_tree_count,
+        tree_count,
+        buffer_pointer,
+    };
+
+    // Serialize the result to a JsValue to return to JavaScript
+    let result_js_value = serde_wasm_bindgen::to_value(&result)
         .map_err(|e| JsValue::from_str(&format!("Failed to serialize result: {}", e)))?;
 
-    Ok(result)
+    Ok(result_js_value)
+}
+
+// Generates random trees for all strata with jittered grid sampling
+pub fn generate_random_trees_into_buffer(
+    p: &Polygon,
+    strata: &TreeStrata,
+    area_ratio: f64,
+    buffer: &SharedBuffer, // Pass in the SharedBuffer to fill
+    start_index: usize
+) -> usize {
+    let total_stem_count = strata.tree_stratum.iter().fold(0, |mut acc: u32, f| {
+        acc += f.stem_count;
+        acc
+    });
+
+    let mut tree_count = 0;
+
+    let trees = strata
+        .tree_stratum
+        .par_iter()
+        .map(|stratum| {
+            let tree_amount = (stratum.stem_count as f64) * area_ratio;
+            let amount = tree_amount.round() as u32;
+
+            let mut radius = generate_radius(total_stem_count, stratum.basal_area);
+            radius *= 0.00001;
+
+            // Jittered Grid Version 2
+            let rng = rand::thread_rng();
+            let options = GridOptions {
+                polygon: p.to_owned(),
+                radius: (radius).into(),
+                jitter: Some(0.6666),
+                point_limit: Some(amount as usize),
+            };
+
+            let mut grid = JitteredHexagonalGridSampling::new(rng, options);
+            let points = grid.fill();
+
+            if points.is_empty() {
+                //println!("\tNo trees generated for stratum with basal area {}, stem count {}, mean height {}", stratum.basal_area, stratum.stem_count, stratum.mean_height);
+            } else if points.len() < amount as usize {
+                println!(
+                    "Generated {} / {} trees for stratum with basal area {}, stem count {}, mean height {}.",
+                    points.len(), amount, stratum.basal_area, stratum.stem_count, stratum.mean_height
+                );
+            }
+
+            let trees_strata: Vec<Tree> = points
+                .iter()
+                .map(|pair: &[f64; 2]| {
+                    Tree::new(stratum.tree_species, stratum.mean_height, (pair[0], pair[1], 0.0))
+                })
+                .collect();
+
+            trees_strata
+        })
+        .flatten()
+        .collect::<Vec<Tree>>();
+ 
+    // Insert the trees into the buffer
+    for (i, tree) in trees.iter().enumerate() {
+        let buffer_index = start_index + i;
+        if i < buffer.len() / 3 {
+            // Fill the buffer with x, y, and species
+            buffer.fill_tree(buffer_index, tree.position().0, tree.position().1, tree.species());
+            tree_count += 1;
+        } else {
+            break; // Avoid overflowing the buffer
+        }
+    }
+
+    tree_count // Return the number of trees added to the buffer
+}
+
+// Get compartment areas in a bounding box.
+pub fn get_compartment_areas_in_bounding_box(
+    all_stands: Vec<Stand>,
+    bbox: &Polygon,
+) -> (Vec<CompartmentArea>, usize, usize, u64) {
+    // Find stands in the bounding box
+    let stands = find_stands_in_bounding_box(&all_stands, bbox);
+
+    // Count the total number of trees in the bounding box
+    let mut max_tree_count = 0;
+    if let Some(stands) = &stands {
+        for stand in stands {
+            let strata = stand.get_strata();
+
+            if let Some(strata) = strata {
+                let strata_stem_count = strata.tree_stratum.iter().fold(0, |mut acc: u32, f| {
+                    acc += f.stem_count;
+                    acc
+                });
+                max_tree_count += strata_stem_count;
+            }
+        }
+    }
+
+    // Create a shared buffer to store the generated trees
+    let buffer = SharedBuffer::new(max_tree_count as usize);
+
+    // If there are stands in the bounding box, generate random trees for each stand
+    if let Some(stands) = stands {
+        let mut compartment_areas = Vec::new();
+        let mut total_tree_count = 0;
+
+        let mut buffer_index = 0;
+        for stand in stands {
+            let polygon = stand.computed_polygon.to_owned().unwrap();
+            let strata = stand.get_strata();
+
+            // Clip the stand's polygon to the bounding box
+            let intersected_polygons = polygon.intersection(bbox).0;
+            let clipped_polygon = intersected_polygons.first()
+                .expect("Intersection result should contain at least one polygon")
+                .to_owned();
+
+            // Calculate the area ratio of the clipped polygon to the original polygon
+            let original_area = polygon.unsigned_area();
+            let clipped_area = clipped_polygon.unsigned_area();
+            let area_ratio = clipped_area / original_area;
+
+            // Generate trees and save them to the buffer if strata exist
+            let mut tree_count = 0;
+            if let Some(strata) = strata {
+                tree_count = generate_random_trees_into_buffer(&clipped_polygon, &strata, area_ratio, &buffer, buffer_index);
+                buffer_index += tree_count;
+                log_1(&format!("Generated {} trees for stand {}", tree_count, stand.stand_basic_data.stand_number).into());
+            }
+            total_tree_count += tree_count;
+
+            // Add to the compartment areas list
+            compartment_areas.push(CompartmentArea {
+                stand_number: stand.stand_basic_data.stand_number.to_string(),
+                polygon: clipped_polygon,
+            });
+        }
+
+        // Get a slice of the buffer
+        let buffer_slice: &[f64] = unsafe {
+            std::slice::from_raw_parts(buffer.ptr(), buffer.len())
+        };  
+
+        log_1(&"Buffer contains:".into());
+        for (i, value) in buffer_slice.iter().enumerate() {
+            if i % 3 == 0 && buffer_slice[i + 2] != 0.0 {
+                let buffer_info = format!("Tree {}: x = {}, y = {}, species = {}", i / 3, buffer_slice[i], buffer_slice[i + 1], buffer_slice[i + 2]);
+                log_1(&buffer_info.into());
+            }
+        }
+        
+        let mut buffer_pointer_string = format!("{:p}", buffer.ptr());
+        buffer_pointer_string = (&buffer_pointer_string[2..]).to_string();
+
+        log_1(&format!("Hexadecimal Buffer pointer in rust: {}", buffer_pointer_string).into());
+        let buffer_pointer = hexadecimal_to_decimal(&buffer_pointer_string).unwrap();
+        log_1(&format!("Decimal Buffer pointer in rust: {}", buffer_pointer).into());
+        (compartment_areas, max_tree_count as usize, total_tree_count, buffer_pointer)
+    } else {
+        (vec![], 0, 0, 0)
+    }
+}
+
+pub fn hexadecimal_to_decimal(hexadecimal_str: &str) -> Result<u64, &'static str> {
+    if hexadecimal_str.is_empty() {
+        return Err("Empty input");
+    }
+
+    for hexadecimal_str in hexadecimal_str.chars() {
+        if !hexadecimal_str.is_ascii_hexdigit() {
+            return Err("Input was not a hexadecimal number");
+        }
+    }
+
+    match u64::from_str_radix(hexadecimal_str, 16) {
+        Ok(decimal) => Ok(decimal),
+        Err(_e) => Err("Failed to convert to hexadecimal"),
+    }
 }

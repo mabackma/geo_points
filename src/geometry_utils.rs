@@ -19,7 +19,7 @@ pub fn get_min_max_coordinates(p: &Polygon<f64>) -> (f64, f64, f64, f64) {
     (min_x, max_x, min_y, max_y)
 }
 
-fn generate_radius(total_stem_count: u32, area: f32) -> f32 {
+pub fn generate_radius(total_stem_count: u32, area: f32) -> f32 {
     let total_trees = total_stem_count as f32 * area / 10000.0;
 
     let mut ratio_fix = 1.3;

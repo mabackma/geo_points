@@ -10,3 +10,6 @@ pub mod requests;
 
 #[cfg(target_arch = "wasm32")]
 pub mod requests_wasm;
+
+#[cfg(target_arch = "wasm32")]
+pub mod shared_buffer;
